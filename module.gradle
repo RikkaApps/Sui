@@ -1,0 +1,30 @@
+ext {
+    moduleId = "sui"
+    moduleName = "Sui"
+    moduleAuthor = "Rikka"
+    moduleDescription = "Modern su implementation. API design from Shizuku."
+    moduleVersion = "v1.0"
+    moduleVersionCode = 1
+
+    moduleMinRiruApiVersion = 9
+    moduleMinRiruVersionName = "v22.0"
+    moduleMaxRiruApiVersion = 10
+
+    moduleProp = [
+            name       : moduleName,
+            version    : moduleVersion,
+            versionCode: moduleVersionCode.toString(),
+            author     : moduleAuthor,
+            description: moduleDescription,
+            minApi     : moduleMinRiruApiVersion
+    ]
+
+    magiskModuleProp = [
+            id         : "riru-${moduleId.replace('_', '-')}",
+            name       : "Riru - ${moduleProp['name']}",
+            version    : moduleProp['version'],
+            versionCode: moduleProp['versionCode'],
+            author     : moduleProp['author'],
+            description: moduleProp['description']
+    ]
+}

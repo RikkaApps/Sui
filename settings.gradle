@@ -1,0 +1,2 @@
+include ':module'
+include ':hidden-api-common', ':hidden-api-common-bridge', ':hidden-api-21', ':hidden-api-21-bridge', ':hidden-api-26', ':hidden-api-26-bridge'
