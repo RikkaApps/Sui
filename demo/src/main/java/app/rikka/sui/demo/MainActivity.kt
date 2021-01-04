@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import app.rikka.sui.demo.databinding.ActivityMainBinding
-import moe.shizuku.server.IShizukuClient
 
 class MainActivity : Activity() {
 
@@ -14,10 +13,12 @@ class MainActivity : Activity() {
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val binder = Sui.getBinder()
         val service = Sui.getService()
 
-        service.requestPermission(0)
+        try {
+            service.requestPermission(0)
+        } catch (e: Exception) {
+        }
 
         Build.MODEL
         val text = try {

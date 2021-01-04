@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.os.UserHandle;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static app.rikka.sui.systemserver.SystemServerConstants.LOGGER;
@@ -29,13 +30,20 @@ public class PackageReceiver {
         }
     };
 
+    @SuppressLint("DiscouragedPrivateApi")
     public static void register() {
         ActivityThread activityThread = ActivityThread.currentActivityThread();
         if (activityThread == null) {
             LOGGER.w("ActivityThread is null");
             return;
         }
-        Context context = activityThread.getSystemContext();
+        Context context = null;
+        try {
+            //noinspection JavaReflectionMemberAccess
+            Method method = ActivityThread.class.getDeclaredMethod("getSystemContext");
+            context = (Context) method.invoke(activityThread);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+        }
         if (context == null) {
             LOGGER.w("context is null");
             return;
@@ -60,7 +68,6 @@ public class PackageReceiver {
 
         try {
             //noinspection JavaReflectionMemberAccess
-            @SuppressLint("DiscouragedPrivateApi")
             Method method = Context.class.getDeclaredMethod("registerReceiverAsUser", BroadcastReceiver.class, UserHandle.class, IntentFilter.class, String.class, Handler.class);
             method.invoke(context, RECEIVER, userHandleAll, intentFilter, null, handler);
             LOGGER.d("register package receiver");
