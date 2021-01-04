@@ -1,4 +1,4 @@
-package app.rikka.sui.server
+package app.rikka.sui.server.userservice
 
 import android.os.FileObserver
 import android.util.Log

@@ -33,6 +33,6 @@ public class Starter {
         waitSystemService(Context.USER_SERVICE);
         waitSystemService(Context.APP_OPS_SERVICE);
 
-        SuiService.main();
+        Service.main();
     }
 }

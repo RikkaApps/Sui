@@ -1,8 +1,8 @@
 package app.rikka.sui.server;
 
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -33,28 +34,29 @@ import java.util.concurrent.Executors;
 
 import app.rikka.sui.server.api.RemoteProcessHolder;
 import app.rikka.sui.server.api.SystemService;
+import app.rikka.sui.server.bridge.BridgeServiceClient;
+import app.rikka.sui.server.userservice.ApkChangedObserver;
+import app.rikka.sui.server.userservice.ApkChangedObservers;
 import app.rikka.sui.util.UserHandleCompat;
 import dalvik.system.PathClassLoader;
 import moe.shizuku.server.IRemoteProcess;
+import moe.shizuku.server.IShizukuClient;
 import moe.shizuku.server.IShizukuService;
 import moe.shizuku.server.IShizukuServiceConnection;
 
 import static app.rikka.sui.server.ServerConstants.LOGGER;
-import static app.rikka.sui.server.SuiApiConstants.USER_SERVICE_ARG_COMPONENT;
-import static app.rikka.sui.server.SuiApiConstants.USER_SERVICE_ARG_DEBUGGABLE;
-import static app.rikka.sui.server.SuiApiConstants.USER_SERVICE_ARG_PROCESS_NAME;
-import static app.rikka.sui.server.SuiApiConstants.USER_SERVICE_ARG_TAG;
-import static app.rikka.sui.server.SuiApiConstants.USER_SERVICE_ARG_VERSION_CODE;
-import static app.rikka.sui.server.SuiApiConstants.USER_SERVICE_TRANSACTION_destroy;
+import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT;
+import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_DEBUGGABLE;
+import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_PROCESS_NAME;
+import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_TAG;
+import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_VERSION_CODE;
+import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_TRANSACTION_destroy;
 
-public class SuiService extends IShizukuService.Stub {
+public class Service extends IShizukuService.Stub {
 
-    private static final String PERMISSION_MANAGER = "moe.shizuku.manager.permission.MANAGER";
-    private static final String PERMISSION = SuiApiConstants.PERMISSION;
+    private static Service instance;
 
-    private static SuiService instance;
-
-    public static SuiService getInstance() {
+    public static Service getInstance() {
         return instance;
     }
 
@@ -62,12 +64,15 @@ public class SuiService extends IShizukuService.Stub {
         LOGGER.i("starting server...");
 
         Looper.prepare();
-        new SuiService();
+        new Service();
         Looper.loop();
 
         LOGGER.i("server exited");
         System.exit(0);
     }
+
+    private static final int MY_PID = Os.getpid();
+    private static final int MY_UID = Os.getuid();
 
     private static final String USER_SERVICE_CMD_DEBUG;
 
@@ -89,12 +94,13 @@ public class SuiService extends IShizukuService.Stub {
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private final Handler mainHandler = new Handler(Looper.myLooper());
-    //private final Context systemContext = HiddenApiBridge.getSystemContext();
     private final Executor executor = Executors.newSingleThreadExecutor();
     private final Map<String, UserServiceRecord> userServiceRecords = Collections.synchronizedMap(new ArrayMap<>());
+    private final ClientManager clientManager;
 
-    public SuiService() {
-        SuiService.instance = this;
+    public Service() {
+        Service.instance = this;
+        clientManager = ClientManager.getInstance();
 
         BridgeServiceClient.send(new BridgeServiceClient.Listener() {
             @Override
@@ -113,46 +119,30 @@ public class SuiService extends IShizukuService.Stub {
         });
     }
 
-    private int checkCallingPermission(String permission) {
-        try {
-            return SystemService.checkPermission(permission,
-                    Binder.getCallingPid(),
-                    Binder.getCallingUid());
-        } catch (Throwable tr) {
-            LOGGER.w(tr, "checkCallingPermission");
-            return PackageManager.PERMISSION_DENIED;
-        }
-    }
+    public void enforceCallingPermission(String func) {
+        int callingPid = Binder.getCallingPid();
+        int callingUid = Binder.getCallingUid();
 
-    private void enforceManager(String func) {
-        if (Binder.getCallingPid() == Os.getpid()) {
+        if (callingPid == MY_PID || callingUid == MY_UID) {
             return;
         }
 
-        if (checkCallingPermission(PERMISSION_MANAGER) == PackageManager.PERMISSION_GRANTED)
-            return;
-
-        String msg = "Permission Denial: " + func + " from pid="
-                + Binder.getCallingPid()
-                + " requires " + PERMISSION_MANAGER;
-        LOGGER.w(msg);
-        throw new SecurityException(msg);
-    }
-
-    private void enforceCallingPermission(String func) {
-        if (Binder.getCallingPid() == Os.getpid()) {
+        ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
+        if (clientRecord != null && clientRecord.permissionGranted) {
             return;
         }
 
-        if (checkCallingPermission(PERMISSION_MANAGER) == PackageManager.PERMISSION_GRANTED
-                || checkCallingPermission(PERMISSION) == PackageManager.PERMISSION_GRANTED)
-            return;
+        if (clientRecord == null) {
+            throw new SecurityException("Permission Denial: " + func + " from pid="
+                    + Binder.getCallingPid()
+                    + " is not an attached client");
+        }
 
-        String msg = "Permission Denial: " + func + " from pid="
-                + Binder.getCallingPid()
-                + " requires " + PERMISSION;
-        LOGGER.w(msg);
-        throw new SecurityException(msg);
+        if (!clientRecord.permissionGranted) {
+            throw new SecurityException("Permission Denial: " + func + " from pid="
+                    + Binder.getCallingPid()
+                    + " requires permission");
+        }
     }
 
     private void transactRemote(Parcel data, Parcel reply, int flags) throws RemoteException {
@@ -179,16 +169,9 @@ public class SuiService extends IShizukuService.Stub {
     }
 
     @Override
-    public void exit() {
-        enforceManager("exit");
-        LOGGER.i("exit");
-        System.exit(0);
-    }
-
-    @Override
     public int getVersion() {
         enforceCallingPermission("getVersion");
-        return SuiApiConstants.SERVER_VERSION;
+        return ShizukuApiConstants.SERVER_VERSION;
     }
 
     @Override
@@ -321,7 +304,7 @@ public class SuiService extends IShizukuService.Stub {
         }
 
         private void removeSelf() {
-            synchronized (SuiService.this) {
+            synchronized (Service.this) {
                 removeUserServiceLocked(UserServiceRecord.this);
             }
         }
@@ -387,12 +370,6 @@ public class SuiService extends IShizukuService.Stub {
             removeUserServiceLocked(record);
         }
         return 0;
-    }
-
-    @Override
-    public boolean isSystemIntegratedMode() {
-        enforceCallingPermission("isSystemIntegratedMode");
-        return true;
     }
 
     private void removeUserServiceLocked(UserServiceRecord record) {
@@ -524,7 +501,7 @@ public class SuiService extends IShizukuService.Stub {
 
         String processName = String.format("%s:%s", packageName, processNameSuffix);
         String cmd = String.format(Locale.ENGLISH, USER_SERVICE_CMD_FORMAT,
-                SuiApiConstants.SERVER_VERSION, debug ? (" " + USER_SERVICE_CMD_DEBUG) : "",
+                ShizukuApiConstants.SERVER_VERSION, debug ? (" " + USER_SERVICE_CMD_DEBUG) : "",
                 processName, "moe.shizuku.starter.ServiceStarter",
                 token, packageName, classname, callingUid, debug ? (" " + "--debug-name=" + processName) : "");
 
@@ -548,15 +525,52 @@ public class SuiService extends IShizukuService.Stub {
     }
 
     @Override
-    public void sendUserService(IBinder binder, Bundle options) {
-        enforceManager("sendUserService");
+    public void exit() {
+        // exit is not supported by Sui
+    }
 
+    @Override
+    public void sendUserService(IBinder binder, Bundle options) {
         Objects.requireNonNull(binder, "binder is null");
-        String token = Objects.requireNonNull(options.getString(SuiApiConstants.USER_SERVICE_ARG_TOKEN), "token is null");
+        String token = Objects.requireNonNull(options.getString(ShizukuApiConstants.USER_SERVICE_ARG_TOKEN), "token is null");
 
         synchronized (this) {
             sendUserServiceLocked(binder, token);
         }
+    }
+
+    @Override
+    public void attachClientProcess(IShizukuClient client, String requestPackageName) {
+        if (client == null || requestPackageName == null) {
+            return;
+        }
+
+        int callingPid = Binder.getCallingPid();
+        int callingUid = Binder.getCallingUid();
+
+        List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
+        if (!packages.contains(requestPackageName)) {
+            throw new SecurityException("Request package " + requestPackageName + "does not belong to uid " + callingUid);
+        }
+
+        synchronized (this) {
+            clientManager.addClient(callingUid, callingPid, client, requestPackageName);
+        }
+    }
+
+    @Override
+    public void requestPermission(int requestCode) {
+
+    }
+
+    @Override
+    public boolean isHidden(int uid) {
+        if (Binder.getCallingUid() != 1000) {
+            // only allow to be called by system server
+            return false;
+        }
+
+        return clientManager.isHidden(uid);
     }
 
     private void sendUserServiceLocked(IBinder binder, String token) {
@@ -579,10 +593,28 @@ public class SuiService extends IShizukuService.Stub {
     }
 
     @Override
+    public void packageChanged(Intent intent) {
+        int callingUid = Binder.getCallingUid();
+        if (callingUid != 1000 && callingUid != 0) {
+            return;
+        }
+        if (intent == null) {
+            return;
+        }
+
+        String action = intent.getAction();
+        int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
+        boolean replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false);
+        if (Intent.ACTION_PACKAGE_REMOVED.equals(action) && uid > 0 & !replacing) {
+
+        }
+    }
+
+    @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
         //LOGGER.d("transact: code=%d, calling uid=%d", code, Binder.getCallingUid());
-        if (code == SuiApiConstants.BINDER_TRANSACTION_transact) {
-            data.enforceInterface(SuiApiConstants.BINDER_DESCRIPTOR);
+        if (code == ShizukuApiConstants.BINDER_TRANSACTION_transact) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
             transactRemote(data, reply, flags);
             return true;
         }

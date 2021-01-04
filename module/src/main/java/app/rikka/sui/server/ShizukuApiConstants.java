@@ -4,11 +4,9 @@ import androidx.annotation.RestrictTo;
 
 import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
 
-public class SuiApiConstants {
+public class ShizukuApiConstants {
 
     public static final int SERVER_VERSION = 11;
-
-    public static final String PERMISSION = "moe.shizuku.manager.permission.API_V23";
 
     // binder
     public static final String BINDER_DESCRIPTOR = "moe.shizuku.server.IShizukuService";
@@ -26,4 +24,11 @@ public class SuiApiConstants {
 
     @RestrictTo(LIBRARY_GROUP_PREFIX)
     public static final String USER_SERVICE_ARG_TOKEN = "shizuku:user-service-arg-token";
+
+    // attach client
+    public static final String ATTACH_REPLY_SERVER_VERSION = "shizuku:attach-reply-version";
+    public static final String ATTACH_REPLY_SERVER_UID = "shizuku:attach-reply-uid";
+    public static final String ATTACH_REPLY_SERVER_SECONTEXT = "shizuku:attach-reply-secontext";
+    public static final String ATTACH_REPLY_SERVER_PERMISSION_GRANTED = "shizuku:attach-reply-permission-granted";
+
 }

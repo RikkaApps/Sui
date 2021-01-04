@@ -3,25 +3,17 @@ package app.rikka.sui.systemserver;
 import android.os.IBinder;
 import android.os.Parcel;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import app.rikka.sui.util.ParcelUtils;
 
-import static app.rikka.sui.systemserver.Constants.LOGGER;
+import static app.rikka.sui.systemserver.SystemServerConstants.LOGGER;
 
 public final class SystemProcess {
 
-    private static final SuiBridgeService SERVICE = new SuiBridgeService();
-
-    private static final int V23_0 = 49;
+    private static final BridgeService SERVICE = new BridgeService();
 
     private final int versionCode;
-
-    private IBinder activityService;
-
-    private List<String> addedServices = new ArrayList<>();
 
     private SystemProcess(int versionCode) {
         this.versionCode = versionCode;

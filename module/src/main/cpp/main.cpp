@@ -46,12 +46,6 @@ static void specializeAppProcessPost(
     // added from Android 10, but disabled at least in Google Pixel devices
 }
 
-static void forkSystemServerPre(
-        JNIEnv *env, jclass clazz, uid_t *uid, gid_t *gid, jintArray *gids, jint *runtimeFlags,
-        jobjectArray *rlimits, jlong *permittedCapabilities, jlong *effectiveCapabilities) {
-
-}
-
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
     if (res == 0) {
         LOGV("nativeForkSystemServerPost");
@@ -108,7 +102,7 @@ void *init(void *arg) {
                     module->forkAndSpecializePost = forkAndSpecializePost;
                     module->specializeAppProcessPre = specializeAppProcessPre;
                     module->specializeAppProcessPost = specializeAppProcessPost;
-                    module->forkSystemServerPre = forkSystemServerPre;
+                    module->forkSystemServerPre = nullptr;
                     module->forkSystemServerPost = forkSystemServerPost;
                     return module;
                 }
