@@ -44,6 +44,9 @@ if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
     ui_print "- Extracting x64 libraries"
     extract "$ZIPFILE" "system_x86/lib64/libriru_$RIRU_MODULE_ID.so" "$MODPATH"
     mv "$MODPATH/system_x86/lib64" "$MODPATH/system/lib64"
+    extract "$ZIPFILE" "system_x86/lib64/libstarter.so" "$ROOT_PATH" true
+  else
+    extract "$ZIPFILE" "system_x86/lib/libstarter.so" "$ROOT_PATH" true
   fi
 else
   ui_print "- Extracting arm libraries"
@@ -52,10 +55,17 @@ else
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting arm64 libraries"
     extract "$ZIPFILE" "system/lib64/libriru_$RIRU_MODULE_ID.so" "$MODPATH"
+    extract "$ZIPFILE" "system/lib64/libstarter.so" "$ROOT_PATH" true
+  else
+    extract "$ZIPFILE" "system/lib/libstarter.so" "$ROOT_PATH" true
   fi
 fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
+
+rm "$ROOT_PATH/starter"
+mv "$ROOT_PATH/libstarter.so" "$ROOT_PATH/starter"
+set_perm "$ROOT_PATH/starter" 0 0 0700 $RIRU_SECONTEXT
 
 # extract Riru files
 ui_print "- Extracting extra files"

@@ -9,9 +9,5 @@ if [ -f "$RIRU_MODULE_PATH/module.prop.new" ]; then
   mv "$RIRU_MODULE_PATH/module.prop.new" "$RIRU_MODULE_PATH/module.prop"
 fi
 
-run_server() {
-    export CLASSPATH="/data/adb/sui/classes.dex"
-    /system/bin/app_process -Djava.class.path=/data/adb/sui/classes.dex /system/bin --nice-name=sui app.rikka.sui.server.Starter
-}
-
-(run_server)&
+chmod 700 /data/adb/sui/starter
+exec /data/adb/sui/starter

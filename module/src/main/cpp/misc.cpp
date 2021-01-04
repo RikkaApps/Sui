@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <cstdlib>
 #include <dirent.h>
+#include "misc.h"
 
 int mkdirs(const char *pathname, mode_t mode) {
     char *path = strdup(pathname), *p;
@@ -119,4 +120,29 @@ int write_full(int fd, const void *buf, size_t count) {
         count -= size;
     }
     return 0;
+}
+
+int is_num(const char *s) {
+    size_t len = strlen(s);
+    for (size_t i = 0; i < len; ++i)
+        if (s[i] < '0' || s[i] > '9')
+            return 0;
+    return 1;
+}
+
+void foreach_proc(foreach_proc_function *func) {
+    DIR *dir;
+    struct dirent *entry;
+
+    if (!(dir = opendir("/proc")))
+        return;
+
+    while ((entry = readdir(dir))) {
+        if (entry->d_type != DT_DIR) continue;
+        if (!is_num(entry->d_name)) continue;
+        pid_t pid = atoi(entry->d_name);
+        if (func(pid)) break;
+    }
+
+    closedir(dir);
 }

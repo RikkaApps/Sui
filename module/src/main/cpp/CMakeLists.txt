@@ -47,3 +47,8 @@ add_library(${MODULE_NAME} SHARED
         manager_process.cpp)
 target_link_libraries(${MODULE_NAME} log riru::riru nativehelper::nativehelper_header_only)
 set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
+
+add_executable(libstarter.so
+        starter.cpp misc.cpp android.cpp)
+target_link_libraries(libstarter.so log riru::riru)
+set_target_properties(libstarter.so PROPERTIES LINK_FLAGS_RELEASE -s)
