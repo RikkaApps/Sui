@@ -1,9 +1,11 @@
 package hidden;
 
+import android.annotation.NonNull;
 import android.app.ActivityManager;
 import android.app.ActivityThread;
 import android.app.AppOpsManager;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -139,5 +141,9 @@ public class HiddenApiBridge {
     public static Context Context_createPackageContextAsUser(Context context, String packageName, int flags, UserHandle user)
             throws PackageManager.NameNotFoundException {
         return context.createPackageContextAsUser(packageName, flags, user);
+    }
+
+    public static ApplicationInfo PackageManager_getApplicationInfoAsUser(PackageManager packageManager, @NonNull String packageName, int flags, int userId) throws android.content.pm.PackageManager.NameNotFoundException {
+        return packageManager.getApplicationInfoAsUser(packageName, flags, userId);
     }
 }

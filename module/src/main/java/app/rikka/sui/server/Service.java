@@ -583,6 +583,8 @@ public class Service extends IShizukuService.Stub {
             } catch (RemoteException e) {
                 LOGGER.w(e, "showPermissionConfirmation");
             }
+        } else {
+            LOGGER.e("manager is null");
         }
     }
 
@@ -633,7 +635,10 @@ public class Service extends IShizukuService.Stub {
         }
 
         boolean allowed = data.getBoolean(REQUEST_PERMISSION_REPLY_ALLOWED);
-        boolean isOnetime = data.getBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME);
+        boolean onetime = data.getBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME);
+
+        LOGGER.i("onPermissionConfirmationResult: uid=%d, pid=%d, requestCode=%d, allowed=%s, onetime=%s",
+                requestUid, requestPid, requestCode, Boolean.toString(allowed), Boolean.toString(onetime));
 
         ClientRecord clientRecord = clientManager.findClient(requestUid, requestPid);
         if (clientRecord == null) {
@@ -643,7 +648,7 @@ public class Service extends IShizukuService.Stub {
             clientRecord.callOnRequestPermissionResult(requestCode, allowed);
         }
 
-        if (!isOnetime) {
+        if (!onetime) {
             configManager.update(requestUid, allowed ? Config.FLAG_ALLOWED : Config.FLAG_DENIED);
         }
     }

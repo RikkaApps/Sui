@@ -43,6 +43,7 @@ add_library(${MODULE_NAME} SHARED
         binder_hook.cpp
         bridge_service.cpp
         android.cpp
-        plt.c)
+        plt.c
+        manager_process.cpp)
 target_link_libraries(${MODULE_NAME} log riru::riru nativehelper::nativehelper_header_only)
 set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)

@@ -25,19 +25,21 @@
 #include "binder_hook.h"
 #include "config.h"
 
-namespace SystemServer {
+namespace Manager {
 
     static jclass mainClass = nullptr;
-    static jmethodID my_execTransactMethodID;
 
-    static bool installDex(JNIEnv *env, DexFile *dexFile) {
+    static bool installDex(JNIEnv *env, DexFile *dexFile, const char *appDataDir) {
         if (android::GetApiLevel() >= 26) {
             dexFile->createInMemoryDexClassLoader(env);
         } else {
-            dexFile->createDexClassLoader(env, FALLBACK_DEX_DIR, DEX_NAME, FALLBACK_DEX_DIR "/oat");
+            char dexDir[PATH_MAX], oatDir[PATH_MAX];
+            snprintf(dexDir, PATH_MAX, "%s/sui", appDataDir);
+            snprintf(oatDir, PATH_MAX, "%s/sui/oat", appDataDir);
+            dexFile->createDexClassLoader(env, dexDir, DEX_NAME, oatDir);
         }
 
-        mainClass = dexFile->findClass(env, SYSTEM_PROCESS_CLASSNAME);
+        mainClass = dexFile->findClass(env, MANAGER_PROCESS_CLASSNAME);
         if (!mainClass) {
             LOGE("unable to find main class");
             return false;
@@ -47,14 +49,6 @@ namespace SystemServer {
         auto mainMethod = env->GetStaticMethodID(mainClass, "main", "([Ljava/lang/String;)V");
         if (!mainMethod) {
             LOGE("unable to find main method");
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-            return false;
-        }
-
-        my_execTransactMethodID = env->GetStaticMethodID(mainClass, "execTransact", "(IJJI)Z");
-        if (!my_execTransactMethodID) {
-            LOGE("unable to find execTransact");
             env->ExceptionDescribe();
             env->ExceptionClear();
             return false;
@@ -77,23 +71,7 @@ namespace SystemServer {
         return true;
     }
 
-    static bool ExecTransact(jboolean *res, JNIEnv *env, jobject obj, va_list args) {
-        jint code;
-
-        va_list copy;
-        va_copy(copy, args);
-        code = va_arg(copy, jint);
-        va_end(copy);
-
-        if (code == BridgeService::BRIDGE_TRANSACTION_CODE) {
-            *res = env->CallStaticBooleanMethodV(mainClass, my_execTransactMethodID, args);
-            return true;
-        }
-
-        return false;
-    }
-
-    void main(JNIEnv *env, DexFile *dexFile) {
+    void main(JNIEnv *env, DexFile *dexFile, const char *appDataDir) {
         LOGD("dex size=%" PRIdPTR, dexFile->getSize());
 
         if (!dexFile->getBytes()) {
@@ -101,20 +79,15 @@ namespace SystemServer {
             return;
         }
 
-        LOGV("main: system server");
+        LOGV("main: manager");
 
         LOGV("install dex");
 
-        if (!installDex(env, dexFile)) {
+        if (!installDex(env, dexFile, appDataDir)) {
             LOGE("can't install dex");
             return;
         }
 
         LOGV("install dex finished");
-
-        JavaVM *javaVm;
-        env->GetJavaVM(&javaVm);
-
-        BinderHook::Install(javaVm, env, ExecTransact);
     }
 }

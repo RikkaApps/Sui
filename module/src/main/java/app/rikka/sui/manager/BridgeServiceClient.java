@@ -1,17 +1,14 @@
-package app.rikka.sui.demo;
+package app.rikka.sui.manager;
 
-import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
-import android.os.RemoteException;
 import android.os.ServiceManager;
 
 import androidx.annotation.Nullable;
 
-import moe.shizuku.server.IShizukuClient;
 import moe.shizuku.server.IShizukuService;
 
-public class Sui {
+public class BridgeServiceClient {
 
     private static IBinder binder;
     private static IShizukuService service;
@@ -24,25 +21,6 @@ public class Sui {
     private static final IBinder.DeathRecipient DEATH_RECIPIENT = () -> {
         binder = null;
         service = null;
-    };
-
-    private static final IShizukuClient CLIENT = new IShizukuClient.Stub() {
-
-        @Override
-        public void onClientAttached(Bundle data) {
-            if (data == null) {
-                return;
-            }
-
-
-        }
-
-        @Override
-        public void onRequestPermissionResult(int requestCode, Bundle data) {
-            if (data == null) {
-                return;
-            }
-        }
     };
 
     private static IBinder requestBinderFromBridge() {
@@ -69,42 +47,31 @@ public class Sui {
         return null;
     }
 
-    protected static void setBinder(@Nullable IBinder newBinder) {
-        if (binder == newBinder) return;
+    protected static void setBinder(@Nullable IBinder binder) {
+        if (BridgeServiceClient.binder == binder) return;
 
-        if (binder != null) {
-            binder.unlinkToDeath(DEATH_RECIPIENT, 0);
+        if (BridgeServiceClient.binder != null) {
+            BridgeServiceClient.binder.unlinkToDeath(DEATH_RECIPIENT, 0);
         }
 
-        if (newBinder == null) {
-            binder = null;
-            service = null;
+        if (binder == null) {
+            BridgeServiceClient.binder = null;
+            BridgeServiceClient.service = null;
         } else {
-            binder = newBinder;
-            service = IShizukuService.Stub.asInterface(newBinder);
+            BridgeServiceClient.binder = binder;
+            BridgeServiceClient.service = IShizukuService.Stub.asInterface(binder);
 
             try {
-                binder.linkToDeath(DEATH_RECIPIENT, 0);
+                BridgeServiceClient.binder.linkToDeath(DEATH_RECIPIENT, 0);
             } catch (Throwable ignored) {
             }
-
-            try {
-                service.attachClient(CLIENT, BuildConfig.APPLICATION_ID);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
         }
-    }
-
-    static {
-        setBinder(requestBinderFromBridge());
-    }
-
-    public static IBinder getBinder() {
-        return binder;
     }
 
     public static IShizukuService getService() {
+        if (service == null) {
+            setBinder(requestBinderFromBridge());
+        }
         return service;
     }
 }

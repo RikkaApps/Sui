@@ -22,63 +22,7 @@ import static app.rikka.sui.server.ServerConstants.LOGGER;
 
 public class Config {
 
-    private static final Gson GSON_IN = new GsonBuilder()
-            .create();
-    private static final Gson GSON_OUT = new GsonBuilder()
-            .setVersion(Config.LATEST_VERSION)
-            .create();
-
     public static final int LATEST_VERSION = 1;
-
-    private static final File FILE = new File("/data/adb/sui/sui.xml");
-    private static final AtomicFile ATOMIC_FILE = new AtomicFile(FILE);
-
-    public static Config load() {
-        FileInputStream stream;
-        try {
-            stream = ATOMIC_FILE.openRead();
-        } catch (FileNotFoundException e) {
-            LOGGER.i("no existing config file " + ATOMIC_FILE.getBaseFile() + "; starting empty");
-            return new Config();
-        }
-
-        Config config = null;
-        try {
-            config = GSON_IN.fromJson(new InputStreamReader(stream), Config.class);
-        } catch (Throwable tr) {
-            LOGGER.w(tr, "load config");
-        } finally {
-            try {
-                stream.close();
-            } catch (IOException e) {
-                LOGGER.w("failed to close: " + e);
-            }
-        }
-        return config;
-    }
-
-    public static void write(Config config) {
-        synchronized (ATOMIC_FILE) {
-            FileOutputStream stream;
-            try {
-                stream = ATOMIC_FILE.startWrite();
-            } catch (IOException e) {
-                LOGGER.w("failed to write state: " + e);
-                return;
-            }
-
-            try {
-                String json = GSON_OUT.toJson(config);
-                stream.write(json.getBytes());
-
-                ATOMIC_FILE.finishWrite(stream);
-                LOGGER.v("config saved");
-            } catch (Throwable tr) {
-                LOGGER.w(tr, "can't save %s, restoring backup.", ATOMIC_FILE.getBaseFile());
-                ATOMIC_FILE.failWrite(stream);
-            }
-        }
-    }
 
     public static final int FLAG_ALLOWED = 1 << 1;
     public static final int FLAG_DENIED = 1 << 2;
@@ -116,7 +60,7 @@ public class Config {
         }
     }
 
-    private Config() {
+    public Config() {
     }
 
     public Config(@NonNull List<PackageEntry> packages) {

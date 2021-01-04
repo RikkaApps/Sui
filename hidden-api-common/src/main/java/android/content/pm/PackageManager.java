@@ -1,6 +1,7 @@
 package android.content.pm;
 
-public class PackageManager {
+
+public abstract class PackageManager {
 
     public static class NameNotFoundException extends Exception {
         public NameNotFoundException() {
@@ -10,5 +11,9 @@ public class PackageManager {
         public NameNotFoundException(String name) {
             throw new RuntimeException();
         }
+    }
+
+    public ApplicationInfo getApplicationInfoAsUser(String packageName, int flags, int userId) throws NameNotFoundException {
+        throw new RuntimeException();
     }
 }

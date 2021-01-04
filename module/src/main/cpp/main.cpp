@@ -3,10 +3,13 @@
 #include <riru.h>
 #include <malloc.h>
 #include <cstring>
+#include <nativehelper/scoped_utf_chars.h>
+#include <climits>
 #include "dex_file.h"
 #include "logging.h"
 #include "system_server.h"
 #include "config.h"
+#include "manager_process.h"
 
 static DexFile *dexFile = nullptr;
 
@@ -15,35 +18,84 @@ static void PrepareDex() {
     dexFile = new DexFile(DEX_PATH);
 }
 
+static char saved_package_name[256] = {0};
+static char saved_app_data_dir[PATH_MAX] = {0};
+static int saved_uid;
+
+static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir) {
+
+    PrepareDex();
+
+    saved_uid = *uid;
+
+    memset(saved_package_name, 0, 256);
+    memset(saved_app_data_dir, 0, 256);
+
+    if (*jAppDataDir) {
+        auto appDataDir = ScopedUtfChars(env, *jAppDataDir).c_str();
+        strcpy(saved_app_data_dir, appDataDir);
+
+        int user = 0;
+
+        // /data/user/<user_id>/<package>
+        if (sscanf(appDataDir, "/data/%*[^/]/%d/%s", &user, saved_package_name) == 2)
+            goto found;
+
+        // /mnt/expand/<id>/user/<user_id>/<package>
+        if (sscanf(appDataDir, "/mnt/expand/%*[^/]/%*[^/]/%d/%s", &user, saved_package_name) == 2)
+            goto found;
+
+        // /data/data/<package>
+        if (sscanf(appDataDir, "/data/%*[^/]/%s", saved_package_name) == 1)
+            goto found;
+
+        // nothing found
+        saved_package_name[0] = '\0';
+
+        found:;
+    }
+}
+
+static void appProcessPost(
+        JNIEnv *env, const char *from, const char *package_name, const char *app_data_dir, jint uid) {
+
+    LOGV("%s: uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
+
+    Manager::main(env, dexFile, app_data_dir);
+}
+
 static void forkAndSpecializePre(
-        JNIEnv *env, jclass clazz, jint *_uid, jint *gid, jintArray *gids, jint *runtimeFlags,
+        JNIEnv *env, jclass clazz, jint *uid, jint *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jint *mountExternal, jstring *seInfo, jstring *niceName,
         jintArray *fdsToClose, jintArray *fdsToIgnore, jboolean *is_child_zygote,
         jstring *instructionSet, jstring *appDataDir, jboolean *isTopApp, jobjectArray *pkgDataInfoList,
         jobjectArray *whitelistedDataInfoList, jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
+
+    appProcessPre(env, uid, appDataDir);
 }
 
 static void forkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
-    if (res == 0) {
-        // in app process
-    } else {
-        // in zygote process, res is child pid
-        // don't print log here, see https://github.com/RikkaApps/Riru/blob/77adfd6a4a6a81bfd20569c910bc4854f2f84f5e/riru-core/jni/main/jni_native_method.cpp#L55-L66
+    if (res == 0 && strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
+        appProcessPost(env, "forkAndSpecialize", saved_package_name, saved_app_data_dir, saved_uid);
     }
 }
 
 static void specializeAppProcessPre(
-        JNIEnv *env, jclass clazz, jint *_uid, jint *gid, jintArray *gids, jint *runtimeFlags,
+        JNIEnv *env, jclass clazz, jint *uid, jint *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jint *mountExternal, jstring *seInfo, jstring *niceName,
         jboolean *startChildZygote, jstring *instructionSet, jstring *appDataDir,
         jboolean *isTopApp, jobjectArray *pkgDataInfoList, jobjectArray *whitelistedDataInfoList,
         jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
-    // added from Android 10, but disabled at least in Google Pixel devices
+
+    appProcessPre(env, uid, appDataDir);
 }
 
 static void specializeAppProcessPost(
         JNIEnv *env, jclass clazz) {
-    // added from Android 10, but disabled at least in Google Pixel devices
+
+    if (strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
+        appProcessPost(env, "specializeAppProcess", saved_package_name, saved_app_data_dir, saved_uid);
+    }
 }
 
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
@@ -55,8 +107,6 @@ static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
 }
 
 static int shouldSkipUid(int uid) {
-    // by default, Riru only call module functions in "normal app processes" (10000 <= uid % 100000 <= 19999)
-    // false = don't skip
     return false;
 }
 

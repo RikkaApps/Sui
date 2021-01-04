@@ -1,4 +1,4 @@
-package app.rikka.sui.server.ktx
+package app.rikka.sui.ktx
 
 import android.content.IContentProvider
 import android.os.Bundle
