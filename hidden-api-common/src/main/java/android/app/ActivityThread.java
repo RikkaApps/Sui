@@ -6,14 +6,6 @@ public class ActivityThread {
         throw new RuntimeException();
     }
 
-    public static ActivityThread systemMain() {
-        throw new RuntimeException();
-    }
-
-    public ContextImpl getSystemContext() {
-        throw new RuntimeException();
-    }
-
     public Application getApplication() {
         throw new RuntimeException();
     }

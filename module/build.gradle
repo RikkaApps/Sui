@@ -69,7 +69,6 @@ dependencies {
     compileOnly project(':hidden-api-common')
     implementation project(':hidden-api-common-bridge')
     implementation project(':hidden-api-21-bridge')
-    implementation project(':hidden-api-26-bridge')
 }
 
 def outDir = file("$rootDir/out")
