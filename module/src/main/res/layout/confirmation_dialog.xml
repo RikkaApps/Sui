@@ -5,12 +5,26 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="24dp"
+        android:importantForAccessibility="no"
+        android:tint="?android:colorAccent"
+        android:tintMode="src_in"
+        tools:src="@tools:sample/avatars"
+        tools:text="Allow %s to have full access of the device?" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:padding="24dp"
+        android:paddingStart="24dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="16dp"
         android:textSize="20sp"
         tools:text="Allow %s to have full access of the device?" />
 
@@ -23,6 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
+        android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:minHeight="56dp"
         android:padding="16dp"
@@ -39,6 +54,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
+        android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:minHeight="56dp"
         android:padding="16dp"
@@ -55,6 +71,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
+        android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:minHeight="56dp"
         android:padding="16dp"
