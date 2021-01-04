@@ -7,13 +7,11 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
-import android.os.SELinux;
 import android.os.SystemProperties;
 import android.system.Os;
 import android.util.ArrayMap;
@@ -35,16 +33,26 @@ import java.util.concurrent.Executors;
 import app.rikka.sui.server.api.RemoteProcessHolder;
 import app.rikka.sui.server.api.SystemService;
 import app.rikka.sui.server.bridge.BridgeServiceClient;
+import app.rikka.sui.server.config.Config;
+import app.rikka.sui.server.config.ConfigManager;
 import app.rikka.sui.server.userservice.ApkChangedObserver;
 import app.rikka.sui.server.userservice.ApkChangedObservers;
+import app.rikka.sui.util.OsUtils;
 import app.rikka.sui.util.UserHandleCompat;
 import dalvik.system.PathClassLoader;
 import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuClient;
+import moe.shizuku.server.IShizukuManager;
 import moe.shizuku.server.IShizukuService;
 import moe.shizuku.server.IShizukuServiceConnection;
 
 import static app.rikka.sui.server.ServerConstants.LOGGER;
+import static app.rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_PERMISSION_GRANTED;
+import static app.rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_SECONTEXT;
+import static app.rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_UID;
+import static app.rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_VERSION;
+import static app.rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
+import static app.rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
 import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT;
 import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_DEBUGGABLE;
 import static app.rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_PROCESS_NAME;
@@ -71,9 +79,6 @@ public class Service extends IShizukuService.Stub {
         System.exit(0);
     }
 
-    private static final int MY_PID = Os.getpid();
-    private static final int MY_UID = Os.getuid();
-
     private static final String USER_SERVICE_CMD_DEBUG;
 
     static {
@@ -92,14 +97,18 @@ public class Service extends IShizukuService.Stub {
         }
     }
 
-    @SuppressWarnings({"FieldCanBeLocal"})
-    private final Handler mainHandler = new Handler(Looper.myLooper());
+    private static final String MANAGER_APPLICATION_ID = "com.android.systemui";
+
     private final Executor executor = Executors.newSingleThreadExecutor();
     private final Map<String, UserServiceRecord> userServiceRecords = Collections.synchronizedMap(new ArrayMap<>());
     private final ClientManager clientManager;
+    private final ConfigManager configManager;
+    private IShizukuManager manager;
 
     public Service() {
         Service.instance = this;
+
+        configManager = ConfigManager.getInstance();
         clientManager = ClientManager.getInstance();
 
         BridgeServiceClient.send(new BridgeServiceClient.Listener() {
@@ -119,16 +128,16 @@ public class Service extends IShizukuService.Stub {
         });
     }
 
-    public void enforceCallingPermission(String func) {
-        int callingPid = Binder.getCallingPid();
+    private void enforceCallingPermission(String func) {
         int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
 
-        if (callingPid == MY_PID || callingUid == MY_UID) {
+        if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
             return;
         }
 
         ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
-        if (clientRecord != null && clientRecord.permissionGranted) {
+        if (clientRecord != null && clientRecord.allowed) {
             return;
         }
 
@@ -138,7 +147,7 @@ public class Service extends IShizukuService.Stub {
                     + " is not an attached client");
         }
 
-        if (!clientRecord.permissionGranted) {
+        if (!clientRecord.allowed) {
             throw new SecurityException("Permission Denial: " + func + " from pid="
                     + Binder.getCallingPid()
                     + " requires permission");
@@ -203,14 +212,10 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
-    public String getSELinuxContext() throws RemoteException {
+    public String getSELinuxContext() {
         enforceCallingPermission("getSELinuxContext");
 
-        try {
-            return SELinux.getContext();
-        } catch (Throwable tr) {
-            throw new RemoteException(tr.getMessage());
-        }
+        return OsUtils.getSELinuxContext();
     }
 
     @Override
@@ -540,7 +545,7 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
-    public void attachClientProcess(IShizukuClient client, String requestPackageName) {
+    public void attachClient(IShizukuClient client, String requestPackageName) {
         if (client == null || requestPackageName == null) {
             return;
         }
@@ -553,14 +558,62 @@ public class Service extends IShizukuService.Stub {
             throw new SecurityException("Request package " + requestPackageName + "does not belong to uid " + callingUid);
         }
 
+        if (clientManager.findClient(callingUid, callingPid) != null) {
+            throw new IllegalStateException("Client (uid=" + callingUid + ", pid=" + callingPid + ") has already attached");
+        }
+
+        ClientRecord clientRecord;
         synchronized (this) {
-            clientManager.addClient(callingUid, callingPid, client, requestPackageName);
+            clientRecord = clientManager.addClient(callingUid, callingPid, client, requestPackageName);
+        }
+        if (clientRecord == null) {
+            return;
+        }
+
+        Bundle reply = new Bundle();
+        reply.putInt(ATTACH_REPLY_SERVER_UID, OsUtils.getUid());
+        reply.putInt(ATTACH_REPLY_SERVER_VERSION, ShizukuApiConstants.SERVER_VERSION);
+        reply.putString(ATTACH_REPLY_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
+        reply.putBoolean(ATTACH_REPLY_SERVER_PERMISSION_GRANTED, clientRecord.allowed);
+        try {
+            client.onClientAttached(reply);
+        } catch (Throwable e) {
+            LOGGER.w(e, "onClientAttached");
         }
     }
 
     @Override
     public void requestPermission(int requestCode) {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
 
+        if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
+            return;
+        }
+
+        ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
+        if (clientRecord == null) {
+            throw new IllegalStateException("Not an attached client");
+        }
+
+        if (clientRecord.allowed) {
+            clientRecord.callOnRequestPermissionResult(requestCode, true);
+            return;
+        }
+
+        Config.PackageEntry entry = configManager.find(callingUid);
+        if (entry != null && entry.isDenied()) {
+            clientRecord.callOnRequestPermissionResult(requestCode, false);
+            return;
+        }
+
+        if (manager != null) {
+            try {
+                manager.showPermissionConfirmation(callingUid, callingPid, clientRecord.packageName, requestCode);
+            } catch (RemoteException e) {
+                LOGGER.w(e, "showPermissionConfirmation");
+            }
+        }
     }
 
     @Override
@@ -570,7 +623,59 @@ public class Service extends IShizukuService.Stub {
             return false;
         }
 
-        return clientManager.isHidden(uid);
+        List<String> packages = SystemService.getPackagesForUidNoThrow(uid);
+        if (packages.contains(MANAGER_APPLICATION_ID)) {
+            return false;
+        }
+
+        return configManager.isHidden(uid);
+    }
+
+    @Override
+    public void attachManager(IShizukuManager manager) {
+        int callingUid = Binder.getCallingUid();
+
+        List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
+        if (!packages.contains(MANAGER_APPLICATION_ID)) {
+            LOGGER.w("attachManager called not from manager package");
+            return;
+        }
+
+        if (manager == null) {
+            return;
+        }
+
+        this.manager = manager;
+    }
+
+    @Override
+    public void onPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) {
+        int callingUid = Binder.getCallingUid();
+
+        List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
+        if (!packages.contains(MANAGER_APPLICATION_ID)) {
+            LOGGER.w("onPermissionConfirmationResult called not from manager package");
+            return;
+        }
+
+        if (data == null) {
+            return;
+        }
+
+        boolean allowed = data.getBoolean(REQUEST_PERMISSION_REPLY_ALLOWED);
+        boolean isOnetime = data.getBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME);
+
+        ClientRecord clientRecord = clientManager.findClient(requestUid, requestPid);
+        if (clientRecord == null) {
+            LOGGER.w("onPermissionConfirmationResult: client (uid=%d, pid=%d) not found", requestUid, requestPid);
+        } else {
+            clientRecord.allowed = allowed;
+            clientRecord.callOnRequestPermissionResult(requestCode, allowed);
+        }
+
+        if (!isOnetime) {
+            configManager.update(requestUid, allowed ? Config.FLAG_ALLOWED : Config.FLAG_DENIED);
+        }
     }
 
     private void sendUserServiceLocked(IBinder binder, String token) {
@@ -593,7 +698,7 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
-    public void packageChanged(Intent intent) {
+    public void onPackageChanged(Intent intent) {
         int callingUid = Binder.getCallingUid();
         if (callingUid != 1000 && callingUid != 0) {
             return;
@@ -606,7 +711,8 @@ public class Service extends IShizukuService.Stub {
         int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
         boolean replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false);
         if (Intent.ACTION_PACKAGE_REMOVED.equals(action) && uid > 0 & !replacing) {
-
+            LOGGER.i("uid %d is removed", uid);
+            configManager.remove(uid);
         }
     }
 

@@ -2,7 +2,7 @@ package moe.shizuku.server;
 
 interface IShizukuClient {
 
-    void onAttachClientProcess(in Bundle data) = 1;
+    oneway void onClientAttached(in Bundle data) = 1;
 
-    void onRequestPermissionResult(int requestCode, boolean granted) = 2;
+    oneway void onRequestPermissionResult(int requestCode, in Bundle data) = 2;
 }

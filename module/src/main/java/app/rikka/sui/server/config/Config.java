@@ -80,7 +80,7 @@ public class Config {
         }
     }
 
-    public static final int FLAG_GRANTED = 1 << 1;
+    public static final int FLAG_ALLOWED = 1 << 1;
     public static final int FLAG_DENIED = 1 << 2;
     public static final int FLAG_HIDDEN = 1 << 3;
 
@@ -93,13 +93,27 @@ public class Config {
     public static class PackageEntry {
 
         @SerializedName("uid")
-        public int uid;
-
-        @SerializedName("package")
-        public int packageName;
+        public final int uid;
 
         @SerializedName("flags")
         public int flags;
+
+        public PackageEntry(int uid, int flags) {
+            this.uid = uid;
+            this.flags = flags;
+        }
+
+        public boolean isAllowed() {
+            return (flags & FLAG_ALLOWED) != 0;
+        }
+
+        public boolean isDenied() {
+            return (flags & FLAG_DENIED) != 0;
+        }
+
+        public boolean isHidden() {
+            return (flags & FLAG_HIDDEN) != 0;
+        }
     }
 
     private Config() {
@@ -108,15 +122,5 @@ public class Config {
     public Config(@NonNull List<PackageEntry> packages) {
         this.version = LATEST_VERSION;
         this.packages = packages;
-    }
-
-    @Nullable
-    public PackageEntry find(int uid) {
-        for (Config.PackageEntry entry : packages) {
-            if (uid == entry.uid) {
-                return entry;
-            }
-        }
-        return null;
     }
 }

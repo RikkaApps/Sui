@@ -31,4 +31,8 @@ public class ShizukuApiConstants {
     public static final String ATTACH_REPLY_SERVER_SECONTEXT = "shizuku:attach-reply-secontext";
     public static final String ATTACH_REPLY_SERVER_PERMISSION_GRANTED = "shizuku:attach-reply-permission-granted";
 
+    // request permission
+    public static final String REQUEST_PERMISSION_REPLY_ALLOWED = "shizuku:request-permission-reply-allowed";
+    public static final String REQUEST_PERMISSION_REPLY_IS_ONETIME = "shizuku:request-permission-reply-is-onetime";
+
 }

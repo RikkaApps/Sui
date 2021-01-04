@@ -8,7 +8,7 @@ import static app.rikka.sui.systemserver.SystemServerConstants.LOGGER;
 
 public class Bridge {
 
-    public static void packageChanged(Intent intent) {
+    public static void onPackageChanged(Intent intent) {
         IShizukuService service = BridgeService.get();
         if (service == null) {
             LOGGER.d("binder is null");
@@ -16,9 +16,9 @@ public class Bridge {
         }
 
         try {
-            service.packageChanged(intent);
+            service.onPackageChanged(intent);
         } catch (Throwable e) {
-            LOGGER.w(e, "packageChanged");
+            LOGGER.w(e, "onPackageChanged");
         }
     }
 
