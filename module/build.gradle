@@ -105,7 +105,7 @@ android.applicationVariants.all { variant ->
             copy {
                 from zipTree(outputFile).matching { include 'classes.dex' }.singleFile
                 into magiskDir
-                rename { fileName -> 'classes.dex' }
+                rename { fileName -> 'sui.dex' }
             }
 
             // copy from template

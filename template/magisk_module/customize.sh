@@ -77,4 +77,7 @@ set_perm "$RIRU_MODULE_PATH/module.prop.new" 0 0 0600 $RIRU_SECONTEXT
 
 # extract server files
 ui_print "- Extracting dex file"
-extract "$ZIPFILE" 'classes.dex' "$ROOT_PATH"
+extract "$ZIPFILE" 'sui.dex' "$MODPATH"
+
+mv "$MODPATH/sui.dex" "$ROOT_PATH/sui.dex.new"
+set_perm "$ROOT_PATH/sui.dex" 0 0 0600 $RIRU_SECONTEXT
