@@ -178,24 +178,6 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
-    public int getVersion() {
-        enforceCallingPermission("getVersion");
-        return ShizukuApiConstants.SERVER_VERSION;
-    }
-
-    @Override
-    public int getUid() {
-        enforceCallingPermission("getUid");
-        return Os.getuid();
-    }
-
-    @Override
-    public int checkPermission(String permission) throws RemoteException {
-        enforceCallingPermission("checkPermission");
-        return SystemService.checkPermission(permission, Os.getuid());
-    }
-
-    @Override
     public IRemoteProcess newProcess(String[] cmd, String[] env, String dir) throws RemoteException {
         enforceCallingPermission("newProcess");
 
@@ -209,13 +191,6 @@ public class Service extends IShizukuService.Stub {
         }
 
         return new RemoteProcessHolder(process);
-    }
-
-    @Override
-    public String getSELinuxContext() {
-        enforceCallingPermission("getSELinuxContext");
-
-        return OsUtils.getSELinuxContext();
     }
 
     @Override
@@ -527,11 +502,6 @@ public class Service extends IShizukuService.Stub {
         if (exitCode != 0) {
             throw new IllegalStateException("sh exited with " + exitCode);
         }
-    }
-
-    @Override
-    public void exit() {
-        // exit is not supported by Sui
     }
 
     @Override

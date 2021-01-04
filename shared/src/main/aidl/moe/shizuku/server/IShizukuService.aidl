@@ -7,16 +7,7 @@ import moe.shizuku.server.IShizukuServiceConnection;
 
 interface IShizukuService {
 
-    int getVersion() = 2;
-
-    int getUid() = 3;
-
-    /* Check permission at remote process. Uncessary for Sui. */
-    int checkPermission(String permission) = 4;
-
     IRemoteProcess newProcess(in String[] cmd, in String[] env, in String dir) = 7;
-
-    String getSELinuxContext() = 8;
 
     String getSystemProperty(in String name, in String defaultValue) = 9;
 
@@ -27,8 +18,6 @@ interface IShizukuService {
     int removeUserService(in IShizukuServiceConnection conn, in Bundle args) = 12;
 
     // ----------------------------
-
-    void exit() = 100;
 
     void sendUserService(in IBinder binder, in Bundle options) = 101;
 

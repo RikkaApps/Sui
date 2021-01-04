@@ -9,6 +9,9 @@
     public static boolean execTransact(int, long, long, int);
 }
 
+-keep class app.rikka.sui.manager.ManagerProcess {
+    public static void main(java.lang.String[]);
+}
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
 }

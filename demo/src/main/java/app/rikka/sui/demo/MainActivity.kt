@@ -17,8 +17,6 @@ class MainActivity : Activity() {
         val text = try {
             """
                     binder: ${Sui.getBinder()}
-                    checkSelfPermission: ${service.checkSelfPermission()}
-                    getUid: ${service.uid}
                     """
         } catch (e: Throwable) {
             Log.getStackTraceString(e)
