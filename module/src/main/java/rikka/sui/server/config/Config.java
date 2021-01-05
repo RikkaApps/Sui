@@ -7,8 +7,6 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
 
-import static rikka.sui.server.ServerConstants.LOGGER;
-
 public class Config {
 
     public static final int LATEST_VERSION = 1;

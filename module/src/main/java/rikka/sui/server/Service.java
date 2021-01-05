@@ -104,6 +104,11 @@ public class Service extends IShizukuService.Stub {
     private final ConfigManager configManager;
     private IShizukuManager manager;
 
+    private final IBinder.DeathRecipient managerDeathRecipient = () -> {
+        LOGGER.w("manager binder is dead");
+        manager = null;
+    };
+
     public Service() {
         Service.instance = this;
 
@@ -616,6 +621,11 @@ public class Service extends IShizukuService.Stub {
             return;
         }
 
+        try {
+            manager.asBinder().linkToDeath(managerDeathRecipient, 0);
+        } catch (RemoteException e) {
+            LOGGER.w(e, "attachManager");
+        }
         this.manager = manager;
     }
 

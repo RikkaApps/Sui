@@ -1,12 +1,11 @@
 package rikka.sui.util;
 
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import static rikka.sui.server.ServerConstants.LOGGER;
 
 public class ParcelFileDescriptorUtil {
 
@@ -54,7 +53,7 @@ public class ParcelFileDescriptorUtil {
                     mOut.flush();
                 }
             } catch (IOException e) {
-                LOGGER.e(e, "TransferThread");
+                Log.e("TransferThread", Log.getStackTraceString(e));
             } finally {
                 try {
                     mIn.close();
