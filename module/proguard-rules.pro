@@ -1,22 +1,22 @@
 -repackageclasses app.rikka.sui
 
--keep class app.rikka.sui.server.Starter {
+-keep class rikka.sui.server.Starter {
     public static void main(java.lang.String[]);
 }
 
--keep class app.rikka.sui.systemserver.SystemProcess {
+-keep class rikka.sui.systemserver.SystemProcess {
     public static void main(java.lang.String[]);
     public static boolean execTransact(int, long, long, int);
 }
 
--keep class app.rikka.sui.manager.ManagerProcess {
+-keep class rikka.sui.manager.ManagerProcess {
     public static void main(java.lang.String[]);
 }
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
 }
 
--assumenosideeffects class app.rikka.sui.util.Logger {
+-assumenosideeffects class rikka.sui.util.Logger {
     public *** d(...);
 }
 

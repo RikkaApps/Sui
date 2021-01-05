@@ -6,7 +6,7 @@ plugins {
 android {
     compileSdkVersion 30
     defaultConfig {
-        applicationId "app.rikka.sui.demo"
+        applicationId "rikka.sui.demo"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 1

@@ -18,7 +18,7 @@
 #endif
 
 #define SERVER_NAME "sui"
-#define SERVER_CLASS_PATH "app.rikka.sui.server.Starter"
+#define SERVER_CLASS_PATH "rikka.sui.server.Starter"
 #define SERVER_DEX "/data/adb/sui/sui.dex"
 
 static void run_server(const char *dex_path, const char *main_class, const char *process_name) {
