@@ -10,7 +10,7 @@ val mainHandler by lazy {
 }
 
 private val workerThread by lazy(LazyThreadSafetyMode.NONE) {
-    HandlerThread("Worker", Process.THREAD_PRIORITY_BACKGROUND).apply { start() }
+    HandlerThread("Worker").apply { start() }
 }
 
 val workerHandler by lazy {
