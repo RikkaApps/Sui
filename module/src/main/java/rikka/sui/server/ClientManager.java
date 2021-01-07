@@ -9,7 +9,7 @@ import java.util.List;
 
 import rikka.sui.server.config.Config;
 import rikka.sui.server.config.ConfigManager;
-import moe.shizuku.server.IShizukuClient;
+import moe.shizuku.server.IShizukuApplication;
 
 import static rikka.sui.server.ServerConstants.LOGGER;
 
@@ -36,7 +36,7 @@ public class ClientManager {
         return null;
     }
 
-    public ClientRecord addClient(int uid, int pid, IShizukuClient client, String packageName) {
+    public ClientRecord addClient(int uid, int pid, IShizukuApplication client, String packageName) {
         ClientRecord clientRecord = new ClientRecord(uid, pid, client, packageName);
 
         Config.PackageEntry entry = configManager.find(uid);

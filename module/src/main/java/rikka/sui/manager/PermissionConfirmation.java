@@ -38,9 +38,9 @@ public class PermissionConfirmation {
         data.putBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME, onetime);
 
         try {
-            BridgeServiceClient.getService().onPermissionConfirmationResult(requestUid, requestPid, requestCode, data);
+            BridgeServiceClient.getService().dispatchPermissionConfirmationResult(requestUid, requestPid, requestCode, data);
         } catch (Throwable e) {
-            LOGGER.e("onPermissionConfirmationResult");
+            LOGGER.e("dispatchPermissionConfirmationResult");
         }
     }
 

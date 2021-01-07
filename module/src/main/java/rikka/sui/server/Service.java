@@ -29,6 +29,11 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import dalvik.system.PathClassLoader;
+import moe.shizuku.server.IRemoteProcess;
+import moe.shizuku.server.IShizukuApplication;
+import moe.shizuku.server.IShizukuService;
+import moe.shizuku.server.IShizukuServiceConnection;
 import rikka.sui.server.api.RemoteProcessHolder;
 import rikka.sui.server.api.SystemService;
 import rikka.sui.server.bridge.BridgeServiceClient;
@@ -38,12 +43,6 @@ import rikka.sui.server.userservice.ApkChangedObserver;
 import rikka.sui.server.userservice.ApkChangedObservers;
 import rikka.sui.util.OsUtils;
 import rikka.sui.util.UserHandleCompat;
-import dalvik.system.PathClassLoader;
-import moe.shizuku.server.IRemoteProcess;
-import moe.shizuku.server.IShizukuClient;
-import moe.shizuku.server.IShizukuManager;
-import moe.shizuku.server.IShizukuService;
-import moe.shizuku.server.IShizukuServiceConnection;
 
 import static rikka.sui.server.ServerConstants.LOGGER;
 import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_PERMISSION_GRANTED;
@@ -102,7 +101,7 @@ public class Service extends IShizukuService.Stub {
     private final Map<String, UserServiceRecord> userServiceRecords = Collections.synchronizedMap(new ArrayMap<>());
     private final ClientManager clientManager;
     private final ConfigManager configManager;
-    private IShizukuManager manager;
+    private IShizukuApplication manager;
 
     private final IBinder.DeathRecipient managerDeathRecipient = () -> {
         LOGGER.w("manager binder is dead");
@@ -518,27 +517,14 @@ public class Service extends IShizukuService.Stub {
         }
     }
 
-    @Override
-    public void attachClient(IShizukuClient client, String requestPackageName) {
-        if (client == null || requestPackageName == null) {
-            return;
-        }
-
-        int callingPid = Binder.getCallingPid();
-        int callingUid = Binder.getCallingUid();
-
-        List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
-        if (!packages.contains(requestPackageName)) {
-            throw new SecurityException("Request package " + requestPackageName + "does not belong to uid " + callingUid);
-        }
-
+    private void attachClientApplication(IShizukuApplication application, String requestPackageName, int callingUid, int callingPid) {
         if (clientManager.findClient(callingUid, callingPid) != null) {
             throw new IllegalStateException("Client (uid=" + callingUid + ", pid=" + callingPid + ") has already attached");
         }
 
         ClientRecord clientRecord;
         synchronized (this) {
-            clientRecord = clientManager.addClient(callingUid, callingPid, client, requestPackageName);
+            clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName);
         }
         if (clientRecord == null) {
             return;
@@ -550,9 +536,39 @@ public class Service extends IShizukuService.Stub {
         reply.putString(ATTACH_REPLY_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
         reply.putBoolean(ATTACH_REPLY_SERVER_PERMISSION_GRANTED, clientRecord.allowed);
         try {
-            client.onClientAttached(reply);
+            application.bindApplication(reply);
         } catch (Throwable e) {
-            LOGGER.w(e, "onClientAttached");
+            LOGGER.w(e, "attachClientApplication");
+        }
+    }
+
+    private void attachManagerApplication(IShizukuApplication application) {
+        try {
+            application.asBinder().linkToDeath(managerDeathRecipient, 0);
+        } catch (RemoteException e) {
+            LOGGER.w(e, "attachManagerApplication");
+        }
+        manager = application;
+    }
+
+    @Override
+    public void attachApplication(IShizukuApplication application, String requestPackageName) {
+        if (application == null || requestPackageName == null) {
+            return;
+        }
+
+        int callingPid = Binder.getCallingPid();
+        int callingUid = Binder.getCallingUid();
+
+        List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
+        if (!packages.contains(requestPackageName)) {
+            throw new SecurityException("Request package " + requestPackageName + "does not belong to uid " + callingUid);
+        }
+
+        if (MANAGER_APPLICATION_ID.equals(requestPackageName)) {
+            attachManagerApplication(application);
+        } else {
+            attachClientApplication(application, requestPackageName, callingUid, callingPid);
         }
     }
 
@@ -571,20 +587,20 @@ public class Service extends IShizukuService.Stub {
         }
 
         if (clientRecord.allowed) {
-            clientRecord.callOnRequestPermissionResult(requestCode, true);
+            clientRecord.dispatchRequestPermissionResult(requestCode, true);
             return;
         }
 
         Config.PackageEntry entry = configManager.find(callingUid);
         if (entry != null && entry.isDenied()) {
-            clientRecord.callOnRequestPermissionResult(requestCode, false);
+            clientRecord.dispatchRequestPermissionResult(requestCode, false);
             return;
         }
 
         if (manager != null) {
             try {
                 manager.showPermissionConfirmation(callingUid, callingPid, clientRecord.packageName, requestCode);
-            } catch (RemoteException e) {
+            } catch (Throwable e) {
                 LOGGER.w(e, "showPermissionConfirmation");
             }
         } else {
@@ -608,34 +624,12 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
-    public void attachManager(IShizukuManager manager) {
+    public void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) {
         int callingUid = Binder.getCallingUid();
 
         List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
         if (!packages.contains(MANAGER_APPLICATION_ID)) {
-            LOGGER.w("attachManager called not from manager package");
-            return;
-        }
-
-        if (manager == null) {
-            return;
-        }
-
-        try {
-            manager.asBinder().linkToDeath(managerDeathRecipient, 0);
-        } catch (RemoteException e) {
-            LOGGER.w(e, "attachManager");
-        }
-        this.manager = manager;
-    }
-
-    @Override
-    public void onPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) {
-        int callingUid = Binder.getCallingUid();
-
-        List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
-        if (!packages.contains(MANAGER_APPLICATION_ID)) {
-            LOGGER.w("onPermissionConfirmationResult called not from manager package");
+            LOGGER.w("dispatchPermissionConfirmationResult called not from manager package");
             return;
         }
 
@@ -646,15 +640,15 @@ public class Service extends IShizukuService.Stub {
         boolean allowed = data.getBoolean(REQUEST_PERMISSION_REPLY_ALLOWED);
         boolean onetime = data.getBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME);
 
-        LOGGER.i("onPermissionConfirmationResult: uid=%d, pid=%d, requestCode=%d, allowed=%s, onetime=%s",
+        LOGGER.i("dispatchPermissionConfirmationResult: uid=%d, pid=%d, requestCode=%d, allowed=%s, onetime=%s",
                 requestUid, requestPid, requestCode, Boolean.toString(allowed), Boolean.toString(onetime));
 
         ClientRecord clientRecord = clientManager.findClient(requestUid, requestPid);
         if (clientRecord == null) {
-            LOGGER.w("onPermissionConfirmationResult: client (uid=%d, pid=%d) not found", requestUid, requestPid);
+            LOGGER.w("dispatchPermissionConfirmationResult: client (uid=%d, pid=%d) not found", requestUid, requestPid);
         } else {
             clientRecord.allowed = allowed;
-            clientRecord.callOnRequestPermissionResult(requestCode, allowed);
+            clientRecord.dispatchRequestPermissionResult(requestCode, allowed);
         }
 
         if (!onetime) {

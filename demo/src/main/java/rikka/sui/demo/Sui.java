@@ -7,7 +7,7 @@ import android.os.ServiceManager;
 
 import androidx.annotation.Nullable;
 
-import moe.shizuku.server.IShizukuClient;
+import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 
 public class Sui {
@@ -25,10 +25,10 @@ public class Sui {
         service = null;
     };
 
-    private static final IShizukuClient CLIENT = new IShizukuClient.Stub() {
+    private static final IShizukuApplication SHIZUKU_APPLICATION = new IShizukuApplication.Stub() {
 
         @Override
-        public void onClientAttached(Bundle data) {
+        public void bindApplication(Bundle data) {
             if (data == null) {
                 return;
             }
@@ -37,10 +37,15 @@ public class Sui {
         }
 
         @Override
-        public void onRequestPermissionResult(int requestCode, Bundle data) {
+        public void dispatchRequestPermissionResult(int requestCode, Bundle data) {
             if (data == null) {
                 return;
             }
+        }
+
+        @Override
+        public void showPermissionConfirmation(int requestUid, int requestPid, String requestPackageName, int requestCode) {
+
         }
     };
 
@@ -88,7 +93,7 @@ public class Sui {
             }
 
             try {
-                service.attachClient(CLIENT, BuildConfig.APPLICATION_ID);
+                service.attachApplication(SHIZUKU_APPLICATION, BuildConfig.APPLICATION_ID);
             } catch (Throwable e) {
                 e.printStackTrace();
             }

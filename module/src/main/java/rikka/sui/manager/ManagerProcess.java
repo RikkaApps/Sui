@@ -1,12 +1,13 @@
 package rikka.sui.manager;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.RemoteException;
 
 import java.util.Arrays;
 
-import moe.shizuku.server.IShizukuManager;
+import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 import rikka.sui.ktx.HandlerKt;
 
@@ -14,7 +15,17 @@ import static rikka.sui.manager.ManagerConstants.LOGGER;
 
 public class ManagerProcess {
 
-    private static final IShizukuManager MANAGER = new IShizukuManager.Stub() {
+    private static final IShizukuApplication APPLICATION = new IShizukuApplication.Stub() {
+
+        @Override
+        public void bindApplication(Bundle data) {
+
+        }
+
+        @Override
+        public void dispatchRequestPermissionResult(int requestCode, Bundle data) {
+
+        }
 
         @Override
         public void showPermissionConfirmation(int requestUid, int requestPid, String requestPackageName, int requestCode) {
@@ -40,9 +51,9 @@ public class ManagerProcess {
         }
 
         try {
-            service.attachManager(MANAGER);
+            service.attachApplication(APPLICATION, "com.android.systemui");
         } catch (RemoteException e) {
-            LOGGER.w(e, "attachManager");
+            LOGGER.w(e, "attachApplication");
             HandlerKt.getWorkerHandler().postDelayed(ManagerProcess::sendToService, 1000);
         }
     }
