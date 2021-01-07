@@ -16,7 +16,7 @@ Back to "su", there are commands provided by Android system. The same example, t
 2. Is is much slower becuase run a command means at least one new process is started. And `PackageManager#getInstalledApplications` is used inside `pm list`.
 3. The possiblily is limited to how the command can do. The command only covers a little amount of Android APIs.
 
-Additionally, for Magisk and other root projects, makes the "su" to work also requires a lot of work.
+In fact, for Magisk and other root projects, makes the "su" to work is not that easy as some people think (let "su" itself work and the comminucation between the "su" and the manager app have a lot of unhappy work behind).
 
 The result is, everyone suffers from "su". The goal of this project is to replace the "su" executable and call for the root community to switch to the correct way.
 
