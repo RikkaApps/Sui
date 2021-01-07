@@ -1,4 +1,4 @@
--repackageclasses app.rikka.sui
+-repackageclasses rikka.sui
 
 -keep class rikka.sui.server.Starter {
     public static void main(java.lang.String[]);
