@@ -5,10 +5,9 @@ ext {
     moduleDescription = "Modern su implementation. API design from Shizuku."
     moduleVersion = "v1.0"
     moduleVersionCode = 1
-
     moduleMinRiruApiVersion = 9
     moduleMinRiruVersionName = "v22.0"
-    moduleMaxRiruApiVersion = 10
+    moduleRiruApiVersion = 10
 
     moduleProp = [
             name       : moduleName,
