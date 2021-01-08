@@ -14,6 +14,7 @@ public class Config {
     public static final int FLAG_ALLOWED = 1 << 1;
     public static final int FLAG_DENIED = 1 << 2;
     public static final int FLAG_HIDDEN = 1 << 3;
+    public static final int MASK_PERMISSION = FLAG_ALLOWED | FLAG_DENIED | FLAG_HIDDEN;
 
     @SerializedName("version")
     public int version = LATEST_VERSION;

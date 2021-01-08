@@ -567,9 +567,7 @@ public class Service extends IShizukuService.Stub {
             if (!isManager && clientManager.findClient(callingUid, callingPid) != null) {
                 throw new IllegalStateException("Client (uid=" + callingUid + ", pid=" + callingPid + ") has already attached");
             }
-            synchronized (this) {
-                clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName);
-            }
+            clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName);
             if (clientRecord == null) {
                 return;
             }
@@ -638,7 +636,7 @@ public class Service extends IShizukuService.Stub {
     @Override
     public void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) {
         if (Binder.getCallingUid() != managerUid) {
-            LOGGER.w("dispatchPermissionConfirmationResult called not from the manager package");
+            LOGGER.w("dispatchPermissionConfirmationResult is allowed to be called only from the manager");
             return;
         }
 
@@ -661,7 +659,31 @@ public class Service extends IShizukuService.Stub {
         }
 
         if (!onetime) {
-            configManager.update(requestUid, allowed ? Config.FLAG_ALLOWED : Config.FLAG_DENIED);
+            configManager.update(requestUid, Config.MASK_PERMISSION, allowed ? Config.FLAG_ALLOWED : Config.FLAG_DENIED);
+        }
+    }
+
+    @Override
+    public void updateFlagsForUid(int uid, int mask, int value) {
+        if (Binder.getCallingUid() != managerUid) {
+            LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
+            return;
+        }
+
+        configManager.update(uid, mask, value);
+
+        if ((mask & Config.MASK_PERMISSION) != 0) {
+            boolean allowed = (value & Config.FLAG_ALLOWED) != 0;
+            boolean denied = (value & Config.FLAG_DENIED) != 0;
+            boolean hidden = (value & Config.FLAG_HIDDEN) != 0;
+            for (ClientRecord record : clientManager.findClients(uid)) {
+                if (allowed) {
+                    record.allowed = allowed;
+                } else if (denied || hidden) {
+                    record.allowed = false;
+                    SystemService.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
+                }
+            }
         }
     }
 

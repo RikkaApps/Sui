@@ -129,14 +129,18 @@ public class ConfigManager {
         }
     }
 
-    public void update(int uid, int flags) {
+    public void update(int uid, int mask, int values) {
         synchronized (this) {
             Config.PackageEntry entry = findLocked(uid);
             if (entry == null) {
-                entry = new Config.PackageEntry(uid, flags);
+                entry = new Config.PackageEntry(uid, mask & values);
                 config.packages.add(entry);
             } else {
-                entry.flags = flags;
+                int newValue = (entry.flags & ~mask) | (mask & values);
+                if (newValue == entry.flags) {
+                    return;
+                }
+                entry.flags = newValue;
             }
             scheduleWriteLocked();
         }

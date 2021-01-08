@@ -31,4 +31,6 @@ interface IShizukuService {
     boolean isHidden(int uid) = 10002;
 
     oneway void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, in Bundle data) = 10003;
+
+    void updateFlagsForUid(int uid, int mask, int value) = 10004;
  }
