@@ -26,11 +26,13 @@ Note, the full implementation of root is far more than a "su" executable, there 
 
 ## Introduction
 
-With the help with Magisk and Riru, we can start a daemon process runs under root and hijack an unused binder call, make apps can acquire the binder from the root daemon. This is pretty similar to binding an Android service using [AIDL](https://developer.android.com/guide/components/aidl), but the remote service is running under root.
+With the help with Magisk and Riru, we can start a daemon process runs under root and hijack an unused binder call in the system server, make apps can acquire the binder from the root daemon. This is pretty similar to binding an Android service using [AIDL](https://developer.android.com/guide/components/aidl), but the remote service is running under root.
 
 Sui shares the same API design with [Shizuku](https://github.com/RikkaApps/Shizuku). The main function are "binder call as root", use Android APIs directly in Java as the identity of root, and "user service", start app's own AIDL-style Java service under root. This will make root app developing much more comfortable.
 
 Also, requesting root permission can have the same experience like Android permission, the app will get Java callback instead of counting timeout by self. Even more, the confirmation UI runs under the systemui process, the is much more reliable and no "manager app" is required.
+
+In conclusion, we can get a super user interface similar to standard Android APIs, and no "su" binary or "root manager" app is required in the whole process.
 
 ## Build
 
