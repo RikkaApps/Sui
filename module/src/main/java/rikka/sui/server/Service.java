@@ -567,7 +567,9 @@ public class Service extends IShizukuService.Stub {
             if (!isManager && clientManager.findClient(callingUid, callingPid) != null) {
                 throw new IllegalStateException("Client (uid=" + callingUid + ", pid=" + callingPid + ") has already attached");
             }
-            clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName);
+            synchronized (this) {
+                clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName);
+            }
             if (clientRecord == null) {
                 return;
             }
