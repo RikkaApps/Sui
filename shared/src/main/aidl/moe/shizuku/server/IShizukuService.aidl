@@ -32,5 +32,7 @@ interface IShizukuService {
 
     oneway void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, in Bundle data) = 10003;
 
-    void updateFlagsForUid(int uid, int mask, int value) = 10004;
+    int getFlagsForUid(int uid, int mask) = 10004;
+
+    void updateFlagsForUid(int uid, int mask, int value) = 10005;
  }

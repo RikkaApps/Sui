@@ -664,6 +664,19 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
+    public int getFlagsForUid(int uid, int mask) {
+        if (Binder.getCallingUid() != managerUid) {
+            LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
+            return 0;
+        }
+        Config.PackageEntry entry = configManager.find(uid);
+        if (entry != null) {
+            return entry.flags & mask;
+        }
+        return 0;
+    }
+
+    @Override
     public void updateFlagsForUid(int uid, int mask, int value) {
         if (Binder.getCallingUid() != managerUid) {
             LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
