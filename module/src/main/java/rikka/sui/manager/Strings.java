@@ -19,7 +19,7 @@ public class Strings {
         String[] array;
 
         array = new String[COUNT];
-        array[permission_warning_template] = "要允许<b>%1$</b>%2$s吗？";
+        array[permission_warning_template] = "要允许<b>%1$s</b>%2$s吗？";
         array[permission_description] = "拥有设备的完全访问权限";
         array[grant_dialog_button_allow_always] = "始终允许";
         array[grant_dialog_button_allow_one_time] = "仅限这一次";
