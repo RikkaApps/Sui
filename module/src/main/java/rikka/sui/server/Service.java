@@ -722,7 +722,7 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
-    public void onPackageChanged(Intent intent) {
+    public void dispatchPackageChanged(Intent intent) {
         int callingUid = Binder.getCallingUid();
         if (callingUid != 1000 && callingUid != 0) {
             return;

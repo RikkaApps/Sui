@@ -26,7 +26,7 @@ public class PackageReceiver {
             String pkgName = (uri != null) ? uri.getSchemeSpecificPart() : null;
             int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
             LOGGER.d("%s: %s (%d)", intent.getAction(), pkgName, uid);
-            Bridge.onPackageChanged(intent);
+            Bridge.dispatchPackageChanged(intent);
         }
     };
 

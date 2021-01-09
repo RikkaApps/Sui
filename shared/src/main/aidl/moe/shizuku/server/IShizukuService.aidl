@@ -16,23 +16,21 @@ interface IShizukuService {
 
     int removeUserService(in IShizukuServiceConnection conn, in Bundle args) = 12;
 
+    void attachApplication(in IShizukuApplication application, String requestPackageName) = 13;
+
+    void requestPermission(int requestCode) = 14;
+
     // ----------------------------
 
     void sendUserService(in IBinder binder, in Bundle options) = 101;
 
-    oneway void onPackageChanged(in Intent intent) = 102;
+    oneway void dispatchPackageChanged(in Intent intent) = 102;
 
-    // ----------------------------
+    boolean isHidden(int uid) = 103;
 
-    void attachApplication(in IShizukuApplication application, String requestPackageName) = 10000;
+    oneway void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, in Bundle data) = 104;
 
-    void requestPermission(int requestCode) = 10001;
+    int getFlagsForUid(int uid, int mask) = 105;
 
-    boolean isHidden(int uid) = 10002;
-
-    oneway void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, in Bundle data) = 10003;
-
-    int getFlagsForUid(int uid, int mask) = 10004;
-
-    void updateFlagsForUid(int uid, int mask, int value) = 10005;
+    void updateFlagsForUid(int uid, int mask, int value) = 106;
  }

@@ -15,7 +15,7 @@ public interface IOnAppsChangedListener extends IInterface {
     void onPackageAdded(UserHandle user, String packageName)
             throws RemoteException;
 
-    void onPackageChanged(UserHandle user, String packageName)
+    void dispatchPackageChanged(UserHandle user, String packageName)
             throws RemoteException;
 
     void onPackagesAvailable(UserHandle user, String[] packageNames, boolean replacing)
