@@ -41,6 +41,7 @@ class PermissionConfirmationLayout(context: Context, label: String) {
     private val l2 = (16 * density).roundToInt()
     private val l1 = 8 * density
     private val l_125 = (1 * density).roundToInt()
+    private val sansSerif = Typeface.create("sans-serif", Typeface.NORMAL)
     private val sansSerifMedium = Typeface.create("sans-serif-medium", Typeface.NORMAL)
 
     init {
@@ -73,21 +74,21 @@ class PermissionConfirmationLayout(context: Context, label: String) {
             setPadding(l3, l1.roundToInt(), l3, l3)
             gravity = Gravity.CENTER
             setTextColor(textColorPrimary)
-            typeface = sansSerifMedium
+            typeface = sansSerif
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-            text = Html.fromHtml("Allow <font face=\"sans-serif\"><b>$label</b></font> to have full access of the device?")
+            text = Html.fromHtml(String.format(Strings.get(Strings.permission_warning_template), label, Strings.get(Strings.permission_description)))
         }.also {
             root.addView(it, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
             root.addDivider(divider, l_125)
         }
 
-        allowButton = root.addButton("Allow all the time")
+        allowButton = root.addButton(Strings.get(Strings.grant_dialog_button_allow_always))
         root.addDivider(divider, l_125)
 
-        onetimeButton = root.addButton("Only this time")
+        onetimeButton = root.addButton(Strings.get(Strings.grant_dialog_button_allow_one_time))
         root.addDivider(divider, l_125)
 
-        denyButton = root.addButton("Deny")
+        denyButton = root.addButton(Strings.get(Strings.grant_dialog_button_deny))
     }
 
     private fun LinearLayout.addDivider(divider: Drawable?, height: Int) = View(context).apply {
