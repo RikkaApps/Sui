@@ -59,9 +59,15 @@ static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir) {
 static void appProcessPost(
         JNIEnv *env, const char *from, const char *package_name, const char *app_data_dir, jint uid) {
 
-    LOGV("%s: uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
-
-    Manager::main(env, dexFile, app_data_dir);
+    if (strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
+        LOGV("%s: uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
+        Manager::main(env, dexFile, app_data_dir);
+    } else {
+        if (dexFile) {
+            dexFile->destroy(env);
+            delete dexFile;
+        }
+    }
 }
 
 static void forkAndSpecializePre(
@@ -75,7 +81,7 @@ static void forkAndSpecializePre(
 }
 
 static void forkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
-    if (res == 0 && strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
+    if (res == 0) {
         appProcessPost(env, "forkAndSpecialize", saved_package_name, saved_app_data_dir, saved_uid);
     }
 }
@@ -93,9 +99,7 @@ static void specializeAppProcessPre(
 static void specializeAppProcessPost(
         JNIEnv *env, jclass clazz) {
 
-    if (strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
-        appProcessPost(env, "specializeAppProcess", saved_package_name, saved_app_data_dir, saved_uid);
-    }
+    appProcessPost(env, "specializeAppProcess", saved_package_name, saved_app_data_dir, saved_uid);
 }
 
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
