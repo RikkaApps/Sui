@@ -4,6 +4,10 @@
     public static void main(java.lang.String[]);
 }
 
+-keep class rikka.sui.server.userservice.Starter {
+    public static void main(java.lang.String[]);
+}
+
 -keep class rikka.sui.systemserver.SystemProcess {
     public static void main(java.lang.String[]);
     public static boolean execTransact(int, long, long, int);

@@ -26,7 +26,7 @@ interface IShizukuService {
 
     // ----------------------------
 
-    void sendUserService(in IBinder binder, in Bundle options) = 101;
+    void attachUserService(in IBinder binder, in Bundle options) = 101;
 
     oneway void dispatchPackageChanged(in Intent intent) = 102;
 
