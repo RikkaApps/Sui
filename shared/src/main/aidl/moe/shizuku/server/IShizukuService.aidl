@@ -20,6 +20,10 @@ interface IShizukuService {
 
     void requestPermission(int requestCode) = 14;
 
+    boolean checkSelfPermission() = 15;
+
+    boolean shouldShowRequestPermissionRationale() = 16;
+
     // ----------------------------
 
     void sendUserService(in IBinder binder, in Bundle options) = 101;

@@ -46,10 +46,11 @@ import rikka.sui.util.OsUtils;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.sui.server.ServerConstants.LOGGER;
-import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_PERMISSION_GRANTED;
+import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
 import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_SECONTEXT;
 import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_UID;
 import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_VERSION;
+import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
 import static rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
 import static rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
 import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT;
@@ -175,6 +176,15 @@ public class Service extends IShizukuService.Stub {
                     + Binder.getCallingPid()
                     + " requires permission");
         }
+    }
+
+    private ClientRecord requireClient(int callingUid, int callingPid) {
+        ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
+        if (clientRecord == null) {
+            LOGGER.w("Caller (uid %d, pid %d) is not an attached client", callingUid, callingPid);
+            throw new IllegalStateException("Not an attached client");
+        }
+        return clientRecord;
     }
 
     private void transactRemote(Parcel data, Parcel reply, int flags) throws RemoteException {
@@ -580,7 +590,8 @@ public class Service extends IShizukuService.Stub {
         reply.putInt(ATTACH_REPLY_SERVER_VERSION, ShizukuApiConstants.SERVER_VERSION);
         reply.putString(ATTACH_REPLY_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
         if (!isManager) {
-            reply.putBoolean(ATTACH_REPLY_SERVER_PERMISSION_GRANTED, clientRecord.allowed);
+            reply.putBoolean(ATTACH_REPLY_PERMISSION_GRANTED, clientRecord.allowed);
+            reply.putBoolean(ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, shouldShowRequestPermissionRationale(clientRecord));
         }
         try {
             application.bindApplication(reply);
@@ -598,10 +609,7 @@ public class Service extends IShizukuService.Stub {
             return;
         }
 
-        ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
-        if (clientRecord == null) {
-            throw new IllegalStateException("Not an attached client");
-        }
+        ClientRecord clientRecord = requireClient(callingUid, callingPid);
 
         if (clientRecord.allowed) {
             clientRecord.dispatchRequestPermissionResult(requestCode, true);
@@ -623,6 +631,35 @@ public class Service extends IShizukuService.Stub {
         } else {
             LOGGER.e("manager is null");
         }
+    }
+
+    @Override
+    public boolean checkSelfPermission() {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+
+        if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
+            return true;
+        }
+
+        return requireClient(callingUid, callingPid).allowed;
+    }
+
+    private boolean shouldShowRequestPermissionRationale(ClientRecord record) {
+        Config.PackageEntry entry = configManager.find(record.uid);
+        return entry != null && entry.isDenied();
+    }
+
+    @Override
+    public boolean shouldShowRequestPermissionRationale() {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+
+        if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
+            return true;
+        }
+
+        return shouldShowRequestPermissionRationale(requireClient(callingUid, callingPid));
     }
 
     @Override
@@ -689,12 +726,10 @@ public class Service extends IShizukuService.Stub {
 
         if ((mask & Config.MASK_PERMISSION) != 0) {
             boolean allowed = (value & Config.FLAG_ALLOWED) != 0;
-            boolean denied = (value & Config.FLAG_DENIED) != 0;
-            boolean hidden = (value & Config.FLAG_HIDDEN) != 0;
             for (ClientRecord record : clientManager.findClients(uid)) {
                 if (allowed) {
                     record.allowed = allowed;
-                } else if (denied || hidden) {
+                } else {
                     record.allowed = false;
                     SystemService.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
                 }
