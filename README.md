@@ -36,7 +36,8 @@ In conclusion, we can get a super user interface similar to standard Android API
 
 ## Build
 
-Run gradle task `:module:assembleRelease` task from Android Studio or the terminal, zip will be saved to `out`.
+* Clone with `git clone --recurse-submodules`
+* Run gradle task `:module:assembleRelease` task from Android Studio or the terminal, zip will be saved to `out`
 
 ## Install
 

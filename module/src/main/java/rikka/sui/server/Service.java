@@ -587,4 +587,30 @@ public class Service extends IShizukuService.Stub {
         }
         return super.onTransact(code, data, reply, flags);
     }
+
+    // pre-v10 APIs is not supported by Sui
+    @Override
+    public int getVersion() {
+        return 0;
+    }
+
+    @Override
+    public int getUid() {
+        return 0;
+    }
+
+    @Override
+    public String getSELinuxContext() {
+        return null;
+    }
+
+    @Override
+    public int checkPermission(String permission) {
+        return 0;
+    }
+
+    @Override
+    public void exit() {
+
+    }
 }
