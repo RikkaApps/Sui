@@ -18,6 +18,7 @@ import android.view.WindowManager;
 
 import hidden.HiddenApiBridge;
 import rikka.sui.ktx.HandlerKt;
+import rikka.sui.ktx.WindowKt;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
@@ -87,6 +88,8 @@ public class PermissionConfirmation {
 
         Window window = dialog.getWindow();
         if (window != null) {
+            WindowKt.addSystemFlags(window, WindowKt.getSYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS());
+
             WindowManager.LayoutParams lp = window.getAttributes();
             lp.flags = 0;
             lp.type = WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG;
