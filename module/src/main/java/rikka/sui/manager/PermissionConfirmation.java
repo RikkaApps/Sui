@@ -33,6 +33,7 @@ import rikka.sui.ktx.WindowKt;
 import rikka.sui.manager.res.Drawables;
 import rikka.sui.manager.res.Layouts;
 import rikka.sui.manager.res.Strings;
+import rikka.sui.manager.res.Utils;
 import rikka.sui.manager.res.Xml;
 import rikka.sui.util.UserHandleCompat;
 
@@ -77,7 +78,7 @@ public class PermissionConfirmation {
         PackageManager pm = context.getPackageManager();
         try {
             ApplicationInfo ai = HiddenApiBridge.PackageManager_getApplicationInfoAsUser(pm, requestPackageName, 0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, userId);
-            label = ai.loadLabel(pm).toString();
+            label = Utils.getAppLabel(ai, context);
         } catch (Throwable e) {
             LOGGER.e("getApplicationInfoAsUser");
         }
