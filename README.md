@@ -42,3 +42,7 @@ In conclusion, we can get a super user interface similar to standard Android API
 ## Install
 
 Install the zip from Magisk manager.
+
+## API & demo for application developers
+
+https://github.com/RikkaApps/Shizuku-API

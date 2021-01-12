@@ -1,6 +1,4 @@
-include ':demo'
-include ':module'
-include ':hidden-api-common', ':hidden-api-common-bridge', ':hidden-api-21', ':hidden-api-21-bridge'
+include ':module', ':hidden-api-common', ':hidden-api-common-bridge', ':hidden-api-21', ':hidden-api-21-bridge'
 
 def root = "api"
 
