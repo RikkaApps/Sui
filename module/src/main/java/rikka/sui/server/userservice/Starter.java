@@ -59,7 +59,7 @@ public class Starter {
         Method getSystemContext = ActivityThread.class.getDeclaredMethod("getSystemContext");
         Context systemContext = (Context) getSystemContext.invoke(activityThread);
 
-        DdmHandleAppName.setAppName(name != null ? name : "shizuku_user_service", 0);
+        DdmHandleAppName.setAppName(name != null ? name : pkg + ":user_service", 0);
 
         Method createPackageContextAsUser = Context.class.getDeclaredMethod("createPackageContextAsUser", String.class, int.class, UserHandle.class);
 
