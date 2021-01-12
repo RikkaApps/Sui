@@ -88,19 +88,30 @@ public class BridgeServiceClient {
         Parcel data = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         boolean res = false;
-        try {
-            data.writeInterfaceToken(BRIDGE_SERVICE_DESCRIPTOR);
-            data.writeInt(ACTION_SEND_BINDER);
-            IBinder binder = Service.getInstance();
-            LOGGER.v("binder %s", binder);
-            data.writeStrongBinder(binder);
-            res = bridgeService.transact(BRIDGE_TRANSACTION_CODE, data, reply, 0);
-            reply.readException();
-        } catch (Throwable e) {
-            LOGGER.e(e, "send binder");
-        } finally {
-            data.recycle();
-            reply.recycle();
+        for (int i = 0; i < 3; i++) {
+            try {
+                data.writeInterfaceToken(BRIDGE_SERVICE_DESCRIPTOR);
+                data.writeInt(ACTION_SEND_BINDER);
+                IBinder binder = Service.getInstance();
+                LOGGER.v("binder %s", binder);
+                data.writeStrongBinder(binder);
+                res = bridgeService.transact(BRIDGE_TRANSACTION_CODE, data, reply, 0);
+                reply.readException();
+            } catch (Throwable e) {
+                LOGGER.e(e, "send binder");
+            } finally {
+                data.recycle();
+                reply.recycle();
+            }
+
+            if (res) break;
+
+            LOGGER.w("no response from bridge, retry in 1s");
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
         }
 
         if (listener != null) {
