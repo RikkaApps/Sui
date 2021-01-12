@@ -41,7 +41,7 @@ public class UserService {
         String processName = String.format("%s:%s", packageName, processNameSuffix);
         String cmd = String.format(Locale.ENGLISH, USER_SERVICE_CMD_FORMAT,
                 debug ? (" " + UserService.USER_SERVICE_CMD_DEBUG) : "",
-                processName, "moe.shizuku.starter.ServiceStarter",
+                processName, "rikka.sui.server.userservice.Starter",
                 token, packageName, classname, callingUid, debug ? (" " + "--debug-name=" + processName) : "");
 
         Process process;
