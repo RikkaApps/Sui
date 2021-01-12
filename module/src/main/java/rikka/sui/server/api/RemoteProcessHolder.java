@@ -6,8 +6,8 @@ import android.os.RemoteException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import rikka.sui.util.ParcelFileDescriptorUtil;
 import moe.shizuku.server.IRemoteProcess;
+import rikka.sui.util.ParcelFileDescriptorUtil;
 
 public class RemoteProcessHolder extends IRemoteProcess.Stub {
 

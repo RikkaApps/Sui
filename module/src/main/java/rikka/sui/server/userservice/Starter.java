@@ -18,7 +18,7 @@ import java.lang.reflect.Method;
 import hidden.HiddenApiBridge;
 import moe.shizuku.server.IShizukuService;
 
-import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_TOKEN;
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_TOKEN;
 
 @SuppressWarnings("JavaReflectionMemberAccess")
 @SuppressLint("DiscouragedPrivateApi")

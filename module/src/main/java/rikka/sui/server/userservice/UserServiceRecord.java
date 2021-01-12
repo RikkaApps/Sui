@@ -9,8 +9,8 @@ import java.util.UUID;
 
 import moe.shizuku.server.IShizukuServiceConnection;
 
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_TRANSACTION_destroy;
 import static rikka.sui.server.ServerConstants.LOGGER;
-import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_TRANSACTION_destroy;
 
 public class UserServiceRecord {
 

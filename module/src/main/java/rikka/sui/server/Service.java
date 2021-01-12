@@ -25,6 +25,7 @@ import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 import moe.shizuku.server.IShizukuServiceConnection;
+import rikka.shizuku.ShizukuApiConstants;
 import rikka.sui.server.api.RemoteProcessHolder;
 import rikka.sui.server.api.SystemService;
 import rikka.sui.server.bridge.BridgeServiceClient;
@@ -35,19 +36,19 @@ import rikka.sui.server.userservice.UserServiceRecord;
 import rikka.sui.util.OsUtils;
 import rikka.sui.util.UserHandleCompat;
 
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_SECONTEXT;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_UID;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT;
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_DEBUGGABLE;
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_PROCESS_NAME;
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_TAG;
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_VERSION_CODE;
 import static rikka.sui.server.ServerConstants.LOGGER;
-import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
-import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_SECONTEXT;
-import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_UID;
-import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SERVER_VERSION;
-import static rikka.sui.server.ShizukuApiConstants.ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
-import static rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
-import static rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
-import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT;
-import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_DEBUGGABLE;
-import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_PROCESS_NAME;
-import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_TAG;
-import static rikka.sui.server.ShizukuApiConstants.USER_SERVICE_ARG_VERSION_CODE;
 
 public class Service extends IShizukuService.Stub {
 

@@ -4,8 +4,8 @@ import android.os.Bundle;
 
 import moe.shizuku.server.IShizukuApplication;
 
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
 import static rikka.sui.server.ServerConstants.LOGGER;
-import static rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
 
 public class ClientRecord {
 

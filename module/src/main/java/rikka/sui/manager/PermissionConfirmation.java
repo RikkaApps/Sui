@@ -16,13 +16,13 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 
+import hidden.HiddenApiBridge;
 import rikka.sui.ktx.HandlerKt;
 import rikka.sui.util.UserHandleCompat;
-import hidden.HiddenApiBridge;
 
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
 import static rikka.sui.manager.ManagerConstants.LOGGER;
-import static rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
-import static rikka.sui.server.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
 
 public class PermissionConfirmation {
 

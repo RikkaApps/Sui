@@ -10,10 +10,10 @@ import android.os.IUserManager
 import android.os.RemoteException
 import android.permission.IPermissionManager
 import androidx.annotation.RequiresApi
-import rikka.sui.server.ServerConstants.LOGGER
-import rikka.sui.util.BuildUtils
 import com.android.internal.app.IAppOpsService
 import hidden.HiddenApiBridgeV23
+import rikka.sui.server.ServerConstants.LOGGER
+import rikka.sui.util.BuildUtils
 import java.util.*
 
 object SystemService {
