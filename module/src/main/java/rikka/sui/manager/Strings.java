@@ -13,10 +13,13 @@ public class Strings {
     public static final int grant_dialog_button_allow_one_time = 3;
     public static final int grant_dialog_button_deny = 4;
     public static final int grant_dialog_button_deny_and_dont_ask_again = 5;
-    private static final int COUNT = 6;
+    public static final int brackets_format = 6;
+    private static final int COUNT = 7;
 
     static {
         String[] array;
+
+        // Permission related texts can be found in packages/apps/PermissionController/res/values-[locale]/strings.xml
 
         array = new String[COUNT];
         array[permission_warning_template] = "要允许<b>%1$s</b>%2$s吗？";
@@ -25,6 +28,7 @@ public class Strings {
         array[grant_dialog_button_allow_one_time] = "仅限这一次";
         array[grant_dialog_button_deny] = "拒绝";
         array[grant_dialog_button_deny_and_dont_ask_again] = "拒绝，不要再询问";
+        array[brackets_format] = "%1$s（%2$s）";
         Strings.STRINGS.put("zh-CN", array);
 
         array = new String[COUNT];
@@ -34,6 +38,7 @@ public class Strings {
         array[grant_dialog_button_allow_one_time] = "僅允許這一次";
         array[grant_dialog_button_deny] = "拒絕";
         array[grant_dialog_button_deny_and_dont_ask_again] = "拒絕且不要再詢問";
+        array[brackets_format] = "%1$s（%2$s）";
         Strings.STRINGS.put("zh", array);
 
         array = new String[COUNT];
@@ -43,6 +48,7 @@ public class Strings {
         array[grant_dialog_button_allow_one_time] = "Only this time";
         array[grant_dialog_button_deny] = "Deny";
         array[grant_dialog_button_deny_and_dont_ask_again] = "Deny, don't ask again";
+        array[brackets_format] = "%1$s (%2$s)";
         Strings.STRINGS.put("en", array);
     }
 

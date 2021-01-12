@@ -18,6 +18,7 @@ import android.view.WindowManager;
 
 import hidden.HiddenApiBridge;
 import rikka.sui.ktx.HandlerKt;
+import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
 import rikka.sui.util.UserHandleCompat;
 
@@ -85,6 +86,10 @@ public class PermissionConfirmation {
             setResult(requestUid, requestPid, requestCode, false, false);
             dialog.dismiss();
         });
+
+        TextViewKt.applyCountdown(layout.getAllowButton(), 1, null, 0);
+        TextViewKt.applyCountdown(layout.getOnetimeButton(), 1, null, 0);
+        TextViewKt.applyCountdown(layout.getDenyButton(), 1, null, 0);
 
         Window window = dialog.getWindow();
         if (window != null) {
