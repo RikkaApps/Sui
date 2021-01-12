@@ -175,12 +175,12 @@ android.applicationVariants.all { variant ->
 
 task zipMagiskMoudleRelease(type: Zip) {
     from magiskDir
-    archiveName "${magiskModuleProp['id']}-${moduleProp['version']}-release.zip"
+    archiveName "riru-${moduleId}-${moduleVersion}-release.zip"
     destinationDir outDir
 }
 
 task zipMagiskMoudleDebug(type: Zip) {
     from magiskDir
-    archiveName "${magiskModuleProp['id']}-${moduleProp['version']}-debug.zip"
+    archiveName "riru-${moduleId}-${moduleVersion}-debug.zip"
     destinationDir outDir
 }
