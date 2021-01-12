@@ -1,4 +1,4 @@
-package rikka.sui.manager;
+package rikka.sui.manager.res;
 
 import java.util.HashMap;
 import java.util.Locale;

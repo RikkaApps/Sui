@@ -3,6 +3,7 @@ package rikka.sui.server.bridge;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.ServiceManager;
+import android.view.LayoutInflater;
 
 import java.lang.reflect.Field;
 import java.util.Map;

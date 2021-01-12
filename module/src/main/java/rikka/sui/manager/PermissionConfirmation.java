@@ -6,20 +6,34 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.graphics.drawable.VectorDrawable;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.Html;
 import android.view.ContextThemeWrapper;
-import android.view.View;
+import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+
 import hidden.HiddenApiBridge;
+import rikka.sui.databinding.ConfirmationDialogBinding;
 import rikka.sui.ktx.HandlerKt;
+import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
+import rikka.sui.manager.res.Drawables;
+import rikka.sui.manager.res.Layouts;
+import rikka.sui.manager.res.Strings;
+import rikka.sui.manager.res.Xml;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
@@ -54,6 +68,9 @@ public class PermissionConfirmation {
         boolean isNight = (application.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
 
         Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_Material_Dialog_Alert : android.R.style.Theme_Material_Light_Dialog_Alert);
+        Resources.Theme theme = context.getTheme();
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
+        ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(layoutInflater.inflate(Xml.get(Layouts.confirmation_dialog), null));
 
         String label = requestPackageName;
         int userId = UserHandleCompat.getUserId(requestUid);
@@ -65,31 +82,52 @@ public class PermissionConfirmation {
             LOGGER.e("getApplicationInfoAsUser");
         }
 
-        PermissionConfirmationLayout layout = new PermissionConfirmationLayout(context, label);
-        View root = layout.getRoot();
+        try {
+            binding.icon.setImageDrawable(VectorDrawable.createFromXml(context.getResources(), Xml.get(Drawables.ic_su_24)));
+        } catch (IOException | XmlPullParserException e) {
+            LOGGER.e(e, "setImageDrawable");
+        }
+        binding.title.setText(Html.fromHtml(
+                String.format(Strings.get(Strings.permission_warning_template), label, Strings.get(Strings.permission_description))));
+        binding.button1.setText(Strings.get(Strings.grant_dialog_button_allow_always));
+        binding.button2.setText(Strings.get(Strings.grant_dialog_button_allow_one_time));
+        binding.button3.setText(Strings.get(Strings.grant_dialog_button_deny_and_dont_ask_again));
 
         Dialog dialog = new AlertDialog.Builder(context)
-                .setView(root)
+                .setView(binding.getRoot())
                 .setCancelable(false)
                 .create();
         dialog.setCanceledOnTouchOutside(false);
 
-        layout.getAllowButton().setOnClickListener(v -> {
+        int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
+        int colorAccent = ResourcesKt.resolveColor(theme, android.R.attr.colorAccent);
+
+        ColorStateList buttonTextColor = new ColorStateList(
+                new int[][]{
+                        new int[]{-android.R.attr.state_enabled},
+                        new int[]{}
+                }, new int[]{colorForeground & 0xffffff | 0x61000000, colorAccent});
+
+        binding.button1.setTextColor(buttonTextColor);
+        binding.button2.setTextColor(buttonTextColor);
+        binding.button3.setTextColor(buttonTextColor);
+
+        binding.button1.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, true, false);
             dialog.dismiss();
         });
-        layout.getOnetimeButton().setOnClickListener(v -> {
+        binding.button2.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, true, true);
             dialog.dismiss();
         });
-        layout.getDenyButton().setOnClickListener(v -> {
+        binding.button3.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, false, false);
             dialog.dismiss();
         });
 
-        TextViewKt.applyCountdown(layout.getAllowButton(), 1, null, 0);
-        TextViewKt.applyCountdown(layout.getOnetimeButton(), 1, null, 0);
-        TextViewKt.applyCountdown(layout.getDenyButton(), 1, null, 0);
+        TextViewKt.applyCountdown(binding.button1, 1, null, 0);
+        TextViewKt.applyCountdown(binding.button2, 1, null, 0);
+        TextViewKt.applyCountdown(binding.button3, 1, null, 0);
 
         Window window = dialog.getWindow();
         if (window != null) {

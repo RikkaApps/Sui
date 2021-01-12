@@ -2,81 +2,88 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <ImageView
+        android:id="@android:id/icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center"
         android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
         android:importantForAccessibility="no"
         android:tint="?android:colorAccent"
         android:tintMode="src_in"
-        tools:src="@tools:sample/avatars"
-        tools:text="Allow %s to have full access of the device?" />
+        tools:src="@drawable/ic_su_24" />
 
     <TextView
+        android:id="@android:id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:paddingStart="24dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="24dp"
-        android:paddingBottom="16dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="24dp"
+        android:textColor="?android:textColorPrimary"
         android:textSize="20sp"
         tools:text="Allow %s to have full access of the device?" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:dividerVertical" />
+        android:alpha="0.12"
+        android:background="?android:colorForeground" />
 
     <TextView
+        android:id="@android:id/button1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:minHeight="56dp"
+        android:minHeight="64dp"
         android:padding="16dp"
-        android:textColor="?android:colorAccent"
-        android:textSize="14sp"
-        tools:text="Allow all the time" />
+        android:textSize="15sp"
+        tools:text="Allow all the time"
+        tools:textColor="?android:colorAccent" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:dividerVertical" />
+        android:alpha="0.12"
+        android:background="?android:colorForeground" />
 
     <TextView
+        android:id="@android:id/button2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:minHeight="56dp"
+        android:minHeight="64dp"
         android:padding="16dp"
-        android:textColor="?android:colorAccent"
-        android:textSize="14sp"
-        tools:text="Only this time" />
+        android:textSize="15sp"
+        tools:text="Only this time"
+        tools:textColor="?android:colorAccent" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:dividerVertical" />
+        android:alpha="0.12"
+        android:background="?android:colorForeground" />
 
     <TextView
+        android:id="@android:id/button3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:selectableItemBackground"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:minHeight="56dp"
+        android:minHeight="64dp"
         android:padding="16dp"
-        android:textColor="?android:colorAccent"
-        android:textSize="14sp"
-        tools:text="Deny" />
+        android:textSize="15sp"
+        tools:text="Deny"
+        tools:textColor="?android:colorAccent" />
 
 </LinearLayout>

@@ -2,7 +2,7 @@ package rikka.sui.ktx
 
 import android.view.View
 import android.widget.TextView
-import rikka.sui.manager.Strings
+import rikka.sui.manager.res.Strings
 
 private val tag_countdown = 1599296841
 
