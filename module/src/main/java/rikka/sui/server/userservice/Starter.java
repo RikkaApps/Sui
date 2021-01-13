@@ -52,7 +52,9 @@ public class Starter {
 
         Log.i(TAG, String.format("starting service %s/%s...", pkg, cls));
 
-        Looper.prepare();
+        if (Looper.getMainLooper() == null) {
+            Looper.prepareMainLooper();
+        }
 
         IBinder service = null;
         ActivityThread activityThread = HiddenApiBridge.ActivityThread_systemMain();
