@@ -4,7 +4,7 @@ import android.view.View
 import android.widget.TextView
 import rikka.sui.manager.res.Strings
 
-private val tag_countdown = 1599296841
+private const val tag_countdown = 1599296841
 
 fun TextView.applyCountdown(countdownSecond: Int, message: CharSequence? = null, format: Int = 0) {
     val countdownRunnable = object : Runnable {

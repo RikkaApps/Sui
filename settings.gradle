@@ -12,7 +12,7 @@ if (propFile.canRead()) {
 
     if (props != null) {
         apiDir = props["api.dir"]
-        apiUseLocal = props["api.useLocal"]
+        apiUseLocal = props["api.useLocal"].equals("true")
     }
 }
 

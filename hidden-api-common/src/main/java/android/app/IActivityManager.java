@@ -13,17 +13,6 @@ import androidx.annotation.RequiresApi;
 
 public interface IActivityManager extends IInterface {
 
-    @RequiresApi(29)
-    ContentProviderHolder getContentProviderExternal(String name, int userId, IBinder token, String tag)
-            throws RemoteException;
-
-    @RequiresApi(26)
-    ContentProviderHolder getContentProviderExternal(String name, int userId, IBinder token)
-            throws RemoteException;
-
-    void removeContentProviderExternal(String name, IBinder token)
-            throws RemoteException;
-
     int checkPermission(String permission, int pid, int uid)
             throws RemoteException;
 

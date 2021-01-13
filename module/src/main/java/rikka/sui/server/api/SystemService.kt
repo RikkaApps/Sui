@@ -3,7 +3,6 @@ package rikka.sui.server.api
 import android.app.IActivityManager
 import android.app.IProcessObserver
 import android.app.IUidObserver
-import android.content.IContentProvider
 import android.content.pm.*
 import android.os.IBinder
 import android.os.IUserManager
@@ -135,30 +134,6 @@ object SystemService {
         val pm = packageManager ?: throw RemoteException("can't get IPackageManager")
         @Suppress("UNCHECKED_CAST")
         return pm.getInstalledPackages(flags, userId) as ParceledListSlice<PackageInfo>?
-    }
-
-    @JvmStatic
-    @Throws(RemoteException::class)
-    fun getContentProviderExternal(name: String?, userId: Int, token: IBinder?, tag: String?): IContentProvider? {
-        val am = activityManager ?: throw RemoteException("can't get IActivityManager")
-        return when {
-            BuildUtils.atLeast29() -> {
-                am.getContentProviderExternal(name, userId, token, tag)?.provider
-            }
-            BuildUtils.atLeast26() -> {
-                am.getContentProviderExternal(name, userId, token)?.provider
-            }
-            else -> {
-                HiddenApiBridgeV23.getContentProviderExternal_provider(am, name, userId, token)
-            }
-        }
-    }
-
-    @JvmStatic
-    @Throws(RemoteException::class)
-    fun removeContentProviderExternal(name: String?, token: IBinder?) {
-        val am = activityManager ?: throw RemoteException("can't get IActivityManager")
-        am.removeContentProviderExternal(name, token)
     }
 
     @JvmStatic
