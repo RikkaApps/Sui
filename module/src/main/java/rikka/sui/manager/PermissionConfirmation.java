@@ -1,24 +1,26 @@
 package rikka.sui.manager;
 
 import android.app.ActivityThread;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.VectorDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Html;
 import android.view.ContextThemeWrapper;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -69,9 +71,24 @@ public class PermissionConfirmation {
         boolean isNight = (application.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
 
         Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_Material_Dialog_Alert : android.R.style.Theme_Material_Light_Dialog_Alert);
-        Resources.Theme theme = context.getTheme();
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         LayoutInflater layoutInflater = LayoutInflater.from(context);
-        ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(layoutInflater.inflate(Xml.get(Layouts.confirmation_dialog), null));
+        Resources.Theme theme = context.getTheme();
+        float density = context.getResources().getDisplayMetrics().density;
+        float l1 = density * 8;
+        float l2 = density * 16;
+        int l2i = Math.round(l2);
+
+        FrameLayout windowRoot = new FrameLayout(context);
+        ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(layoutInflater.inflate(Xml.get(Layouts.confirmation_dialog), windowRoot, false));
+
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) binding.getRoot().getLayoutParams();
+        lp.leftMargin = l2i;
+        lp.rightMargin = l2i;
+        lp.topMargin = l2i;
+        lp.bottomMargin = l2i;
+        binding.getRoot().setLayoutParams(lp);
+        windowRoot.addView(binding.getRoot());
 
         String label = requestPackageName;
         int userId = UserHandleCompat.getUserId(requestUid);
@@ -94,12 +111,6 @@ public class PermissionConfirmation {
         binding.button2.setText(Strings.get(Strings.grant_dialog_button_allow_one_time));
         binding.button3.setText(Strings.get(Strings.grant_dialog_button_deny_and_dont_ask_again));
 
-        Dialog dialog = new AlertDialog.Builder(context)
-                .setView(binding.getRoot())
-                .setCancelable(false)
-                .create();
-        dialog.setCanceledOnTouchOutside(false);
-
         int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
         int colorAccent = ResourcesKt.resolveColor(theme, android.R.attr.colorAccent);
 
@@ -115,38 +126,40 @@ public class PermissionConfirmation {
 
         binding.button1.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, true, false);
-            dialog.dismiss();
+            wm.removeView(windowRoot);
         });
         binding.button2.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, true, true);
-            dialog.dismiss();
+            wm.removeView(windowRoot);
         });
         binding.button3.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, false, false);
-            dialog.dismiss();
+            wm.removeView(windowRoot);
         });
 
         TextViewKt.applyCountdown(binding.button1, 1, null, 0);
         TextViewKt.applyCountdown(binding.button2, 1, null, 0);
         TextViewKt.applyCountdown(binding.button3, 1, null, 0);
 
-        Window window = dialog.getWindow();
-        if (window != null) {
-            WindowKt.addSystemFlags(window, WindowKt.getSYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS());
+        ShapeDrawable shapeDrawable = new ShapeDrawable();
+        shapeDrawable.setShape(new RoundRectShape(new float[]{l1, l1, l1, l1, l1, l1, l1, l1}, null, null));
+        shapeDrawable.getPaint().setColor(ResourcesKt.resolveColor(theme, android.R.attr.colorBackground));
+        //InsetDrawable insetDrawable = new InsetDrawable(shapeDrawable, l2i, l2i, l2i, l2i);
+        binding.getRoot().setBackground(shapeDrawable);
+        binding.getRoot().setElevation(l1);
 
-            WindowManager.LayoutParams lp = window.getAttributes();
-            lp.flags = 0;
-            lp.type = WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG;
-            lp.token = TOKEN;
-            window.setAttributes(lp);
-            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        WindowManager.LayoutParams attr = new WindowManager.LayoutParams();
+        attr.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        attr.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        attr.flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        attr.type = WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG;
+        attr.token = TOKEN;
+        attr.gravity = Gravity.CENTER;
+        attr.windowAnimations = android.R.style.Animation_Dialog;
+        attr.dimAmount = 0.32f;
+        attr.format = PixelFormat.TRANSLUCENT;
+        WindowKt.setPrivateFlags(attr, WindowKt.getPrivateFlags(attr) | WindowKt.getSYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS());
 
-            /*View decorView = window.getDecorView();
-            if (decorView != null) {
-                window.setBackgroundDrawable(layout.getBackground());
-            }*/
-        }
-
-        dialog.show();
+        wm.addView(windowRoot, attr);
     }
 }
