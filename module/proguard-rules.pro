@@ -14,7 +14,7 @@
 }
 
 -keep class rikka.sui.manager.ManagerProcess {
-    public static void main(java.lang.String[]);
+    public static void main(java.lang.String[], java.nio.ByteBuffer[]);
 }
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
