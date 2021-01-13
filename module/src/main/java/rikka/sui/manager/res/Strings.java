@@ -3,18 +3,18 @@ package rikka.sui.manager.res;
 import java.util.HashMap;
 import java.util.Locale;
 
+import static rikka.sui.manager.res.Res.string.COUNT;
+import static rikka.sui.manager.res.Res.string.brackets_format;
+import static rikka.sui.manager.res.Res.string.grant_dialog_button_allow_always;
+import static rikka.sui.manager.res.Res.string.grant_dialog_button_allow_one_time;
+import static rikka.sui.manager.res.Res.string.grant_dialog_button_deny;
+import static rikka.sui.manager.res.Res.string.grant_dialog_button_deny_and_dont_ask_again;
+import static rikka.sui.manager.res.Res.string.permission_description;
+import static rikka.sui.manager.res.Res.string.permission_warning_template;
+
 public class Strings {
 
     private static final HashMap<String, String[]> STRINGS = new HashMap<>();
-
-    public static final int permission_warning_template = 0;
-    public static final int permission_description = 1;
-    public static final int grant_dialog_button_allow_always = 2;
-    public static final int grant_dialog_button_allow_one_time = 3;
-    public static final int grant_dialog_button_deny = 4;
-    public static final int grant_dialog_button_deny_and_dont_ask_again = 5;
-    public static final int brackets_format = 6;
-    private static final int COUNT = 7;
 
     static {
         String[] array;

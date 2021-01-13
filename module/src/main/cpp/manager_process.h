@@ -4,5 +4,5 @@
 #include "dex_file.h"
 
 namespace Manager {
-    void main(JNIEnv *env, DexFile *dexFile, const char *appDataDir);
+    void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files);
 }

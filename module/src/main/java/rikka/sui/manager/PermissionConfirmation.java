@@ -18,6 +18,7 @@ import android.text.Html;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
@@ -32,8 +33,7 @@ import rikka.sui.ktx.HandlerKt;
 import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
-import rikka.sui.manager.res.Drawables;
-import rikka.sui.manager.res.Layouts;
+import rikka.sui.manager.res.Res;
 import rikka.sui.manager.res.Strings;
 import rikka.sui.manager.res.Utils;
 import rikka.sui.manager.res.Xml;
@@ -76,18 +76,10 @@ public class PermissionConfirmation {
         Resources.Theme theme = context.getTheme();
         float density = context.getResources().getDisplayMetrics().density;
         float l1 = density * 8;
-        float l2 = density * 16;
-        int l2i = Math.round(l2);
 
         FrameLayout windowRoot = new FrameLayout(context);
-        ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(layoutInflater.inflate(Xml.get(Layouts.confirmation_dialog), windowRoot, false));
-
-        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) binding.getRoot().getLayoutParams();
-        lp.leftMargin = l2i;
-        lp.rightMargin = l2i;
-        lp.topMargin = l2i;
-        lp.bottomMargin = l2i;
-        binding.getRoot().setLayoutParams(lp);
+        View view = layoutInflater.inflate(Xml.get(Res.layout.confirmation_dialog), windowRoot, false);
+        ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(view);
         windowRoot.addView(binding.getRoot());
 
         String label = requestPackageName;
@@ -101,15 +93,15 @@ public class PermissionConfirmation {
         }
 
         try {
-            binding.icon.setImageDrawable(VectorDrawable.createFromXml(context.getResources(), Xml.get(Drawables.ic_su_24)));
+            binding.icon.setImageDrawable(VectorDrawable.createFromXml(context.getResources(), Xml.get(Res.drawable.ic_su_24)));
         } catch (IOException | XmlPullParserException e) {
             LOGGER.e(e, "setImageDrawable");
         }
         binding.title.setText(Html.fromHtml(
-                String.format(Strings.get(Strings.permission_warning_template), label, Strings.get(Strings.permission_description))));
-        binding.button1.setText(Strings.get(Strings.grant_dialog_button_allow_always));
-        binding.button2.setText(Strings.get(Strings.grant_dialog_button_allow_one_time));
-        binding.button3.setText(Strings.get(Strings.grant_dialog_button_deny_and_dont_ask_again));
+                String.format(Strings.get(Res.string.permission_warning_template), label, Strings.get(Res.string.permission_description))));
+        binding.button1.setText(Strings.get(Res.string.grant_dialog_button_allow_always));
+        binding.button2.setText(Strings.get(Res.string.grant_dialog_button_allow_one_time));
+        binding.button3.setText(Strings.get(Res.string.grant_dialog_button_deny_and_dont_ask_again));
 
         int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
         int colorAccent = ResourcesKt.resolveColor(theme, android.R.attr.colorAccent);
@@ -144,9 +136,7 @@ public class PermissionConfirmation {
         ShapeDrawable shapeDrawable = new ShapeDrawable();
         shapeDrawable.setShape(new RoundRectShape(new float[]{l1, l1, l1, l1, l1, l1, l1, l1}, null, null));
         shapeDrawable.getPaint().setColor(ResourcesKt.resolveColor(theme, android.R.attr.colorBackground));
-        //InsetDrawable insetDrawable = new InsetDrawable(shapeDrawable, l2i, l2i, l2i, l2i);
         binding.getRoot().setBackground(shapeDrawable);
-        binding.getRoot().setElevation(l1);
 
         WindowManager.LayoutParams attr = new WindowManager.LayoutParams();
         attr.width = ViewGroup.LayoutParams.MATCH_PARENT;

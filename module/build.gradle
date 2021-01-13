@@ -63,7 +63,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
     implementation "androidx.annotation:annotation:1.1.0"
-    
+
     implementation 'com.google.code.gson:gson:2.8.6'
 
     implementation project(':aidl')
@@ -109,6 +109,22 @@ android.applicationVariants.all { variant ->
                 into magiskDir
                 rename { fileName -> 'sui.dex' }
             }
+
+            copy {
+                from zipTree(outputFile).matching { include 'res/*/*.xml' }
+                into magiskDir
+            }
+
+            // copy apk
+            /*copy {
+                from outputFile
+                into magiskDir
+                rename { fileName -> 'sui.apk' }
+            }
+            exec {
+                executable "zip"
+                args "-d", "$magiskDir/sui.apk", "lib/*", "kotlin/*", "classes.dex", "META-INF/*"
+            }*/
 
             // copy from template
             copy {

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <nativehelper/scoped_utf_chars.h>
 #include <climits>
+#include <vector>
 #include "dex_file.h"
 #include "logging.h"
 #include "system_server.h"
@@ -12,10 +13,30 @@
 #include "manager_process.h"
 
 static DexFile *dexFile = nullptr;
+static std::vector<File *> *files = nullptr;
 
-static void PrepareDex() {
+static void PrepareFiles() {
     if (dexFile && dexFile->getBytes()) return;
     dexFile = new DexFile(DEX_PATH);
+
+    files = new std::vector<File *>();
+    files->emplace_back(new File(RES_PATH "/layout/confirmation_dialog.xml"));
+    files->emplace_back(new File(RES_PATH "/drawable/ic_su_24.xml"));
+}
+
+static void DestroyFiles(JNIEnv *env) {
+    if (dexFile) {
+        dexFile->destroy(env);
+        delete dexFile;
+        dexFile = nullptr;
+    }
+    if (files) {
+        for (auto *file : *files) {
+            delete file;
+        }
+        delete files;
+        files = nullptr;
+    }
 }
 
 static char saved_package_name[256] = {0};
@@ -24,7 +45,7 @@ static int saved_uid;
 
 static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir) {
 
-    PrepareDex();
+    PrepareFiles();
 
     saved_uid = *uid;
 
@@ -61,12 +82,9 @@ static void appProcessPost(
 
     if (strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
         LOGV("%s: uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
-        Manager::main(env, dexFile, app_data_dir);
+        Manager::main(env, app_data_dir, dexFile, files);
     } else {
-        if (dexFile) {
-            dexFile->destroy(env);
-            delete dexFile;
-        }
+        DestroyFiles(env);
     }
 }
 
@@ -115,7 +133,7 @@ static int shouldSkipUid(int uid) {
 }
 
 static void onModuleLoaded() {
-    PrepareDex();
+    PrepareFiles();
 }
 
 extern "C" {

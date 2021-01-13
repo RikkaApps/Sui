@@ -76,8 +76,19 @@ extract "$ZIPFILE" 'riru/module.prop.new' "$RIRU_MODULE_PATH" true
 set_perm "$RIRU_MODULE_PATH/module.prop.new" 0 0 0600 $RIRU_SECONTEXT
 
 # extract server files
-ui_print "- Extracting dex file"
-extract "$ZIPFILE" 'sui.dex' "$MODPATH"
+ui_print "- Extracting Sui files"
+rm -rf "$ROOT_PATH/tmp" && mkdir "$ROOT_PATH/tmp"
 
-mv "$MODPATH/sui.dex" "$ROOT_PATH/sui.dex.new"
+extract "$ZIPFILE" 'sui.dex' "$ROOT_PATH/tmp"
+rm "$ROOT_PATH/sui.dex.new"
+mv "$ROOT_PATH/tmp/sui.dex" "$ROOT_PATH/sui.dex.new"
+
+extract "$ZIPFILE" 'res/layout/confirmation_dialog.xml' "$ROOT_PATH/tmp"
+extract "$ZIPFILE" 'res/drawable/ic_su_24.xml' "$ROOT_PATH/tmp"
+rm -rf "$ROOT_PATH/res.new"
+mv "$ROOT_PATH/tmp/res" "$ROOT_PATH/res.new"
+
 set_perm "$ROOT_PATH/sui.dex" 0 0 0600 $RIRU_SECONTEXT
+set_perm_recursive "$ROOT_PATH/res.new" 0 0 0700 0600 $RIRU_SECONTEXT
+
+rm -rf "$ROOT_PATH/tmp"

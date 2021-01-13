@@ -3,14 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_margin="24dp"
+    android:elevation="8dp"
+    android:orientation="vertical"
+    tools:background="@android:color/white">
 
     <ImageView
         android:id="@android:id/icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
         android:importantForAccessibility="no"
         android:tint="?android:colorAccent"
@@ -21,12 +24,12 @@
         android:id="@android:id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="24dp"
         android:textColor="?android:textColorPrimary"
-        android:textSize="20sp"
+        android:textSize="18sp"
         tools:text="Allow %s to have full access of the device?" />
 
     <View
@@ -42,9 +45,9 @@
         android:background="?android:selectableItemBackground"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:minHeight="64dp"
+        android:minHeight="56dp"
         android:padding="16dp"
-        android:textSize="15sp"
+        android:textSize="14sp"
         tools:text="Allow all the time"
         tools:textColor="?android:colorAccent" />
 
@@ -61,9 +64,9 @@
         android:background="?android:selectableItemBackground"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:minHeight="64dp"
+        android:minHeight="56dp"
         android:padding="16dp"
-        android:textSize="15sp"
+        android:textSize="14sp"
         tools:text="Only this time"
         tools:textColor="?android:colorAccent" />
 
@@ -80,9 +83,9 @@
         android:background="?android:selectableItemBackground"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:minHeight="64dp"
+        android:minHeight="56dp"
         android:padding="16dp"
-        android:textSize="15sp"
+        android:textSize="14sp"
         tools:text="Deny"
         tools:textColor="?android:colorAccent" />
 

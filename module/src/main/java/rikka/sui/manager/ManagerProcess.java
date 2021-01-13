@@ -5,11 +5,13 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.RemoteException;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 import rikka.sui.ktx.HandlerKt;
+import rikka.sui.manager.res.Xml;
 
 import static rikka.sui.manager.ManagerConstants.LOGGER;
 
@@ -58,8 +60,11 @@ public class ManagerProcess {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args, ByteBuffer[] buffers) {
         LOGGER.d("main: %s", Arrays.toString(args));
+        LOGGER.d("buffers: %s", Arrays.toString(buffers));
         HANDLER.post(ManagerProcess::sendToService);
+
+        Xml.setBuffers(buffers);
     }
 }

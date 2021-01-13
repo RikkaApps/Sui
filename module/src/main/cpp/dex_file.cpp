@@ -7,23 +7,16 @@
 #include "logging.h"
 #include "rirud.h"
 
-void DexFile::destroy(JNIEnv *env) {
-    if (bytes) free(bytes);
-    if (dexClassLoaderClass) env->DeleteGlobalRef(dexClassLoaderClass);
-    if (dexClassLoader) env->DeleteGlobalRef(dexClassLoader);
-}
-
-DexFile::DexFile(const char *path) {
+File::File(const char *path)  {
     if (!path) return;
 
-    filepath = strdup(path);
     bytes = nullptr;
     size = 0;
 
     if (rirud::ReadFile(path, (char *&) bytes, size)) {
-        LOGI("read dex from from rirud");
+        LOGI("read %s from from rirud", path);
     } else {
-        LOGE("failed to read from rirud");
+        LOGE("failed to read %s from rirud", path);
 
         auto fd = open(path, O_RDONLY);
         if (fd == -1) {
@@ -47,12 +40,25 @@ DexFile::DexFile(const char *path) {
     }
 }
 
-uint8_t *DexFile::getBytes() const {
+File::~File() {
+    if (bytes) free(bytes);
+}
+
+uint8_t *File::getBytes() const {
     return bytes;
 }
 
-size_t DexFile::getSize() const {
+size_t File::getSize() const {
     return size;
+}
+
+void DexFile::destroy(JNIEnv *env) {
+    if (dexClassLoaderClass) env->DeleteGlobalRef(dexClassLoaderClass);
+    if (dexClassLoader) env->DeleteGlobalRef(dexClassLoader);
+}
+
+DexFile::DexFile(const char *path) : File(path) {
+
 }
 
 void DexFile::createInMemoryDexClassLoader(JNIEnv *env) {

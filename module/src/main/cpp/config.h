@@ -6,5 +6,6 @@
 
 #define DEX_NAME "sui.dex"
 #define DEX_PATH ROOT_PATH "/" DEX_NAME
+#define RES_PATH ROOT_PATH "/res"
 #define SYSTEM_PROCESS_CLASSNAME "rikka/sui/systemserver/SystemProcess"
 #define MANAGER_PROCESS_CLASSNAME "rikka/sui/manager/ManagerProcess"

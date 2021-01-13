@@ -1,23 +1,33 @@
 #pragma once
 
-class DexFile {
+class File {
 
-private:
-    const char *filepath = nullptr;
+protected:
     uint8_t *bytes = nullptr;
     size_t size = 0;
+
+public:
+    File(const char *path);
+
+    ~File();
+
+    uint8_t *getBytes() const;
+
+    size_t getSize() const;
+};
+
+class DexFile : public File {
+
+private:
     jclass dexClassLoaderClass = nullptr;
     jmethodID findClassMethod = nullptr;
     jobject dexClassLoader = nullptr;
 
 public:
+
     DexFile(const char *path);
 
     void destroy(JNIEnv *env);
-
-    uint8_t *getBytes() const;
-
-    size_t getSize() const;
 
     void createInMemoryDexClassLoader(JNIEnv *env);
 

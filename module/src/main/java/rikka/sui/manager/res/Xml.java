@@ -7,11 +7,13 @@ import org.xmlpull.v1.XmlPullParser;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 
 import static rikka.sui.manager.ManagerConstants.LOGGER;
 
 public class Xml {
 
+    private static ByteBuffer[] buffers;
     private static Constructor<?> xmlBlockConstructor;
     private static Method newParser;
 
@@ -28,10 +30,20 @@ public class Xml {
         }
     }
 
-    public static XmlPullParser get(byte[] res) {
+    public static void setBuffers(ByteBuffer[] buffers) {
+        Xml.buffers = buffers;
+    }
+
+    public static XmlPullParser get(int res) {
+        ByteBuffer bb = buffers[res];
+        bb.rewind();
+        byte[] bytes = new byte[bb.remaining()];
+        bb.get(bytes);
+
         try {
-            return (XmlPullParser) newParser.invoke(xmlBlockConstructor.newInstance((Object) res));
+            return (XmlPullParser) newParser.invoke(xmlBlockConstructor.newInstance((Object) bytes));
         } catch (Throwable e) {
+            LOGGER.e(e, "getXml %d", res);
             return null;
         }
     }

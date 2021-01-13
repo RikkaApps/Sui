@@ -15,6 +15,7 @@
 #include <sys/sendfile.h>
 #include <dlfcn.h>
 #include <cinttypes>
+#include <vector>
 
 #include "android.h"
 #include "logging.h"
@@ -29,7 +30,7 @@ namespace Manager {
 
     static jclass mainClass = nullptr;
 
-    static bool installDex(JNIEnv *env, DexFile *dexFile, const char *appDataDir) {
+    static bool installDex(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files) {
         if (android::GetApiLevel() >= 26) {
             dexFile->createInMemoryDexClassLoader(env);
         } else {
@@ -46,7 +47,7 @@ namespace Manager {
         }
         mainClass = (jclass) env->NewGlobalRef(mainClass);
 
-        auto mainMethod = env->GetStaticMethodID(mainClass, "main", "([Ljava/lang/String;)V");
+        auto mainMethod = env->GetStaticMethodID(mainClass, "main", "([Ljava/lang/String;[Ljava/nio/ByteBuffer;)V");
         if (!mainMethod) {
             LOGE("unable to find main method");
             env->ExceptionDescribe();
@@ -55,12 +56,17 @@ namespace Manager {
         }
 
         auto args = env->NewObjectArray(1, env->FindClass("java/lang/String"), nullptr);
-
         char buf[64];
         sprintf(buf, "--version-code=%d", RIRU_MODULE_VERSION);
         env->SetObjectArrayElement(args, 0, env->NewStringUTF(buf));
 
-        env->CallStaticVoidMethod(mainClass, mainMethod, args);
+        auto buffers = env->NewObjectArray(files->size(), env->FindClass("java/nio/ByteBuffer"), nullptr);
+        for (auto i = 0; i < files->size(); ++i) {
+            auto file = files->at(i);
+            env->SetObjectArrayElement(buffers, i, env->NewDirectByteBuffer(file->getBytes(), file->getSize()));
+        }
+
+        env->CallStaticVoidMethod(mainClass, mainMethod, args, buffers);
         if (env->ExceptionCheck()) {
             LOGE("unable to call main method");
             env->ExceptionDescribe();
@@ -71,7 +77,7 @@ namespace Manager {
         return true;
     }
 
-    void main(JNIEnv *env, DexFile *dexFile, const char *appDataDir) {
+    void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files) {
         LOGD("dex size=%" PRIdPTR, dexFile->getSize());
 
         if (!dexFile->getBytes()) {
@@ -83,7 +89,7 @@ namespace Manager {
 
         LOGV("install dex");
 
-        if (!installDex(env, dexFile, appDataDir)) {
+        if (!installDex(env, appDataDir, dexFile, files)) {
             LOGE("can't install dex");
             return;
         }
