@@ -37,10 +37,12 @@ In conclusion, we can get a super user interface similar to standard Android API
 * Clone with `git clone --recurse-submodules`
 * Run gradle task `:module:assembleRelease` task from Android Studio or the terminal, zip will be saved to `out`
 
-## Install
+## Guide for users
 
-Install the zip from Magisk manager.
+* Install the zip from Magisk manager
+* Show Management UI: enter `*#*#784784#*#*` in the default dialer app
+* Play with apps that support Sui
 
-## API & demo for application developers
+## Guide for application developers
 
 https://github.com/RikkaApps/Shizuku-API
