@@ -154,10 +154,17 @@ public class Service extends IShizukuService.Stub {
     }
 
     private ClientRecord requireClient(int callingUid, int callingPid) {
+        return requireClient(callingUid, callingPid, false);
+    }
+
+    private ClientRecord requireClient(int callingUid, int callingPid, boolean requiresPermission) {
         ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
         if (clientRecord == null) {
             LOGGER.w("Caller (uid %d, pid %d) is not an attached client", callingUid, callingPid);
             throw new IllegalStateException("Not an attached client");
+        }
+        if (requiresPermission && !clientRecord.allowed) {
+            throw new SecurityException("Caller has no permission");
         }
         return clientRecord;
     }
@@ -187,7 +194,7 @@ public class Service extends IShizukuService.Stub {
 
     @Override
     public IRemoteProcess newProcess(String[] cmd, String[] env, String dir) throws RemoteException {
-        enforceCallingPermission("newProcess");
+        ClientRecord record = requireClient(Binder.getCallingUid(), Binder.getCallingPid(), true);
 
         LOGGER.d("newProcess: uid=%d, cmd=%s, env=%s, dir=%s", Binder.getCallingUid(), Arrays.toString(cmd), Arrays.toString(env), dir);
 
@@ -198,7 +205,7 @@ public class Service extends IShizukuService.Stub {
             throw new RemoteException(e.getMessage());
         }
 
-        return new RemoteProcessHolder(process);
+        return new RemoteProcessHolder(process, record.client.asBinder());
     }
 
     @Override
