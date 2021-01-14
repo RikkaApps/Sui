@@ -61,7 +61,7 @@ public class Strings {
 
         array = new String[COUNT];
         array[permission_warning_template] = "Allow <b>%1$s</b> to %2$s?";
-        array[permission_description] = "have full access of the device";
+        array[permission_description] = "have the full access of the device";
         array[grant_dialog_button_allow_always] = "Allow all the time";
         array[grant_dialog_button_allow_one_time] = "Only this time";
         array[grant_dialog_button_deny] = "Deny";
