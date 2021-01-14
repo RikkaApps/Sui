@@ -13,7 +13,7 @@
         android:background="?android:colorPrimary"
         android:elevation="2dp"
         tools:navigationIcon="@drawable/ic_close_24"
-        tools:text="Superuser management" />
+        tools:title="Superuser management" />
 
     <FrameLayout
         android:layout_width="match_parent"

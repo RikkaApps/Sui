@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import rikka.sui.BuildConfig;
 import rikka.sui.databinding.ManagementAppItemBinding;
 import rikka.sui.databinding.ManagementDialogBinding;
 import rikka.sui.ktx.DrawableKt;
@@ -178,6 +179,7 @@ public class ManagementDialog {
 
     private static void setupView(Context context, LayoutInflater layoutInflater, ManagementDialogBinding binding) {
         binding.title.setTitle(Strings.get(Res.string.management_title));
+        binding.title.setSubtitle("Sui " + BuildConfig.VERSION_NAME);
 
         Drawable closeDrawable = null;
         try {
