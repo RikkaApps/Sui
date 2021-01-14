@@ -15,17 +15,20 @@ import android.util.ArrayMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import hidden.HiddenApiBridge;
 import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 import moe.shizuku.server.IShizukuServiceConnection;
 import rikka.shizuku.ShizukuApiConstants;
+import rikka.sui.model.AppInfo;
 import rikka.sui.server.api.RemoteProcessHolder;
 import rikka.sui.server.api.SystemService;
 import rikka.sui.server.bridge.BridgeServiceClient;
@@ -34,6 +37,7 @@ import rikka.sui.server.config.ConfigManager;
 import rikka.sui.server.userservice.UserService;
 import rikka.sui.server.userservice.UserServiceRecord;
 import rikka.sui.util.OsUtils;
+import rikka.sui.util.ParceledListSlice;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
@@ -524,17 +528,21 @@ public class Service extends IShizukuService.Stub {
         }
     }
 
+    private int getFlagsForUidInternal(int uid, int mask) {
+        Config.PackageEntry entry = configManager.find(uid);
+        if (entry != null) {
+            return entry.flags & mask;
+        }
+        return 0;
+    }
+
     @Override
     public int getFlagsForUid(int uid, int mask) {
         if (Binder.getCallingUid() != managerUid) {
             LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
             return 0;
         }
-        Config.PackageEntry entry = configManager.find(uid);
-        if (entry != null) {
-            return entry.flags & mask;
-        }
-        return 0;
+        return getFlagsForUidInternal(uid, mask);
     }
 
     @Override
@@ -578,12 +586,62 @@ public class Service extends IShizukuService.Stub {
         }
     }
 
+    private ParceledListSlice<AppInfo> getApplications(int userId) {
+        if (Binder.getCallingUid() != managerUid) {
+            LOGGER.w("getApplications is allowed to be called only from the manager");
+            return null;
+        }
+
+        List<Integer> users = new ArrayList<>();
+        if (userId == -1) {
+            users.addAll(SystemService.getUserIdsNoThrow());
+        } else {
+            users.add(userId);
+        }
+
+        List<AppInfo> list = new ArrayList<>();
+        for (int user : users) {
+            for (PackageInfo pi : SystemService.getInstalledPackagesNoThrow(0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, user)) {
+                if (pi.applicationInfo == null || HiddenApiBridge.PackageInfo_overlayTarget(pi) != null)
+                    continue;
+
+                int uid = pi.applicationInfo.uid;
+                if (uid == managerUid)
+                    continue;
+
+                int flags = getFlagsForUid(pi.applicationInfo.uid, Config.MASK_PERMISSION);
+                if (flags == 0
+                        && pi.applicationInfo.uid != 2000
+                        && UserHandleCompat.getAppId(pi.applicationInfo.uid) < 10000)
+                    continue;
+
+                AppInfo item = new AppInfo();
+                item.packageInfo = pi;
+                item.flags = flags;
+                list.add(item);
+            }
+        }
+        return new ParceledListSlice<>(list);
+    }
+
     @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
         //LOGGER.d("transact: code=%d, calling uid=%d", code, Binder.getCallingUid());
         if (code == ShizukuApiConstants.BINDER_TRANSACTION_transact) {
             data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
             transactRemote(data, reply, flags);
+            return true;
+        } else if (code == ServerConstants.BINDER_TRANSACTION_getApplications) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            int userId = data.readInt();
+            ParceledListSlice<AppInfo> result = getApplications(userId);
+            reply.writeNoException();
+            if (result != null) {
+                reply.writeInt(1);
+                result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+            } else {
+                reply.writeInt(0);
+            }
             return true;
         }
         return super.onTransact(code, data, reply, flags);

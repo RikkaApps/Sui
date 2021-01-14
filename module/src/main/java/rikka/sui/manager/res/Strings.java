@@ -5,11 +5,17 @@ import java.util.Locale;
 
 import static rikka.sui.manager.res.Res.string.COUNT;
 import static rikka.sui.manager.res.Res.string.brackets_format;
+import static rikka.sui.manager.res.Res.string.close;
 import static rikka.sui.manager.res.Res.string.grant_dialog_button_allow_always;
 import static rikka.sui.manager.res.Res.string.grant_dialog_button_allow_one_time;
 import static rikka.sui.manager.res.Res.string.grant_dialog_button_deny;
 import static rikka.sui.manager.res.Res.string.grant_dialog_button_deny_and_dont_ask_again;
+import static rikka.sui.manager.res.Res.string.management_title;
+import static rikka.sui.manager.res.Res.string.permission_allowed;
+import static rikka.sui.manager.res.Res.string.permission_ask;
+import static rikka.sui.manager.res.Res.string.permission_denied;
 import static rikka.sui.manager.res.Res.string.permission_description;
+import static rikka.sui.manager.res.Res.string.permission_hidden;
 import static rikka.sui.manager.res.Res.string.permission_warning_template;
 
 public class Strings {
@@ -29,6 +35,12 @@ public class Strings {
         array[grant_dialog_button_deny] = "拒绝";
         array[grant_dialog_button_deny_and_dont_ask_again] = "拒绝，不要再询问";
         array[brackets_format] = "%1$s（%2$s）";
+        array[management_title] = "超级用户管理";
+        array[close] = "关闭";
+        array[permission_allowed] = "允许";
+        array[permission_denied] = "拒绝";
+        array[permission_hidden] = "隐藏";
+        array[permission_ask] = "询问";
         Strings.STRINGS.put("zh-CN", array);
 
         array = new String[COUNT];
@@ -39,6 +51,12 @@ public class Strings {
         array[grant_dialog_button_deny] = "拒絕";
         array[grant_dialog_button_deny_and_dont_ask_again] = "拒絕且不要再詢問";
         array[brackets_format] = "%1$s（%2$s）";
+        array[management_title] = "超級使用者管理";
+        array[close] = "關閉";
+        array[permission_allowed] = "允許";
+        array[permission_denied] = "拒絕";
+        array[permission_hidden] = "隱藏";
+        array[permission_ask] = "詢問";
         Strings.STRINGS.put("zh", array);
 
         array = new String[COUNT];
@@ -49,6 +67,12 @@ public class Strings {
         array[grant_dialog_button_deny] = "Deny";
         array[grant_dialog_button_deny_and_dont_ask_again] = "Deny, don't ask again";
         array[brackets_format] = "%1$s (%2$s)";
+        array[management_title] = "Superuser management";
+        array[close] = "Close";
+        array[permission_allowed] = "Allowed";
+        array[permission_denied] = "Denied";
+        array[permission_hidden] = "Hidden";
+        array[permission_ask] = "Ask";
         Strings.STRINGS.put("en", array);
     }
 

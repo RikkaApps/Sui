@@ -21,7 +21,10 @@ static void PrepareFiles() {
 
     files = new std::vector<File *>();
     files->emplace_back(new File(RES_PATH "/layout/confirmation_dialog.xml"));
+    files->emplace_back(new File(RES_PATH "/layout/management_dialog.xml"));
+    files->emplace_back(new File(RES_PATH "/layout/management_app_item.xml"));
     files->emplace_back(new File(RES_PATH "/drawable/ic_su_24.xml"));
+    files->emplace_back(new File(RES_PATH "/drawable/ic_close_24.xml"));
 }
 
 static void DestroyFiles(JNIEnv *env) {

@@ -6,7 +6,13 @@ import android.os.ServiceManager;
 
 import androidx.annotation.Nullable;
 
+import java.util.List;
+
 import moe.shizuku.server.IShizukuService;
+import rikka.shizuku.ShizukuApiConstants;
+import rikka.sui.model.AppInfo;
+import rikka.sui.server.ServerConstants;
+import rikka.sui.util.ParceledListSlice;
 
 public class BridgeServiceClient {
 
@@ -73,5 +79,31 @@ public class BridgeServiceClient {
             setBinder(requestBinderFromBridge());
         }
         return service;
+    }
+
+    public static List<AppInfo> getApplications(int userId) {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        List<AppInfo> result;
+        try {
+            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
+            data.writeInt(userId);
+            try {
+                getService().asBinder().transact(ServerConstants.BINDER_TRANSACTION_getApplications, data, reply, 0);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+            reply.readException();
+            if ((0 != reply.readInt())) {
+                //noinspection unchecked
+                result = ParceledListSlice.CREATOR.createFromParcel(reply).getList();
+            } else {
+                result = null;
+            }
+        } finally {
+            reply.recycle();
+            data.recycle();
+        }
+        return result;
     }
 }

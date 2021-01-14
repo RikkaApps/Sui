@@ -84,7 +84,10 @@ rm "$ROOT_PATH/sui.dex.new"
 mv "$ROOT_PATH/tmp/sui.dex" "$ROOT_PATH/sui.dex.new"
 
 extract "$ZIPFILE" 'res/layout/confirmation_dialog.xml' "$ROOT_PATH/tmp"
+extract "$ZIPFILE" 'res/layout/management_dialog.xml' "$ROOT_PATH/tmp"
+extract "$ZIPFILE" 'res/layout/management_app_item.xml' "$ROOT_PATH/tmp"
 extract "$ZIPFILE" 'res/drawable/ic_su_24.xml' "$ROOT_PATH/tmp"
+extract "$ZIPFILE" 'res/drawable/ic_close_24.xml' "$ROOT_PATH/tmp"
 rm -rf "$ROOT_PATH/res.new"
 mv "$ROOT_PATH/tmp/res" "$ROOT_PATH/res.new"
 

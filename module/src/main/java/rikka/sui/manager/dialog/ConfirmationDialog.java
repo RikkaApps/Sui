@@ -1,4 +1,4 @@
-package rikka.sui.manager;
+package rikka.sui.manager.dialog;
 
 import android.app.ActivityThread;
 import android.content.Context;
@@ -17,6 +17,7 @@ import android.os.IBinder;
 import android.text.Html;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,7 @@ import rikka.sui.ktx.HandlerKt;
 import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
+import rikka.sui.manager.BridgeServiceClient;
 import rikka.sui.manager.res.Res;
 import rikka.sui.manager.res.Strings;
 import rikka.sui.manager.res.Utils;
@@ -43,7 +45,7 @@ import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
 import static rikka.sui.manager.ManagerConstants.LOGGER;
 
-public class PermissionConfirmation {
+public class ConfirmationDialog {
 
     private static final IBinder TOKEN = new Binder();
 

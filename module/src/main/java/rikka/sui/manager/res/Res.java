@@ -4,12 +4,15 @@ public final class Res {
 
     public final static class drawable {
 
-        public final static int ic_su_24 = 1;
+        public final static int ic_su_24 = 3;
+        public final static int ic_close_24 = 4;
     }
 
     public final static class layout {
 
         public final static int confirmation_dialog = 0;
+        public final static int management_dialog = 1;
+        public final static int management_app_item = 2;
     }
 
     public final static class string {
@@ -21,6 +24,12 @@ public final class Res {
         public static final int grant_dialog_button_deny = 4;
         public static final int grant_dialog_button_deny_and_dont_ask_again = 5;
         public static final int brackets_format = 6;
-        public static final int COUNT = 7;
+        public static final int management_title = 7;
+        public static final int close = 8;
+        public static final int permission_allowed = 9;
+        public static final int permission_denied = 10;
+        public static final int permission_hidden = 11;
+        public static final int permission_ask = 12;
+        public static final int COUNT = 13;
     }
 }

@@ -2,8 +2,6 @@
 
 Modern super user interface implementation on Android.
 
-**Work in progress (management UI + demo + README not finished).**
-
 > The name, Sui, also comes from a character. (<https://www.pixiv.net/artworks/71435059>)
 
 ## Background
