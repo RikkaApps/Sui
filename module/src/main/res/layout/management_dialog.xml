@@ -31,6 +31,7 @@
             android:id="@android:id/list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
             android:divider="@null"
             android:visibility="gone"
             tools:listitem="@layout/management_app_item"

@@ -194,11 +194,59 @@ public class ManagementDialog {
 
         setupView(context, layoutInflater, binding);
 
+        windowRoot.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                v.removeOnAttachStateChangeListener(this);
+                v.requestApplyInsets();
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+
+            }
+        });
+
+        windowRoot.setSystemUiVisibility(windowRoot.getSystemUiVisibility()
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+
+        windowRoot.setOnApplyWindowInsetsListener((v, insets) -> {
+            int left = insets.getSystemWindowInsetLeft();
+            int top = insets.getSystemWindowInsetTop();
+            int right = insets.getSystemWindowInsetRight();
+            int bottom = insets.getSystemWindowInsetBottom();
+
+            /*v.setPadding(v.getPaddingLeft() + left,
+                    v.getPaddingTop(),
+                    v.getPaddingRight() + right,
+                    v.getPaddingBottom());*/
+
+            binding.title.setPadding(
+                    binding.title.getPaddingLeft(),
+                    /*binding.title.getPaddingTop() + */top,
+                    binding.title.getPaddingRight(),
+                    binding.title.getPaddingBottom()
+            );
+
+            binding.list.setPadding(
+                    binding.list.getPaddingLeft(),
+                    binding.list.getPaddingTop(),
+                    binding.list.getPaddingRight(),
+                    /*binding.list.getPaddingBottom() + */bottom
+            );
+
+            return insets;
+        });
+
         WindowManager.LayoutParams attr = new WindowManager.LayoutParams();
         attr.width = ViewGroup.LayoutParams.MATCH_PARENT;
         attr.height = ViewGroup.LayoutParams.MATCH_PARENT;
         attr.dimAmount = 0;
-        attr.flags = 0;
+        attr.flags = WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
+                | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
         attr.type = WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG;
         attr.token = TOKEN;
         attr.gravity = Gravity.CENTER;
