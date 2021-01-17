@@ -1,7 +1,10 @@
 package rikka.sui.manager.dialog;
 
 import android.app.ActivityThread;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -112,6 +115,28 @@ public class ManagementDialog {
         }
     }
 
+    private static class RemoveWindowRunnable implements Runnable {
+
+        private WindowManager windowManager;
+        private View view;
+        private BroadcastReceiver receiver;
+
+        @Override
+        public void run() {
+            try {
+                windowManager.removeView(view);
+            } catch (Throwable e) {
+                LOGGER.w(e, "removeView");
+            }
+
+            try {
+                view.getContext().unregisterReceiver(receiver);
+            } catch (Throwable e) {
+                LOGGER.w(e, "unregisterReceiver");
+            }
+        }
+    }
+
     public static void show() {
         HandlerKt.getMainHandler().post(ManagementDialog::showInternal);
     }
@@ -130,6 +155,15 @@ public class ManagementDialog {
 
         float density = context.getResources().getDisplayMetrics().density;
 
+        RemoveWindowRunnable removeWindowRunnable = new RemoveWindowRunnable();
+        removeWindowRunnable.windowManager = wm;
+        removeWindowRunnable.receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                HandlerKt.getMainHandler().post(removeWindowRunnable);
+            }
+        };
+
         FrameLayout windowRoot = new FrameLayout(context) {
             @Override
             public boolean dispatchKeyEvent(KeyEvent event) {
@@ -144,21 +178,19 @@ public class ManagementDialog {
                     getKeyDispatcherState().handleUpEvent(event);
 
                     if (event.isTracking() && !event.isCanceled()) {
-                        try {
-                            wm.removeView(this);
-                        } catch (Throwable e) {
-                            LOGGER.w(e, "removeView");
-                        }
+                        HandlerKt.getMainHandler().post(removeWindowRunnable);
                         return true;
                     }
                 }
                 return super.dispatchKeyEvent(event);
             }
         };
+        removeWindowRunnable.view = windowRoot;
+
         View view = layoutInflater.inflate(Xml.get(Res.layout.management_dialog), windowRoot, false);
         ManagementDialogBinding binding = ManagementDialogBinding.bind(view);
         windowRoot.addView(binding.getRoot());
-        binding.title.setNavigationOnClickListener((v) -> wm.removeView(windowRoot));
+        binding.title.setNavigationOnClickListener((v) -> HandlerKt.getMainHandler().post(removeWindowRunnable));
 
         setupView(context, layoutInflater, binding);
 
@@ -174,7 +206,22 @@ public class ManagementDialog {
         attr.format = PixelFormat.TRANSLUCENT;
         WindowKt.setPrivateFlags(attr, WindowKt.getPrivateFlags(attr) | WindowKt.getSYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS());
 
-        wm.addView(windowRoot, attr);
+        try {
+            wm.addView(windowRoot, attr);
+        } catch (Exception e) {
+            LOGGER.w(e, "addView");
+            return;
+        }
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+
+        try {
+            context.registerReceiver(removeWindowRunnable.receiver, intentFilter);
+            LOGGER.i("registerReceiver android.intent.action.CLOSE_SYSTEM_DIALOGS");
+        } catch (Exception e) {
+            LOGGER.w(e, "registerReceiver android.intent.action.CLOSE_SYSTEM_DIALOGS");
+        }
     }
 
     private static void setupView(Context context, LayoutInflater layoutInflater, ManagementDialogBinding binding) {

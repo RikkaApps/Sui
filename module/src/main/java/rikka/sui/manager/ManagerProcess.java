@@ -90,9 +90,9 @@ public class ManagerProcess {
         try {
             context.registerReceiver(SHOW_MANAGEMENT_RECEIVER, intentFilter,
                     "android.permission.CONTROL_INCALL_EXPERIENCE", null);
-            LOGGER.i("registerReceiver");
+            LOGGER.i("registerReceiver android.provider.Telephony.SECRET_CODE");
         } catch (Exception e) {
-            LOGGER.w(e, "registerReceiver");
+            LOGGER.w(e, "registerReceiver android.provider.Telephony.SECRET_CODE");
         }
     }
 
