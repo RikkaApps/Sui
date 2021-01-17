@@ -86,20 +86,18 @@ public class Service extends IShizukuService.Stub {
         managerApplication = null;
     };
 
-    public Service() {
-        Service.instance = this;
-
-        configManager = ConfigManager.getInstance();
-        clientManager = ClientManager.getInstance();
-
+    private int waitForPackage(String packageName, boolean forever) {
+        int uid;
         while (true) {
-            ApplicationInfo ai = SystemService.getApplicationInfoNoThrow(MANAGER_APPLICATION_ID, 0, 0);
+            ApplicationInfo ai = SystemService.getApplicationInfoNoThrow(packageName, 0, 0);
             if (ai != null) {
-                managerUid = ai.uid;
+                uid = ai.uid;
                 break;
             }
 
-            LOGGER.w("can't find manager package, wait 1s");
+            LOGGER.w("can't find %s, wait 1s", packageName);
+
+            if (!forever) return -1;
 
             try {
                 //noinspection BusyWait
@@ -108,7 +106,22 @@ public class Service extends IShizukuService.Stub {
             }
         }
 
-        LOGGER.i("uid for %s is %d", MANAGER_APPLICATION_ID, managerUid);
+        LOGGER.i("uid for %s is %d", packageName, uid);
+        return uid;
+    }
+
+    public Service() {
+        Service.instance = this;
+
+        configManager = ConfigManager.getInstance();
+        clientManager = ClientManager.getInstance();
+
+        managerUid = waitForPackage(MANAGER_APPLICATION_ID, true);
+
+        int gmsUid = waitForPackage("com.google.android.gms", false);
+        if (gmsUid != 0) {
+            configManager.update(gmsUid, Config.MASK_PERMISSION, Config.FLAG_HIDDEN);
+        }
 
         BridgeServiceClient.send(new BridgeServiceClient.Listener() {
             @Override
