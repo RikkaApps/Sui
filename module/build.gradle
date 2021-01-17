@@ -11,7 +11,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode gitCommitCount
-        versionName moduleVersion
+        versionName moduleVersion.substring(1)
         externalNativeBuild {
             cmake {
                 arguments "-DMODULE_NAME:STRING=riru_$moduleId",

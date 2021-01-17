@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="24dp"
     android:elevation="8dp"
-    tools:background="@android:color/white">
+    tools:background="?android:colorBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,9 +20,9 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
             android:importantForAccessibility="no"
-            android:tint="?android:colorAccent"
             android:tintMode="src_in"
-            tools:src="@drawable/ic_su_24" />
+            tools:src="@drawable/ic_su_24"
+            tools:tint="@color/accent_color_light" />
 
         <TextView
             android:id="@android:id/title"
@@ -53,7 +53,7 @@
             android:padding="16dp"
             android:textSize="14sp"
             tools:text="Allow all the time"
-            tools:textColor="?android:colorAccent" />
+            tools:textColor="@color/accent_color_light" />
 
         <View
             android:layout_width="match_parent"
@@ -72,7 +72,7 @@
             android:padding="16dp"
             android:textSize="14sp"
             tools:text="Only this time"
-            tools:textColor="?android:colorAccent" />
+            tools:textColor="@color/accent_color_light" />
 
         <View
             android:layout_width="match_parent"
@@ -91,7 +91,7 @@
             android:padding="16dp"
             android:textSize="14sp"
             tools:text="Deny"
-            tools:textColor="?android:colorAccent" />
+            tools:textColor="@color/accent_color_light" />
 
     </LinearLayout>
 

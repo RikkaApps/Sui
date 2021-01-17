@@ -17,7 +17,6 @@ import android.os.IBinder;
 import android.text.Html;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -79,6 +78,15 @@ public class ConfirmationDialog {
         float density = context.getResources().getDisplayMetrics().density;
         float l1 = density * 8;
 
+        int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
+        int colorAccent = isNight ? 0xffc8e6c9 : 0xff338158/*ResourcesKt.resolveColor(theme, android.R.attr.colorAccent)*/;
+
+        ColorStateList buttonTextColor = new ColorStateList(
+                new int[][]{
+                        new int[]{-android.R.attr.state_enabled},
+                        new int[]{}
+                }, new int[]{colorForeground & 0xffffff | 0x61000000, colorAccent});
+
         FrameLayout windowRoot = new FrameLayout(context);
         View view = layoutInflater.inflate(Xml.get(Res.layout.confirmation_dialog), windowRoot, false);
         ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(view);
@@ -99,20 +107,12 @@ public class ConfirmationDialog {
         } catch (IOException | XmlPullParserException e) {
             LOGGER.e(e, "setImageDrawable");
         }
+        binding.icon.setImageTintList(ColorStateList.valueOf(colorAccent));
         binding.title.setText(Html.fromHtml(
                 String.format(Strings.get(Res.string.permission_warning_template), label, Strings.get(Res.string.permission_description))));
         binding.button1.setText(Strings.get(Res.string.grant_dialog_button_allow_always));
         binding.button2.setText(Strings.get(Res.string.grant_dialog_button_allow_one_time));
         binding.button3.setText(Strings.get(Res.string.grant_dialog_button_deny_and_dont_ask_again));
-
-        int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
-        int colorAccent = ResourcesKt.resolveColor(theme, android.R.attr.colorAccent);
-
-        ColorStateList buttonTextColor = new ColorStateList(
-                new int[][]{
-                        new int[]{-android.R.attr.state_enabled},
-                        new int[]{}
-                }, new int[]{colorForeground & 0xffffff | 0x61000000, colorAccent});
 
         binding.button1.setTextColor(buttonTextColor);
         binding.button2.setTextColor(buttonTextColor);
