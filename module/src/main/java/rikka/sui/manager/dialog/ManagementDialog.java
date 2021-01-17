@@ -1,10 +1,7 @@
 package rikka.sui.manager.dialog;
 
 import android.app.ActivityThread;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -23,7 +20,6 @@ import android.util.LruCache;
 import android.util.Pair;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +27,6 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -115,28 +110,6 @@ public class ManagementDialog {
         }
     }
 
-    private static class RemoveWindowRunnable implements Runnable {
-
-        private WindowManager windowManager;
-        private View view;
-        private BroadcastReceiver receiver;
-
-        @Override
-        public void run() {
-            try {
-                windowManager.removeView(view);
-            } catch (Throwable e) {
-                LOGGER.w(e, "removeView");
-            }
-
-            try {
-                view.getContext().unregisterReceiver(receiver);
-            } catch (Throwable e) {
-                LOGGER.w(e, "unregisterReceiver");
-            }
-        }
-    }
-
     public static void show() {
         HandlerKt.getMainHandler().post(ManagementDialog::showInternal);
     }
@@ -149,52 +122,21 @@ public class ManagementDialog {
 
         boolean isNight = (application.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
         Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_Material : android.R.style.Theme_Material_Light);
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         Resources.Theme theme = context.getTheme();
 
         float density = context.getResources().getDisplayMetrics().density;
 
-        RemoveWindowRunnable removeWindowRunnable = new RemoveWindowRunnable();
-        removeWindowRunnable.windowManager = wm;
-        removeWindowRunnable.receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                HandlerKt.getMainHandler().post(removeWindowRunnable);
-            }
-        };
+        SystemDialogRootView root = new SystemDialogRootView(context);
 
-        FrameLayout windowRoot = new FrameLayout(context) {
-            @Override
-            public boolean dispatchKeyEvent(KeyEvent event) {
-                if (event.getKeyCode() != KeyEvent.KEYCODE_BACK) {
-                    return super.dispatchKeyEvent(event);
-                }
-
-                if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
-                    getKeyDispatcherState().startTracking(event, this);
-                    return true;
-                } else if (event.getAction() == KeyEvent.ACTION_UP) {
-                    getKeyDispatcherState().handleUpEvent(event);
-
-                    if (event.isTracking() && !event.isCanceled()) {
-                        HandlerKt.getMainHandler().post(removeWindowRunnable);
-                        return true;
-                    }
-                }
-                return super.dispatchKeyEvent(event);
-            }
-        };
-        removeWindowRunnable.view = windowRoot;
-
-        View view = layoutInflater.inflate(Xml.get(Res.layout.management_dialog), windowRoot, false);
+        View view = layoutInflater.inflate(Xml.get(Res.layout.management_dialog), root, false);
         ManagementDialogBinding binding = ManagementDialogBinding.bind(view);
-        windowRoot.addView(binding.getRoot());
-        binding.title.setNavigationOnClickListener((v) -> HandlerKt.getMainHandler().post(removeWindowRunnable));
+        root.addView(binding.getRoot());
+        binding.title.setNavigationOnClickListener((v) -> root.dismiss());
 
         setupView(context, layoutInflater, binding);
 
-        windowRoot.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+        root.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View v) {
                 v.removeOnAttachStateChangeListener(this);
@@ -207,12 +149,12 @@ public class ManagementDialog {
             }
         });
 
-        windowRoot.setSystemUiVisibility(windowRoot.getSystemUiVisibility()
+        root.setSystemUiVisibility(root.getSystemUiVisibility()
                 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
 
-        windowRoot.setOnApplyWindowInsetsListener((v, insets) -> {
+        root.setOnApplyWindowInsetsListener((v, insets) -> {
             int left = insets.getSystemWindowInsetLeft();
             int top = insets.getSystemWindowInsetTop();
             int right = insets.getSystemWindowInsetRight();
@@ -254,22 +196,7 @@ public class ManagementDialog {
         attr.format = PixelFormat.TRANSLUCENT;
         WindowKt.setPrivateFlags(attr, WindowKt.getPrivateFlags(attr) | WindowKt.getSYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS());
 
-        try {
-            wm.addView(windowRoot, attr);
-        } catch (Exception e) {
-            LOGGER.w(e, "addView");
-            return;
-        }
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-
-        try {
-            context.registerReceiver(removeWindowRunnable.receiver, intentFilter);
-            LOGGER.i("registerReceiver android.intent.action.CLOSE_SYSTEM_DIALOGS");
-        } catch (Exception e) {
-            LOGGER.w(e, "registerReceiver android.intent.action.CLOSE_SYSTEM_DIALOGS");
-        }
+        root.show(attr);
     }
 
     private static void setupView(Context context, LayoutInflater layoutInflater, ManagementDialogBinding binding) {

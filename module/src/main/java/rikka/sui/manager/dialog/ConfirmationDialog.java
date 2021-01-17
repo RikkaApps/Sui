@@ -21,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -72,7 +71,6 @@ public class ConfirmationDialog {
         boolean isNight = (application.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
 
         Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_Material_Dialog_Alert : android.R.style.Theme_Material_Light_Dialog_Alert);
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         Resources.Theme theme = context.getTheme();
         float density = context.getResources().getDisplayMetrics().density;
@@ -87,10 +85,22 @@ public class ConfirmationDialog {
                         new int[]{}
                 }, new int[]{colorForeground & 0xffffff | 0x61000000, colorAccent});
 
-        FrameLayout windowRoot = new FrameLayout(context);
-        View view = layoutInflater.inflate(Xml.get(Res.layout.confirmation_dialog), windowRoot, false);
+        SystemDialogRootView root = new SystemDialogRootView(context) {
+
+            @Override
+            public boolean onBackPressed() {
+                return false;
+            }
+
+            @Override
+            public void onClose() {
+                setResult(requestUid, requestPid, requestCode, false, true);
+            }
+        };
+
+        View view = layoutInflater.inflate(Xml.get(Res.layout.confirmation_dialog), root, false);
         ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(view);
-        windowRoot.addView(binding.getRoot());
+        root.addView(binding.getRoot());
 
         String label = requestPackageName;
         int userId = UserHandleCompat.getUserId(requestUid);
@@ -120,15 +130,15 @@ public class ConfirmationDialog {
 
         binding.button1.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, true, false);
-            wm.removeView(windowRoot);
+            root.dismiss();
         });
         binding.button2.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, true, true);
-            wm.removeView(windowRoot);
+            root.dismiss();
         });
         binding.button3.setOnClickListener(v -> {
             setResult(requestUid, requestPid, requestCode, false, false);
-            wm.removeView(windowRoot);
+            root.dismiss();
         });
 
         TextViewKt.applyCountdown(binding.button1, 1, null, 0);
@@ -152,6 +162,6 @@ public class ConfirmationDialog {
         attr.format = PixelFormat.TRANSLUCENT;
         WindowKt.setPrivateFlags(attr, WindowKt.getPrivateFlags(attr) | WindowKt.getSYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS());
 
-        wm.addView(windowRoot, attr);
+        root.show(attr);
     }
 }
