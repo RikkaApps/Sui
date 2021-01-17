@@ -385,7 +385,7 @@ public class ManagementDialog {
                             Strings.get(Res.string.permission_hidden),
                             String.format(Locale.ENGLISH, "%06x", colorForeground & 0xffffff)
                     )),
-                    String.format(Strings.get(Res.string.brackets_format), "", Strings.get(Res.string.permission_ask)),
+                    Strings.get(Res.string.permission_ask),
             }) {
                 @NonNull
                 @Override
@@ -430,36 +430,24 @@ public class ManagementDialog {
             boolean denied = (data.flags & Config.FLAG_DENIED) != 0;
             boolean hidden = (data.flags & Config.FLAG_HIDDEN) != 0;
             if (allowed) {
-                binding.title.setAlpha(1f);
-                binding.summary.setAlpha(1f);
-                binding.icon.setAlpha(1f);
                 binding.title.setTextColor(textColorPrimary);
 
                 binding.title.setTypeface(SANS_SERIF_MEDIUM);
 
                 binding.button1.setSelection(0);
             } else if (denied) {
-                binding.title.setAlpha(0.5f);
-                binding.summary.setAlpha(0.5f);
-                binding.icon.setAlpha(0.5f);
                 binding.title.setTextColor(textColorSecondary);
 
                 binding.title.setTypeface(SANS_SERIF);
 
                 binding.button1.setSelection(1);
             } else if (hidden) {
-                binding.title.setAlpha(0.2f);
-                binding.summary.setAlpha(0.2f);
-                binding.icon.setAlpha(0.2f);
                 binding.title.setTextColor(textColorSecondary);
 
                 binding.title.setTypeface(SANS_SERIF);
 
                 binding.button1.setSelection(2);
             } else {
-                binding.title.setAlpha(1f);
-                binding.summary.setAlpha(1f);
-                binding.icon.setAlpha(1f);
                 binding.title.setTextColor(textColorSecondary);
 
                 binding.title.setTypeface(SANS_SERIF);
