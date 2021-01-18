@@ -74,11 +74,13 @@ public class Service extends IShizukuService.Stub {
     }
 
     private static final String MANAGER_APPLICATION_ID = "com.android.systemui";
+    private static final String SETTINGS_APPLICATION_ID = "com.android.settings";
 
     private final Map<String, UserServiceRecord> userServiceRecords = Collections.synchronizedMap(new ArrayMap<>());
     private final ClientManager clientManager;
     private final ConfigManager configManager;
     private final int managerUid;
+    private final int settingsUid;
     private IShizukuApplication managerApplication;
 
     private final IBinder.DeathRecipient managerDeathRecipient = () -> {
@@ -117,6 +119,7 @@ public class Service extends IShizukuService.Stub {
         clientManager = ClientManager.getInstance();
 
         managerUid = waitForPackage(MANAGER_APPLICATION_ID, true);
+        settingsUid = waitForPackage(SETTINGS_APPLICATION_ID, true);
 
         int gmsUid = waitForPackage("com.google.android.gms", false);
         if (gmsUid != 0) {
@@ -401,7 +404,7 @@ public class Service extends IShizukuService.Stub {
 
         int callingPid = Binder.getCallingPid();
         int callingUid = Binder.getCallingUid();
-        boolean isManager;
+        boolean isManager, isSettings;
         ClientRecord clientRecord = null;
 
         List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
@@ -410,6 +413,7 @@ public class Service extends IShizukuService.Stub {
         }
 
         isManager = MANAGER_APPLICATION_ID.equals(requestPackageName);
+        isSettings = SETTINGS_APPLICATION_ID.equals(requestPackageName);
         if (isManager) {
             try {
                 application.asBinder().linkToDeath(managerDeathRecipient, 0);
@@ -419,8 +423,8 @@ public class Service extends IShizukuService.Stub {
             managerApplication = application;
         }
 
-        if (!isManager) {
-            if (!isManager && clientManager.findClient(callingUid, callingPid) != null) {
+        if (!isManager && !isSettings) {
+            if (clientManager.findClient(callingUid, callingPid) != null) {
                 throw new IllegalStateException("Client (uid=" + callingUid + ", pid=" + callingPid + ") has already attached");
             }
             synchronized (this) {
@@ -435,7 +439,7 @@ public class Service extends IShizukuService.Stub {
         reply.putInt(ATTACH_REPLY_SERVER_UID, OsUtils.getUid());
         reply.putInt(ATTACH_REPLY_SERVER_VERSION, ShizukuApiConstants.SERVER_VERSION);
         reply.putString(ATTACH_REPLY_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
-        if (!isManager) {
+        if (!isManager && !isSettings) {
             reply.putBoolean(ATTACH_REPLY_PERMISSION_GRANTED, clientRecord.allowed);
             reply.putBoolean(ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, shouldShowRequestPermissionRationale(clientRecord));
         }
@@ -648,6 +652,27 @@ public class Service extends IShizukuService.Stub {
         return new ParceledListSlice<>(list);
     }
 
+    private void showManagement() {
+        if (Binder.getCallingUid() != settingsUid) {
+            LOGGER.w("showManagement is allowed to be called only from settings");
+            return;
+        }
+
+        if (managerApplication != null) {
+            Parcel data = Parcel.obtain();
+            data.writeInterfaceToken(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            try {
+                managerApplication.asBinder().transact(ServerConstants.BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
+            } catch (Throwable e) {
+                LOGGER.w(e, "showPermissionConfirmation");
+            } finally {
+                data.recycle();
+            }
+        } else {
+            LOGGER.e("manager is null");
+        }
+    }
+
     @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
         //LOGGER.d("transact: code=%d, calling uid=%d", code, Binder.getCallingUid());
@@ -666,6 +691,10 @@ public class Service extends IShizukuService.Stub {
             } else {
                 reply.writeInt(0);
             }
+            return true;
+        } else if (code == ServerConstants.BINDER_TRANSACTION_showManagement) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            showManagement();
             return true;
         }
         return super.onTransact(code, data, reply, flags);

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.os.RemoteException;
 
 import java.nio.ByteBuffer;
@@ -13,10 +14,12 @@ import java.util.Arrays;
 
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
+import rikka.shizuku.ShizukuApiConstants;
 import rikka.sui.ktx.HandlerKt;
 import rikka.sui.manager.dialog.ConfirmationDialog;
 import rikka.sui.manager.dialog.ManagementDialog;
 import rikka.sui.manager.res.Xml;
+import rikka.sui.server.ServerConstants;
 
 import static rikka.sui.manager.ManagerConstants.LOGGER;
 
@@ -38,6 +41,18 @@ public class ManagerProcess {
         public void showPermissionConfirmation(int requestUid, int requestPid, String requestPackageName, int requestCode) {
             LOGGER.i("showPermissionConfirmation: %d %d %s %d", requestUid, requestPid, requestPackageName, requestCode);
             ConfirmationDialog.show(requestUid, requestPid, requestPackageName, requestCode);
+        }
+
+        @Override
+        public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+            if (code == ServerConstants.BINDER_TRANSACTION_showManagement) {
+                data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+                LOGGER.i("showManagement");
+                ManagementDialog.show();
+                return true;
+            } else {
+                return super.onTransact(code, data, reply, flags);
+            }
         }
     };
 

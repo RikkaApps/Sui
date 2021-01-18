@@ -7,4 +7,6 @@ public class ServerConstants {
     public static final Logger LOGGER = new Logger("SuiServer");
 
     public static final int BINDER_TRANSACTION_getApplications = 10001;
+    public static final int BINDER_TRANSACTION_showManagement = 10002;
+
 }
