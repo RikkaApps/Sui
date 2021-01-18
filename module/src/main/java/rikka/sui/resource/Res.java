@@ -1,4 +1,4 @@
-package rikka.sui.manager.res;
+package rikka.sui.resource;
 
 public final class Res {
 
@@ -30,6 +30,8 @@ public final class Res {
         public static final int permission_denied = 10;
         public static final int permission_hidden = 11;
         public static final int permission_ask = 12;
-        public static final int COUNT = 13;
+        public static final int notification_channel_group_name = 13;
+        public static final int notification_show_management_text = 14;
+        public static final int COUNT = 15;
     }
 }

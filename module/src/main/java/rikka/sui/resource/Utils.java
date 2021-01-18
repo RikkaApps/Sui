@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package rikka.sui.manager.res;
+package rikka.sui.resource;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;

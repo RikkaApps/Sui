@@ -1,4 +1,4 @@
-package rikka.sui.manager.res;
+package rikka.sui.resource;
 
 import android.annotation.SuppressLint;
 import android.util.Log;

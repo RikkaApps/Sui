@@ -18,8 +18,9 @@ import rikka.shizuku.ShizukuApiConstants;
 import rikka.sui.ktx.HandlerKt;
 import rikka.sui.manager.dialog.ConfirmationDialog;
 import rikka.sui.manager.dialog.ManagementDialog;
-import rikka.sui.manager.res.Xml;
+import rikka.sui.resource.Xml;
 import rikka.sui.server.ServerConstants;
+import rikka.sui.util.BridgeServiceClient;
 
 import static rikka.sui.manager.ManagerConstants.LOGGER;
 

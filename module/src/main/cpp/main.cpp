@@ -11,20 +11,21 @@
 #include "system_server.h"
 #include "config.h"
 #include "manager_process.h"
+#include "settings_process.h"
 
 static DexFile *dexFile = nullptr;
-static std::vector<File *> *files = nullptr;
+static std::vector<File *> *resources_files = nullptr;
 
 static void PrepareFiles() {
     if (dexFile && dexFile->getBytes()) return;
     dexFile = new DexFile(DEX_PATH);
 
-    files = new std::vector<File *>();
-    files->emplace_back(new File(RES_PATH "/layout/confirmation_dialog.xml"));
-    files->emplace_back(new File(RES_PATH "/layout/management_dialog.xml"));
-    files->emplace_back(new File(RES_PATH "/layout/management_app_item.xml"));
-    files->emplace_back(new File(RES_PATH "/drawable/ic_su_24.xml"));
-    files->emplace_back(new File(RES_PATH "/drawable/ic_close_24.xml"));
+    resources_files = new std::vector<File *>();
+    resources_files->emplace_back(new File(RES_PATH "/layout/confirmation_dialog.xml"));
+    resources_files->emplace_back(new File(RES_PATH "/layout/management_dialog.xml"));
+    resources_files->emplace_back(new File(RES_PATH "/layout/management_app_item.xml"));
+    resources_files->emplace_back(new File(RES_PATH "/drawable/ic_su_24.xml"));
+    resources_files->emplace_back(new File(RES_PATH "/drawable/ic_close_24.xml"));
 }
 
 static void DestroyFiles(JNIEnv *env) {
@@ -33,12 +34,12 @@ static void DestroyFiles(JNIEnv *env) {
         delete dexFile;
         dexFile = nullptr;
     }
-    if (files) {
-        for (auto *file : *files) {
+    if (resources_files) {
+        for (auto *file : *resources_files) {
             delete file;
         }
-        delete files;
-        files = nullptr;
+        delete resources_files;
+        resources_files = nullptr;
     }
 }
 
@@ -84,8 +85,11 @@ static void appProcessPost(
         JNIEnv *env, const char *from, const char *package_name, const char *app_data_dir, jint uid) {
 
     if (strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
-        LOGV("%s: uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
-        Manager::main(env, app_data_dir, dexFile, files);
+        LOGV("%s: manager process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
+        Manager::main(env, app_data_dir, dexFile, resources_files);
+    } else if (strcmp(saved_package_name, SETTINGS_APPLICATION_ID) == 0)  {
+        LOGV("%s: settings process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
+        Settings::main(env, app_data_dir, dexFile, resources_files);
     } else {
         DestroyFiles(env);
     }

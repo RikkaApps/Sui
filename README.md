@@ -40,7 +40,9 @@ In conclusion, we can get a super user interface similar to standard Android API
 ## Guide for users
 
 * Install the zip from Magisk manager
-* Show Management UI: enter `*#*#784784#*#*` in the default dialer app
+* Open Management UI:
+  - Trough a notification, this notification will show when you are in "Developer options"
+  - Enter `*#*#784784#*#*` in the default dialer app
 * Play with apps that support Sui
 
 ## Guide for application developers

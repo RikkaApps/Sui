@@ -1,22 +1,24 @@
-package rikka.sui.manager.res;
+package rikka.sui.resource;
 
 import java.util.HashMap;
 import java.util.Locale;
 
-import static rikka.sui.manager.res.Res.string.COUNT;
-import static rikka.sui.manager.res.Res.string.brackets_format;
-import static rikka.sui.manager.res.Res.string.close;
-import static rikka.sui.manager.res.Res.string.grant_dialog_button_allow_always;
-import static rikka.sui.manager.res.Res.string.grant_dialog_button_allow_one_time;
-import static rikka.sui.manager.res.Res.string.grant_dialog_button_deny;
-import static rikka.sui.manager.res.Res.string.grant_dialog_button_deny_and_dont_ask_again;
-import static rikka.sui.manager.res.Res.string.management_title;
-import static rikka.sui.manager.res.Res.string.permission_allowed;
-import static rikka.sui.manager.res.Res.string.permission_ask;
-import static rikka.sui.manager.res.Res.string.permission_denied;
-import static rikka.sui.manager.res.Res.string.permission_description;
-import static rikka.sui.manager.res.Res.string.permission_hidden;
-import static rikka.sui.manager.res.Res.string.permission_warning_template;
+import static rikka.sui.resource.Res.string.COUNT;
+import static rikka.sui.resource.Res.string.brackets_format;
+import static rikka.sui.resource.Res.string.close;
+import static rikka.sui.resource.Res.string.grant_dialog_button_allow_always;
+import static rikka.sui.resource.Res.string.grant_dialog_button_allow_one_time;
+import static rikka.sui.resource.Res.string.grant_dialog_button_deny;
+import static rikka.sui.resource.Res.string.grant_dialog_button_deny_and_dont_ask_again;
+import static rikka.sui.resource.Res.string.management_title;
+import static rikka.sui.resource.Res.string.notification_channel_group_name;
+import static rikka.sui.resource.Res.string.notification_show_management_text;
+import static rikka.sui.resource.Res.string.permission_allowed;
+import static rikka.sui.resource.Res.string.permission_ask;
+import static rikka.sui.resource.Res.string.permission_denied;
+import static rikka.sui.resource.Res.string.permission_description;
+import static rikka.sui.resource.Res.string.permission_hidden;
+import static rikka.sui.resource.Res.string.permission_warning_template;
 
 public class Strings {
 
@@ -41,6 +43,8 @@ public class Strings {
         array[permission_denied] = "拒绝";
         array[permission_hidden] = "隐藏";
         array[permission_ask] = "询问";
+        array[notification_channel_group_name] = "显示管理界面";
+        array[notification_show_management_text] = "点按以显示超级用户管理界面";
         Strings.STRINGS.put("zh-CN", array);
 
         array = new String[COUNT];
@@ -57,6 +61,8 @@ public class Strings {
         array[permission_denied] = "拒絕";
         array[permission_hidden] = "隱藏";
         array[permission_ask] = "詢問";
+        array[notification_channel_group_name] = "顯示管理介面";
+        array[notification_show_management_text] = "輕觸以顯示超級使用者管理介面";
         Strings.STRINGS.put("zh", array);
 
         array = new String[COUNT];
@@ -73,6 +79,8 @@ public class Strings {
         array[permission_denied] = "Denied";
         array[permission_hidden] = "Hidden";
         array[permission_ask] = "Ask";
+        array[notification_channel_group_name] = "Show management";
+        array[notification_show_management_text] = "Tap to show superuser management";
         Strings.STRINGS.put("en", array);
     }
 

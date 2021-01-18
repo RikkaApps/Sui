@@ -17,6 +17,10 @@
     public static void main(java.lang.String[], java.nio.ByteBuffer[]);
 }
 
+-keep class rikka.sui.settings.SettingsProcess {
+    public static void main(java.lang.String[], java.nio.ByteBuffer[]);
+}
+
 -keepnames class * implements android.os.Parcelable
 
 -keepclassmembers class * implements android.os.Parcelable {

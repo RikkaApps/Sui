@@ -15,7 +15,7 @@
  */
 
 
-package rikka.sui.manager.res;
+package rikka.sui.resource;
 
 import android.text.Html;
 import android.text.TextPaint;

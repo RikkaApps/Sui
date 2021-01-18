@@ -1,4 +1,4 @@
-package rikka.sui.manager;
+package rikka.sui.util;
 
 import android.os.IBinder;
 import android.os.Parcel;
@@ -9,10 +9,8 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import moe.shizuku.server.IShizukuService;
-import rikka.shizuku.ShizukuApiConstants;
 import rikka.sui.model.AppInfo;
 import rikka.sui.server.ServerConstants;
-import rikka.sui.util.ParceledListSlice;
 
 public class BridgeServiceClient {
 
@@ -105,5 +103,19 @@ public class BridgeServiceClient {
             data.recycle();
         }
         return result;
+    }
+
+    public static void showManagement() {
+        Parcel data = Parcel.obtain();
+        try {
+            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
+            try {
+                getService().asBinder().transact(ServerConstants.BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        } finally {
+            data.recycle();
+        }
     }
 }

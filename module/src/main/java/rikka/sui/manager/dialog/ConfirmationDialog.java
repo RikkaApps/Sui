@@ -32,11 +32,11 @@ import rikka.sui.ktx.HandlerKt;
 import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
-import rikka.sui.manager.BridgeServiceClient;
-import rikka.sui.manager.res.Res;
-import rikka.sui.manager.res.Strings;
-import rikka.sui.manager.res.Utils;
-import rikka.sui.manager.res.Xml;
+import rikka.sui.util.BridgeServiceClient;
+import rikka.sui.resource.Res;
+import rikka.sui.resource.Strings;
+import rikka.sui.resource.Utils;
+import rikka.sui.resource.Xml;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
