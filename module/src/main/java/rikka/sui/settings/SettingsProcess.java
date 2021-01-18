@@ -18,6 +18,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
 import android.graphics.drawable.VectorDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -76,6 +77,7 @@ public class SettingsProcess {
             channel.setShowBadge(false);
             channel.setBypassDnd(true);
             channel.setGroup(CHANNEL_GROUP_ID);
+            channel.setSound(null, null);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 channel.setAllowBubbles(false);
             }
@@ -86,8 +88,10 @@ public class SettingsProcess {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder = new Notification.Builder(context, CHANNEL_SHOW_MANAGEMENT_ID);
         } else {
-            builder = new Notification.Builder(context);
-            builder.setPriority(Notification.PRIORITY_LOW);
+            builder = new Notification.Builder(context)
+                    .setPriority(Notification.PRIORITY_LOW)
+                    .setSound(Uri.EMPTY)
+                    .setVibrate(new long[0]);
         }
 
         Bitmap bitmap;
