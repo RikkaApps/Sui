@@ -60,6 +60,13 @@ public class SettingsProcess {
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         nm.cancel("rikka.sui", NOTIFICATION_ID);
+
+        try {
+            context.unregisterReceiver(SHOW_MANAGEMENT_RECEIVER);
+            LOGGER.i("unregisterReceiver");
+        } catch (Throwable e) {
+            LOGGER.w(e, "unregisterReceiver");
+        }
     }
 
     private static void showNotification(Context context) {
@@ -117,6 +124,17 @@ public class SettingsProcess {
         Notification notification = builder.build();
 
         nm.notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(SHOW_MANAGEMENT_ACTION);
+
+        try {
+            context.registerReceiver(SHOW_MANAGEMENT_RECEIVER, intentFilter,
+                    "android.permission.MANAGE_DEVICE_ADMINS", null);
+            LOGGER.i("registerReceiver");
+        } catch (Throwable e) {
+            LOGGER.w(e, "registerReceiver");
+        }
     }
 
     private static void init() {
@@ -207,17 +225,6 @@ public class SettingsProcess {
         });
 
         LOGGER.d("registerActivityLifecycleCallbacks");
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(SHOW_MANAGEMENT_ACTION);
-
-        try {
-            application.registerReceiver(SHOW_MANAGEMENT_RECEIVER, intentFilter,
-                    "android.permission.MANAGE_DEVICE_ADMINS", null);
-            LOGGER.i("registerReceiver");
-        } catch (Exception e) {
-            LOGGER.w(e, "registerReceiver");
-        }
     }
 
     public static void main(String[] args, ByteBuffer[] buffers) {
