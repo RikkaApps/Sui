@@ -70,7 +70,7 @@ public class ManagerProcess {
         IShizukuService service = BridgeServiceClient.getService();
         if (service == null) {
             LOGGER.w("service is null, wait 1s");
-            HandlerKt.getWorkerHandler().postDelayed(ManagerProcess::sendToService, 1000);
+            WorkerHandler.get().postDelayed(ManagerProcess::sendToService, 1000);
             return;
         }
 
@@ -79,7 +79,7 @@ public class ManagerProcess {
             LOGGER.i("attachApplication");
         } catch (RemoteException e) {
             LOGGER.w(e, "attachApplication");
-            HandlerKt.getWorkerHandler().postDelayed(ManagerProcess::sendToService, 1000);
+            WorkerHandler.get().postDelayed(ManagerProcess::sendToService, 1000);
         }
     }
 
@@ -87,13 +87,13 @@ public class ManagerProcess {
         Context context = null;
         try {
             context = ActivityThread.currentActivityThread().getApplication();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.w(e, "getApplication");
         }
 
         if (context == null) {
             LOGGER.w("application is null, wait 1s");
-            HandlerKt.getWorkerHandler().postDelayed(ManagerProcess::registerListener, 1000);
+            WorkerHandler.get().postDelayed(ManagerProcess::registerListener, 1000);
             return;
         }
 

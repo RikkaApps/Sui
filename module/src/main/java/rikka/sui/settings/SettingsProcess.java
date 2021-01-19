@@ -141,13 +141,13 @@ public class SettingsProcess {
         Application application = null;
         try {
             application = ActivityThread.currentActivityThread().getApplication();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.w(e, "getApplication");
         }
 
         if (application == null) {
             LOGGER.w("application is null, wait 1s");
-            HandlerKt.getWorkerHandler().postDelayed(SettingsProcess::init, 1000);
+            WorkerHandler.get().postDelayed(SettingsProcess::init, 1000);
             return;
         }
 
@@ -166,25 +166,21 @@ public class SettingsProcess {
 
             @Override
             public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
-                if (savedInstanceState != null) {
-                    return;
-                }
 
+            }
+
+            @Override
+            public void onActivityStarted(@NonNull Activity activity) {
                 Intent intent = activity.getIntent();
                 String fragment = intent.getStringExtra(":settings:show_fragment");
 
-                LOGGER.d("onActivityCreated: %s, action=%s, fragment=%s",
+                LOGGER.d("onActivityStarted: %s, action=%s, fragment=%s",
                         activity.getLocalClassName(), activity.getIntent().getAction(), fragment);
 
                 if (fragment != null && fragment.contains("Development")
                         || activity.getComponentName().getClassName().contains(developmentActivityName)) {
                     WorkerHandler.get().post(() -> showNotification(activity));
                 }
-            }
-
-            @Override
-            public void onActivityStarted(@NonNull Activity activity) {
-
             }
 
             @Override
@@ -199,7 +195,18 @@ public class SettingsProcess {
 
             @Override
             public void onActivityStopped(@NonNull Activity activity) {
+                if (activity.isChangingConfigurations()) return;
 
+                Intent intent = activity.getIntent();
+                String fragment = intent.getStringExtra(":settings:show_fragment");
+
+                LOGGER.d("onActivityStopped: %s, action=%s, fragment=%s",
+                        activity.getLocalClassName(), activity.getIntent().getAction(), fragment);
+
+                if (fragment != null && fragment.contains("Development")
+                        || activity.getComponentName().getClassName().contains(developmentActivityName)) {
+                    WorkerHandler.get().post(() -> cancelNotification(activity));
+                }
             }
 
             @Override
@@ -209,18 +216,7 @@ public class SettingsProcess {
 
             @Override
             public void onActivityDestroyed(@NonNull Activity activity) {
-                if (activity.isChangingConfigurations()) return;
 
-                Intent intent = activity.getIntent();
-                String fragment = intent.getStringExtra(":settings:show_fragment");
-
-                LOGGER.d("onActivityDestroyed: %s, action=%s, fragment=%s",
-                        activity.getLocalClassName(), activity.getIntent().getAction(), fragment);
-
-                if (fragment != null && fragment.contains("Development")
-                        || activity.getComponentName().getClassName().contains(developmentActivityName)) {
-                    WorkerHandler.get().post(() -> cancelNotification(activity));
-                }
             }
         });
 
