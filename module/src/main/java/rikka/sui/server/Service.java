@@ -580,15 +580,17 @@ public class Service extends IShizukuService.Stub {
             return;
         }
 
+        int oldValue = getFlagsForUidInternal(uid, mask);
+        boolean wasHidden = (oldValue & Config.FLAG_HIDDEN) != 0;
+
         configManager.update(uid, mask, value);
 
         if ((mask & Config.MASK_PERMISSION) != 0) {
             boolean allowed = (value & Config.FLAG_ALLOWED) != 0;
             for (ClientRecord record : clientManager.findClients(uid)) {
-                if (allowed) {
-                    record.allowed = allowed;
-                } else {
-                    record.allowed = false;
+                record.allowed = allowed;
+
+                if (!allowed || wasHidden) {
                     SystemService.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
                 }
             }
