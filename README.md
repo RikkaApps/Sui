@@ -45,6 +45,10 @@ In conclusion, we can get a super user interface similar to standard Android API
   - Enter `*#*#784784#*#*` in the default dialer app
 * Play with apps that support Sui
 
+The behavior of existing apps using "su" will NOT change. You can ask the developer of root apps to use Sui, or wait for the day that Sui becomes part of Magisk.
+
+For existing apps which already supports Shizuku, add support for Sui (including changes for Shizuku API v11) should only takes less than half an hour.
+
 ## Guide for application developers
 
 https://github.com/RikkaApps/Shizuku-API
