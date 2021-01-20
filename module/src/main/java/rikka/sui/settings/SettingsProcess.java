@@ -72,6 +72,8 @@ public class SettingsProcess {
     private static void showNotification(Context context) {
         LOGGER.i("showNotification");
 
+        boolean isNight = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
+
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -119,7 +121,8 @@ public class SettingsProcess {
 
         builder.setContentTitle("Sui")
                 .setContentText(Strings.get(Res.string.notification_show_management_text))
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .setColor(isNight ? 0xffc8e6c9 : 0xff338158);
 
         Notification notification = builder.build();
 
