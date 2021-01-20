@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -30,7 +31,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import rikka.sui.ktx.DrawableKt;
-import rikka.sui.ktx.HandlerKt;
 import rikka.sui.resource.Res;
 import rikka.sui.resource.Strings;
 import rikka.sui.resource.Xml;
@@ -78,7 +78,7 @@ public class SettingsProcess {
             NotificationChannelGroup group = new NotificationChannelGroup(CHANNEL_GROUP_ID, "Sui");
             nm.createNotificationChannelGroup(group);
 
-            NotificationChannel channel = new NotificationChannel(CHANNEL_SHOW_MANAGEMENT_ID, Strings.get(Res.string.notification_channel_group_name), NotificationManager.IMPORTANCE_MIN);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_SHOW_MANAGEMENT_ID, Strings.get(Res.string.notification_channel_group_name), NotificationManager.IMPORTANCE_DEFAULT);
             channel.enableLights(false);
             channel.enableVibration(false);
             channel.setShowBadge(false);
@@ -96,7 +96,7 @@ public class SettingsProcess {
             builder = new Notification.Builder(context, CHANNEL_SHOW_MANAGEMENT_ID);
         } else {
             builder = new Notification.Builder(context)
-                    .setPriority(Notification.PRIORITY_LOW)
+                    .setPriority(Notification.PRIORITY_DEFAULT)
                     .setSound(Uri.EMPTY)
                     .setVibrate(new long[0]);
         }
