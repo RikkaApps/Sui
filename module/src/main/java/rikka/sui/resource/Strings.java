@@ -12,6 +12,7 @@ import static rikka.sui.resource.Res.string.grant_dialog_button_deny;
 import static rikka.sui.resource.Res.string.grant_dialog_button_deny_and_dont_ask_again;
 import static rikka.sui.resource.Res.string.management_title;
 import static rikka.sui.resource.Res.string.notification_channel_group_name;
+import static rikka.sui.resource.Res.string.notification_show_management_title;
 import static rikka.sui.resource.Res.string.notification_show_management_text;
 import static rikka.sui.resource.Res.string.permission_allowed;
 import static rikka.sui.resource.Res.string.permission_ask;
@@ -44,6 +45,7 @@ public class Strings {
         array[permission_hidden] = "隐藏";
         array[permission_ask] = "询问";
         array[notification_channel_group_name] = "显示管理界面";
+        array[notification_show_management_title] = "您已进入“开发者设置”";
         array[notification_show_management_text] = "点按以显示超级用户管理界面";
         Strings.STRINGS.put("zh-CN", array);
 
@@ -62,6 +64,7 @@ public class Strings {
         array[permission_hidden] = "隱藏";
         array[permission_ask] = "詢問";
         array[notification_channel_group_name] = "顯示管理介面";
+        array[notification_show_management_title] = "您已進入「開發人員設定」";
         array[notification_show_management_text] = "輕觸以顯示超級使用者管理介面";
         Strings.STRINGS.put("zh", array);
 
@@ -80,6 +83,7 @@ public class Strings {
         array[permission_hidden] = "Hidden";
         array[permission_ask] = "Ask";
         array[notification_channel_group_name] = "Show management";
+        array[notification_show_management_title] = "You have entered \"Developer options\"";
         array[notification_show_management_text] = "Tap to show superuser management";
         Strings.STRINGS.put("en", array);
     }

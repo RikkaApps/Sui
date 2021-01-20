@@ -119,8 +119,9 @@ public class SettingsProcess {
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        builder.setContentTitle("Sui")
+        builder.setContentTitle(Strings.get(Res.string.notification_show_management_title))
                 .setContentText(Strings.get(Res.string.notification_show_management_text))
+                .setSubText("Sui")
                 .setContentIntent(pendingIntent)
                 .setColor(isNight ? 0xffc8e6c9 : 0xff338158);
 
