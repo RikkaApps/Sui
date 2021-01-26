@@ -36,6 +36,7 @@ import rikka.sui.server.config.Config;
 import rikka.sui.server.config.ConfigManager;
 import rikka.sui.server.userservice.UserService;
 import rikka.sui.server.userservice.UserServiceRecord;
+import rikka.sui.util.Logger;
 import rikka.sui.util.OsUtils;
 import rikka.sui.util.ParceledListSlice;
 import rikka.sui.util.UserHandleCompat;
@@ -83,10 +84,8 @@ public class Service extends IShizukuService.Stub {
     private final int settingsUid;
     private IShizukuApplication managerApplication;
 
-    private final IBinder.DeathRecipient managerDeathRecipient = () -> {
-        LOGGER.w("manager binder is dead");
-        managerApplication = null;
-    };
+    private final Object managerBinderLock = new Object();
+    private final Logger flog = new Logger("Sui", "/cache/sui.log");
 
     private int waitForPackage(String packageName, boolean forever) {
         int uid;
@@ -414,13 +413,35 @@ public class Service extends IShizukuService.Stub {
 
         isManager = MANAGER_APPLICATION_ID.equals(requestPackageName);
         isSettings = SETTINGS_APPLICATION_ID.equals(requestPackageName);
+
         if (isManager) {
+            IBinder binder = application.asBinder();
             try {
-                application.asBinder().linkToDeath(managerDeathRecipient, 0);
+                binder.linkToDeath(new IBinder.DeathRecipient() {
+
+                    @Override
+                    public void binderDied() {
+                        flog.w("manager binder is dead, pid=%d", callingPid);
+
+                        synchronized (managerBinderLock) {
+                            if (managerApplication.asBinder() == binder) {
+                                managerApplication = null;
+                            } else {
+                                flog.w("binderDied is called later than new binder arrived ?!");
+                            }
+                        }
+
+                        binder.unlinkToDeath(this, 0);
+                    }
+                }, 0);
             } catch (RemoteException e) {
                 LOGGER.w(e, "attachApplication");
             }
-            managerApplication = application;
+
+            synchronized (managerBinderLock) {
+                managerApplication = application;
+                flog.i("manager attached: pid=%d", callingPid);
+            }
         }
 
         if (!isManager && !isSettings) {
