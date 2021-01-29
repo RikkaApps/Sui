@@ -427,7 +427,7 @@ public class Service extends IShizukuService.Stub {
                             if (managerApplication.asBinder() == binder) {
                                 managerApplication = null;
                             } else {
-                                flog.w("binderDied is called later than new binder arrived ?!");
+                                flog.w("binderDied is called later than the arrival of the new binder ?!");
                             }
                         }
 
@@ -653,7 +653,9 @@ public class Service extends IShizukuService.Stub {
         List<AppInfo> list = new ArrayList<>();
         for (int user : users) {
             for (PackageInfo pi : SystemService.getInstalledPackagesNoThrow(0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, user)) {
-                if (pi.applicationInfo == null || HiddenApiBridge.PackageInfo_overlayTarget(pi) != null)
+                if (pi.applicationInfo == null
+                        || HiddenApiBridge.PackageInfo_overlayTarget(pi) != null
+                        || (pi.applicationInfo.flags & ApplicationInfo.FLAG_HAS_CODE) == 0)
                     continue;
 
                 int uid = pi.applicationInfo.uid;
