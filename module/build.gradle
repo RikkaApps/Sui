@@ -90,12 +90,6 @@ static def calcSha256(file) {
     return md.digest().encodeHex()
 }
 
-static def renameOrFail(File from, File to) {
-    if (!from.renameTo(to)) {
-        throw new IOException("Unable reanme file $from to $to")
-    }
-}
-
 android.applicationVariants.all { variant ->
     variant.outputs.all {
         def task = variant.assembleProvider.get()
@@ -166,13 +160,11 @@ android.applicationVariants.all { variant ->
 
             // copy native files
             def nativeOutDir = file("build/intermediates/cmake/$variant.name/obj")
-
-            file("$magiskDir/system").mkdirs()
-            file("$magiskDir/system_x86").mkdirs()
-            renameOrFail(file("$nativeOutDir/arm64-v8a"), file("$magiskDir/system/lib64"))
-            renameOrFail(file("$nativeOutDir/armeabi-v7a"), file("$magiskDir/system/lib"))
-            renameOrFail(file("$nativeOutDir/x86_64"), file("$magiskDir/system_x86/lib64"))
-            renameOrFail(file("$nativeOutDir/x86"), file("$magiskDir/system_x86/lib"))
+            copy {
+                from "$nativeOutDir"
+                into "$magiskDir/lib"
+                exclude "**/*.txt"
+            }
 
             // generate sha1sum
             fileTree("$magiskDir").matching {
