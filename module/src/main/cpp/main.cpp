@@ -57,21 +57,21 @@ static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir) {
     memset(saved_app_data_dir, 0, 256);
 
     if (*jAppDataDir) {
-        auto appDataDir = ScopedUtfChars(env, *jAppDataDir).c_str();
-        strcpy(saved_app_data_dir, appDataDir);
+        ScopedUtfChars appDataDir{env, *jAppDataDir};
+        strcpy(saved_app_data_dir, appDataDir.c_str());
 
         int user = 0;
 
         // /data/user/<user_id>/<package>
-        if (sscanf(appDataDir, "/data/%*[^/]/%d/%s", &user, saved_package_name) == 2)
+        if (sscanf(appDataDir.c_str(), "/data/%*[^/]/%d/%s", &user, saved_package_name) == 2)
             goto found;
 
         // /mnt/expand/<id>/user/<user_id>/<package>
-        if (sscanf(appDataDir, "/mnt/expand/%*[^/]/%*[^/]/%d/%s", &user, saved_package_name) == 2)
+        if (sscanf(appDataDir.c_str(), "/mnt/expand/%*[^/]/%*[^/]/%d/%s", &user, saved_package_name) == 2)
             goto found;
 
         // /data/data/<package>
-        if (sscanf(appDataDir, "/data/%*[^/]/%s", saved_package_name) == 1)
+        if (sscanf(appDataDir.c_str(), "/data/%*[^/]/%s", saved_package_name) == 1)
             goto found;
 
         // nothing found
