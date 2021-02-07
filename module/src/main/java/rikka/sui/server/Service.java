@@ -659,13 +659,12 @@ public class Service extends IShizukuService.Stub {
                     continue;
 
                 int uid = pi.applicationInfo.uid;
+                int appId = UserHandleCompat.getAppId(uid);
                 if (uid == managerUid)
                     continue;
 
-                int flags = getFlagsForUid(pi.applicationInfo.uid, Config.MASK_PERMISSION);
-                if (flags == 0
-                        && pi.applicationInfo.uid != 2000
-                        && UserHandleCompat.getAppId(pi.applicationInfo.uid) < 10000)
+                int flags = getFlagsForUid(uid, Config.MASK_PERMISSION);
+                if (flags == 0 && uid != 2000 && appId < 10000)
                     continue;
 
                 AppInfo item = new AppInfo();
