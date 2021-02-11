@@ -14,7 +14,7 @@ message("Build type: ${CMAKE_BUILD_TYPE}")
 set(CMAKE_CXX_STANDARD 11)
 
 set(LINKER_FLAGS "-ffixed-x18 -Wl,--hash-style=both")
-set(C_FLAGS "-Werror=format -fdata-sections -ffunction-sections")
+set(C_FLAGS "-Werror=format -fdata-sections -ffunction-sections -fno-exceptions")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(C_FLAGS "${C_FLAGS} -O2 -fvisibility=hidden -fvisibility-inlines-hidden")
@@ -45,7 +45,8 @@ add_library(${MODULE_NAME} SHARED
         android.cpp
         plt.c
         manager_process.cpp
-        settings_process.cpp)
+        settings_process.cpp
+        tinynew.cpp)
 target_link_libraries(${MODULE_NAME} log riru::riru nativehelper::nativehelper_header_only)
 set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
 
