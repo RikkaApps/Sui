@@ -151,9 +151,6 @@ public class Service extends IShizukuService.Stub {
         }
 
         ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
-        if (clientRecord != null && clientRecord.allowed) {
-            return;
-        }
 
         if (clientRecord == null) {
             throw new SecurityException("Permission Denial: " + func + " from pid="

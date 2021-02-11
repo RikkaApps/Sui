@@ -4,6 +4,19 @@
 
 ## Changelog
 
+### v11.4.2 (2021-02-11)
+
+- Reduce the file size
+
+### v11.4.1 (2021-02-07)
+
+- Fix an undefined behavior
+- Skip packages with no code
+
+### v11.4 (2021-01-26)
+
+- Avoid a possible race condition
+
 ### v11.3 (2021-01-19)
 
 - Open management UI trough a notification, this notification will show when you are in "Developer options"
