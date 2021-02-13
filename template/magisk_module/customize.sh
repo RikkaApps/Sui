@@ -44,11 +44,11 @@ if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting x64 libraries"
-    extract "$ZIPFILE" "system_x86/lib64/libriru_$RIRU_MODULE_ID.so" "$MODPATH"
+    extract "$ZIPFILE" "lib/x86_64/libriru_$RIRU_MODULE_ID.so" "$MODPATH"
     mv "$MODPATH/lib/x86_64" "$MODPATH/system/lib64"
-    extract "$ZIPFILE" "system_x86/lib64/libstarter.so" "$ROOT_PATH" true
+    extract "$ZIPFILE" "lib/x86_64/libstarter.so" "$ROOT_PATH" true
   else
-    extract "$ZIPFILE" "system_x86/lib/libstarter.so" "$ROOT_PATH" true
+    extract "$ZIPFILE" "lib/x86/libstarter.so" "$ROOT_PATH" true
   fi
 fi
 
