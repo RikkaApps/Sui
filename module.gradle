@@ -9,7 +9,7 @@ ext {
     moduleAuthor = "Rikka"
     moduleDescription = "Modern superuser interface implementation, shares the same API design from Shizuku."
     moduleVersionMinor = 4
-    moduleVersionPatch = 2
+    moduleVersionPatch = 3
     moduleVersion = "v${api_version_major}.${moduleVersionMinor}.${moduleVersionPatch}"
     moduleVersionCode = gitCommitCount
     moduleMinRiruApiVersion = 9

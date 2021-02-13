@@ -4,6 +4,10 @@
 
 ## Changelog
 
+### v11.4.3 (2021-02-14)
+
+- Fix installation on x86
+
 ### v11.4.2 (2021-02-11)
 
 - Reduce the file size
