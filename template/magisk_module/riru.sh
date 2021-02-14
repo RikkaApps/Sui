@@ -22,7 +22,7 @@ check_riru_version() {
   ui_print "- Riru API version: $local_api_version"
   if [ "$local_api_version" -lt $RIRU_MODULE_MIN_API_VERSION ]; then
     ui_print "*********************************************************"
-    ui_print "! Riru $RIRU_MIN_VERSION_NAME or above is required"
+    ui_print "! Riru $RIRU_MODULE_MIN_RIRU_VERSION_NAME or above is required"
     ui_print "! Please upgrade Riru from Magisk Manager or https://github.com/RikkaApps/Riru/releases"
     abort "*********************************************************"
   fi
