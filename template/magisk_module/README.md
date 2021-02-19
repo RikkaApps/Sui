@@ -6,6 +6,11 @@
 
 ### v11.4.3 (2021-02-14)
 
+- Fix developer options crash on Android 12
+- Works on devices that have dropped 32-bit support (Android 12 emulator or devices in the future)
+
+### v11.4.3 (2021-02-14)
+
 - Fix installation on x86
 
 ### v11.4.2 (2021-02-11)
