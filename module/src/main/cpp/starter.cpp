@@ -97,13 +97,18 @@ static int start_server(const char *path, const char *main_class, const char *pr
             foreach_proc([](pid_t pid) -> bool {
                 if (pid == getpid()) return false;
 
+#ifdef __LP64__
+                const char* zygote_name = "zygote64";
+#else
+                const char* zygote_name = "zygote";
+#endif
                 char buf[64];
                 snprintf(buf, 64, "/proc/%d/cmdline", pid);
 
                 int fd = open(buf, O_RDONLY);
                 if (fd > 0) {
                     memset(buf, 0, 64);
-                    if (read(fd, buf, 64) > 0 && strcmp("zygote", buf) == 0) {
+                    if (read(fd, buf, 64) > 0 && strcmp(zygote_name, buf) == 0) {
                         zygote_pid = pid;
                     }
                     close(fd);
