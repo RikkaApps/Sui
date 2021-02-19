@@ -53,15 +53,13 @@ public class UserServiceRecord {
 
         if (binder != null && binder.pingBinder()) {
             Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
             try {
                 data.writeInterfaceToken(binder.getInterfaceDescriptor());
-                binder.transact(USER_SERVICE_TRANSACTION_destroy, data, reply, Binder.FLAG_ONEWAY);
+                binder.transact(USER_SERVICE_TRANSACTION_destroy, data, null, Binder.FLAG_ONEWAY);
             } catch (Throwable e) {
                 LOGGER.w(e, "failed to destroy");
             } finally {
                 data.recycle();
-                reply.recycle();
             }
         }
 
