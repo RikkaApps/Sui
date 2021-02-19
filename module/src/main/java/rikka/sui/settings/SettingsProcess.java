@@ -117,7 +117,7 @@ public class SettingsProcess {
         Intent intent = new Intent(SHOW_MANAGEMENT_ACTION)
                 .setPackage(context.getPackageName());
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         builder.setContentTitle(Strings.get(Res.string.notification_show_management_title))
                 .setContentText(Strings.get(Res.string.notification_show_management_text))
