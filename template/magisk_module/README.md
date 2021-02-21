@@ -4,7 +4,11 @@
 
 ## Changelog
 
-### v11.4.3 (2021-02-14)
+### v11.4.5 (2021-02-21)
+
+- Fix random authorization dialog or management ui not showing
+
+### v11.4.4 (2021-02-19)
 
 - Fix developer options crash on Android 12
 - Works on devices that have dropped 32-bit support (Android 12 emulator or devices in the future)
