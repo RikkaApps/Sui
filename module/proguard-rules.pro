@@ -21,6 +21,10 @@
     public static void main(java.lang.String[], java.nio.ByteBuffer[]);
 }
 
+-keep class rikka.sui.installer.Installer {
+    public static void main(java.lang.String[]);
+}
+
 -keepnames class * implements android.os.Parcelable
 
 -keepclassmembers class * implements android.os.Parcelable {

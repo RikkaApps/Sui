@@ -99,7 +99,10 @@ extract "$ZIPFILE" 'res/drawable/ic_close_24.xml' "$ROOT_PATH/tmp"
 rm -rf "$ROOT_PATH/res.new"
 mv "$ROOT_PATH/tmp/res" "$ROOT_PATH/res.new"
 
-set_perm "$ROOT_PATH/sui.dex" 0 0 0600 $RIRU_SECONTEXT
+set_perm "$ROOT_PATH/sui.dex.new" 0 0 0600 $RIRU_SECONTEXT
 set_perm_recursive "$ROOT_PATH/res.new" 0 0 0700 0600 $RIRU_SECONTEXT
+
+ui_print "- Fetching information for SystemUI and Settings"
+/system/bin/app_process -Djava.class.path=$ROOT_PATH/sui.dex.new /system/bin --nice-name=sui_installer rikka.sui.installer.Installer
 
 rm -rf "$ROOT_PATH/tmp"

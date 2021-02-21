@@ -12,6 +12,27 @@
 #include "config.h"
 #include "manager_process.h"
 #include "settings_process.h"
+#include "rirud.h"
+
+static uid_t manager_uid = -1, settings_uid = -1;
+static char manager_process[128], settings_uid_process[128];
+
+static void ReadApplicationInfo(const char *package, uid_t &uid, char *process) {
+    char buf[PATH_MAX];
+    snprintf(buf, PATH_MAX, "%s/%s", ROOT_PATH, package);
+    auto file = File(buf);
+    auto bytes = file.getBytes();
+    auto size = file.getSize();
+    for (int i = 0; i < size; ++i) {
+        if (bytes[i] == '\n') {
+            memset(process, 0, 128);
+            memcpy(process, bytes + i + 1, size - i - 1);
+            bytes[i] = 0;
+            uid = atoi((char *) bytes);
+            break;
+        }
+    }
+}
 
 static DexFile *dexFile = nullptr;
 static std::vector<File *> *resources_files = nullptr;
@@ -26,6 +47,9 @@ static void PrepareFiles() {
     resources_files->emplace_back(new File(RES_PATH "/layout/management_app_item.xml"));
     resources_files->emplace_back(new File(RES_PATH "/drawable/ic_su_24.xml"));
     resources_files->emplace_back(new File(RES_PATH "/drawable/ic_close_24.xml"));
+
+    ReadApplicationInfo(MANAGER_APPLICATION_ID, manager_uid, manager_process);
+    ReadApplicationInfo(SETTINGS_APPLICATION_ID, settings_uid, settings_uid_process);
 }
 
 static void DestroyFiles(JNIEnv *env) {
@@ -45,9 +69,10 @@ static void DestroyFiles(JNIEnv *env) {
 
 static char saved_package_name[256] = {0};
 static char saved_app_data_dir[PATH_MAX] = {0};
+static char saved_process_name[PATH_MAX] = {0};
 static int saved_uid;
 
-static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir) {
+static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir, jstring *jNiceName) {
 
     PrepareFiles();
 
@@ -55,6 +80,12 @@ static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir) {
 
     memset(saved_package_name, 0, 256);
     memset(saved_app_data_dir, 0, 256);
+    memset(saved_process_name, 0, 256);
+
+    if (*jNiceName) {
+        ScopedUtfChars niceName{env, *jNiceName};
+        strcpy(saved_process_name, niceName.c_str());
+    }
 
     if (*jAppDataDir) {
         ScopedUtfChars appDataDir{env, *jAppDataDir};
@@ -82,16 +113,37 @@ static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir) {
 }
 
 static void appProcessPost(
-        JNIEnv *env, const char *from, const char *package_name, const char *app_data_dir, jint uid) {
+        JNIEnv *env, const char *from, const char *package_name, const char *app_data_dir, const char *process_name, jint uid) {
 
-    if (strcmp(saved_package_name, MANAGER_APPLICATION_ID) == 0) {
-        LOGV("%s: manager process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
-        Manager::main(env, app_data_dir, dexFile, resources_files);
-    } else if (strcmp(saved_package_name, SETTINGS_APPLICATION_ID) == 0)  {
-        LOGV("%s: settings process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
-        Settings::main(env, app_data_dir, dexFile, resources_files);
+    LOGD("%s:uid=%d, proc=%s, dir=%s", from, uid, saved_process_name, app_data_dir);
+    LOGD("systemui %d %s", manager_uid, manager_process);
+    LOGD("settings %d %s", settings_uid, settings_uid_process);
+
+    if (manager_uid == -1 || settings_uid == -1) {
+        // files are missing, assume package name is reliable and process name is package name
+        if (strcmp(package_name, MANAGER_APPLICATION_ID) == 0
+            && strcmp(process_name, MANAGER_APPLICATION_ID) == 0) {
+            LOGV("%s: manager process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
+            Manager::main(env, app_data_dir, dexFile, resources_files);
+        } else if (strcmp(package_name, SETTINGS_APPLICATION_ID) == 0
+                   && strcmp(process_name, MANAGER_APPLICATION_ID) == 0) {
+            LOGV("%s: settings process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
+            Settings::main(env, app_data_dir, dexFile, resources_files);
+        } else {
+            DestroyFiles(env);
+        }
     } else {
-        DestroyFiles(env);
+        if (uid == manager_uid && strcmp(process_name, manager_process) == 0) {
+            LOGV("%s: manager process, uid=%d, package=%s, proc=%s, dir=%s", from, uid, package_name, saved_process_name,
+                 app_data_dir);
+            Manager::main(env, app_data_dir, dexFile, resources_files);
+        } else if (uid == settings_uid && strcmp(process_name, settings_uid_process) == 0) {
+            LOGV("%s: settings process, uid=%d, package=%s, proc=%s, dir=%s", from, uid, package_name, saved_process_name,
+                 app_data_dir);
+            Settings::main(env, app_data_dir, dexFile, resources_files);
+        } else {
+            DestroyFiles(env);
+        }
     }
 }
 
@@ -102,12 +154,12 @@ static void forkAndSpecializePre(
         jstring *instructionSet, jstring *appDataDir, jboolean *isTopApp, jobjectArray *pkgDataInfoList,
         jobjectArray *whitelistedDataInfoList, jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
 
-    appProcessPre(env, uid, appDataDir);
+    appProcessPre(env, uid, appDataDir, niceName);
 }
 
 static void forkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
     if (res == 0) {
-        appProcessPost(env, "forkAndSpecialize", saved_package_name, saved_app_data_dir, saved_uid);
+        appProcessPost(env, "forkAndSpecialize", saved_package_name, saved_app_data_dir, saved_process_name, saved_uid);
     }
 }
 
@@ -118,13 +170,13 @@ static void specializeAppProcessPre(
         jboolean *isTopApp, jobjectArray *pkgDataInfoList, jobjectArray *whitelistedDataInfoList,
         jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
 
-    appProcessPre(env, uid, appDataDir);
+    appProcessPre(env, uid, appDataDir, niceName);
 }
 
 static void specializeAppProcessPost(
         JNIEnv *env, jclass clazz) {
 
-    appProcessPost(env, "specializeAppProcess", saved_package_name, saved_app_data_dir, saved_uid);
+    appProcessPost(env, "specializeAppProcess", saved_package_name, saved_app_data_dir, saved_process_name, saved_uid);
 }
 
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
