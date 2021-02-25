@@ -1,6 +1,5 @@
 package rikka.sui.server.userservice;
 
-import android.annotation.SuppressLint;
 import android.app.ActivityThread;
 import android.content.Context;
 import android.ddm.DdmHandleAppName;
@@ -12,21 +11,20 @@ import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.util.Log;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import hidden.HiddenApiBridge;
 import moe.shizuku.server.IShizukuService;
+import rikka.sui.util.Unsafe;
 
 import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_TOKEN;
 
-@SuppressWarnings("JavaReflectionMemberAccess")
-@SuppressLint("DiscouragedPrivateApi")
 public class Starter {
 
     private static final String TAG = "SuiUserServiceStarter";
+    private static final int BRIDGE_TRANSACTION_CODE = ('_' << 24) | ('S' << 16) | ('U' << 8) | 'I';
+    private static final String BRIDGE_SERVICE_DESCRIPTOR = "android.app.IActivityManager";
+    private static final String BRIDGE_SERVICE_NAME = "activity";
+    private static final int BRIDGE_ACTION_GET_BINDER = 2;
 
-    public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public static void main(String[] args) {
         String name = null;
         String token = null;
         String pkg = null;
@@ -57,17 +55,14 @@ public class Starter {
         }
 
         IBinder service = null;
-        ActivityThread activityThread = HiddenApiBridge.ActivityThread_systemMain();
-        Method getSystemContext = ActivityThread.class.getDeclaredMethod("getSystemContext");
-        Context systemContext = (Context) getSystemContext.invoke(activityThread);
+        Context systemContext = ActivityThread.systemMain().getSystemContext();
 
         DdmHandleAppName.setAppName(name != null ? name : pkg + ":user_service", 0);
 
-        Method createPackageContextAsUser = Context.class.getDeclaredMethod("createPackageContextAsUser", String.class, int.class, UserHandle.class);
-
         try {
-            UserHandle userHandle = HiddenApiBridge.createUserHandle(userId);
-            Context context = (Context) createPackageContextAsUser.invoke(systemContext, pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle);
+            UserHandle userHandle = Unsafe.unsafeCast($android.os.UserHandle.of(userId));
+            Context context = Unsafe.unsafeCast(Unsafe.<$android.content.Context>unsafeCast(systemContext)
+                    .createPackageContextAsUser(pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle));
             ClassLoader classLoader = context.getClassLoader();
             Class<?> serviceClass = classLoader.loadClass(cls);
             service = (IBinder) serviceClass.newInstance();
@@ -85,11 +80,6 @@ public class Starter {
 
         Log.i(TAG, String.format("service %s/%s exited", pkg, cls));
     }
-
-    private static final int BRIDGE_TRANSACTION_CODE = ('_' << 24) | ('S' << 16) | ('U' << 8) | 'I';
-    private static final String BRIDGE_SERVICE_DESCRIPTOR = "android.app.IActivityManager";
-    private static final String BRIDGE_SERVICE_NAME = "activity";
-    private static final int BRIDGE_ACTION_GET_BINDER = 2;
 
     private static IBinder requestBinderFromBridge() {
         IBinder binder = ServiceManager.getService(BRIDGE_SERVICE_NAME);

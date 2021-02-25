@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import hidden.HiddenApiBridge;
 import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
@@ -39,6 +38,7 @@ import rikka.sui.server.userservice.UserServiceRecord;
 import rikka.sui.util.Logger;
 import rikka.sui.util.OsUtils;
 import rikka.sui.util.ParceledListSlice;
+import rikka.sui.util.Unsafe;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
@@ -651,7 +651,7 @@ public class Service extends IShizukuService.Stub {
         for (int user : users) {
             for (PackageInfo pi : SystemService.getInstalledPackagesNoThrow(0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, user)) {
                 if (pi.applicationInfo == null
-                        || HiddenApiBridge.PackageInfo_overlayTarget(pi) != null
+                        || Unsafe.<$android.content.pm.PackageInfo>unsafeCast(pi).overlayTarget != null
                         || (pi.applicationInfo.flags & ApplicationInfo.FLAG_HAS_CODE) == 0)
                     continue;
 
