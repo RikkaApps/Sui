@@ -13,7 +13,7 @@ RIRU_MODULE_MIN_RIRU_VERSION_NAME="%%%RIRU_MODULE_MIN_RIRU_VERSION_NAME%%%"
 check_riru_version() {
   if [ ! -f "$RIRU_PATH/api_version" ] && [ ! -f "$RIRU_PATH/api_version.new" ]; then
     ui_print "*********************************************************"
-    ui_print "! Riru $RIRU_MIN_VERSION_NAME or above is required"
+    ui_print "! Riru $RIRU_MODULE_MIN_RIRU_VERSION_NAME or above is required"
     ui_print "! Please install Riru from Magisk Manager or https://github.com/RikkaApps/Riru/releases"
     abort "*********************************************************"
   fi
