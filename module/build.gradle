@@ -1,3 +1,10 @@
+import org.jf.dexlib2.DexFileFactory
+import org.jf.dexlib2.Opcodes
+import org.jf.dexlib2.rewriter.DexRewriter
+import org.jf.dexlib2.rewriter.Rewriter
+import org.jf.dexlib2.rewriter.RewriterModule
+import org.jf.dexlib2.rewriter.Rewriters
+
 plugins {
     id('com.android.application')
     id('kotlin-android')
@@ -69,8 +76,7 @@ dependencies {
     implementation project(':aidl')
     implementation project(':shared')
     compileOnly project(':hidden-api-common')
-    implementation project(':hidden-api-common-bridge')
-    implementation project(':hidden-api-21-bridge')
+    compileOnly project(':hidden-api-21')
 }
 
 def outDir = file("$rootDir/out")
@@ -108,6 +114,23 @@ android.applicationVariants.all { variant ->
                 from zipTree(outputFile).matching { include 'res/*/*.xml' }
                 into magiskDir
             }
+
+            // patch dex
+            def dex = DexFileFactory.loadDexFile("$magiskDir/sui.dex", Opcodes.forApi(minSdkVersion))
+            def rewriter = new DexRewriter(new RewriterModule() {
+                @Override
+                Rewriter<String> getTypeRewriter(Rewriters rewriters) {
+                    return new Rewriter<String>() {
+                        @Override
+                        String rewrite(String value) {
+                            if (value.startsWith("L\$"))
+                                return "L" + value.substring(2)
+                            return value
+                        }
+                    }
+                }
+            })
+            DexFileFactory.writeDexFile("$magiskDir/sui.dex", rewriter.dexFileRewriter.rewrite(dex))
 
             // copy apk
             /*copy {

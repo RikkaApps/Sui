@@ -13,4 +13,8 @@ public class ActivityThread {
     public Application getApplication() {
         throw new RuntimeException();
     }
+
+    public ContextImpl getSystemContext() {
+        throw new RuntimeException();
+    }
 }

@@ -1,4 +1,32 @@
-apply plugin: 'java-library'
+plugins {
+    id('com.android.library')
+}
 
-sourceCompatibility = "1.7"
-targetCompatibility = "1.7"
+apply from: file(rootProject.file('module.gradle'))
+
+android {
+    compileSdkVersion rootProject.ext.targetSdkVersion
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode gitCommitCount
+        versionName moduleVersion.substring(1)
+    }
+    buildTypes {
+        debug {
+            multiDexEnabled false
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+}
+
+dependencies {
+    compileOnly project(":hidden-api-common")
+}

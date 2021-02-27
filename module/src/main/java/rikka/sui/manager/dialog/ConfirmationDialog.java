@@ -26,17 +26,17 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-import hidden.HiddenApiBridge;
 import rikka.sui.databinding.ConfirmationDialogBinding;
 import rikka.sui.ktx.HandlerKt;
 import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
-import rikka.sui.util.BridgeServiceClient;
 import rikka.sui.resource.Res;
 import rikka.sui.resource.Strings;
 import rikka.sui.resource.Utils;
 import rikka.sui.resource.Xml;
+import rikka.sui.util.BridgeServiceClient;
+import rikka.sui.util.Unsafe;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
@@ -106,7 +106,8 @@ public class ConfirmationDialog {
         int userId = UserHandleCompat.getUserId(requestUid);
         PackageManager pm = context.getPackageManager();
         try {
-            ApplicationInfo ai = HiddenApiBridge.PackageManager_getApplicationInfoAsUser(pm, requestPackageName, 0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, userId);
+            ApplicationInfo ai = Unsafe.<$android.content.pm.PackageManager>unsafeCast(pm)
+                    .getApplicationInfoAsUser(requestPackageName, $android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES, userId);
             label = Utils.getAppLabel(ai, context);
         } catch (Throwable e) {
             LOGGER.e("getApplicationInfoAsUser");

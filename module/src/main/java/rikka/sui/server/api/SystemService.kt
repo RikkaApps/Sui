@@ -1,16 +1,15 @@
 package rikka.sui.server.api
 
+import android.app.ActivityManagerNative
 import android.app.IActivityManager
 import android.app.IProcessObserver
 import android.app.IUidObserver
 import android.content.pm.*
-import android.os.IBinder
 import android.os.IUserManager
 import android.os.RemoteException
 import android.permission.IPermissionManager
 import androidx.annotation.RequiresApi
 import com.android.internal.app.IAppOpsService
-import hidden.HiddenApiBridgeV23
 import rikka.sui.server.ServerConstants.LOGGER
 import rikka.sui.util.BuildUtils
 import java.util.*
@@ -22,7 +21,7 @@ object SystemService {
             if (BuildUtils.atLeast26()) {
                 IActivityManager.Stub.asInterface(it)
             } else {
-                HiddenApiBridgeV23.ActivityManagerNative_asInterface(it)
+                ActivityManagerNative.asInterface(it)
             }
         }
     }

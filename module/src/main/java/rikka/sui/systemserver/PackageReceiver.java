@@ -1,6 +1,5 @@
 package rikka.sui.systemserver;
 
-import android.annotation.SuppressLint;
 import android.app.ActivityThread;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,11 +8,8 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.UserHandle;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import rikka.sui.util.Unsafe;
 
 import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
 
@@ -30,32 +26,10 @@ public class PackageReceiver {
         }
     };
 
-    @SuppressLint("DiscouragedPrivateApi")
     public static void register() {
         ActivityThread activityThread = ActivityThread.currentActivityThread();
         if (activityThread == null) {
             LOGGER.w("ActivityThread is null");
-            return;
-        }
-        Context context = null;
-        try {
-            //noinspection JavaReflectionMemberAccess
-            Method method = ActivityThread.class.getDeclaredMethod("getSystemContext");
-            context = (Context) method.invoke(activityThread);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
-        }
-        if (context == null) {
-            LOGGER.w("context is null");
-            return;
-        }
-
-        UserHandle userHandleAll;
-        try {
-            //noinspection JavaReflectionMemberAccess
-            Field field = UserHandle.class.getDeclaredField("ALL");
-            userHandleAll = (UserHandle) field.get(null);
-        } catch (Throwable e) {
-            LOGGER.w("UserHandle.ALL", e);
             return;
         }
 
@@ -67,9 +41,14 @@ public class PackageReceiver {
         Handler handler = new Handler(Looper.getMainLooper());
 
         try {
-            //noinspection JavaReflectionMemberAccess
-            Method method = Context.class.getDeclaredMethod("registerReceiverAsUser", BroadcastReceiver.class, UserHandle.class, IntentFilter.class, String.class, Handler.class);
-            method.invoke(context, RECEIVER, userHandleAll, intentFilter, null, handler);
+            Unsafe.<$android.content.Context>unsafeCast(ActivityThread.currentActivityThread().getSystemContext())
+                    .registerReceiverAsUser(
+                            RECEIVER,
+                            Unsafe.unsafeCast($android.os.UserHandle.ALL),
+                            intentFilter,
+                            null,
+                            handler
+                    );
             LOGGER.d("register package receiver");
         } catch (Throwable e) {
             LOGGER.w("registerReceiver failed", e);

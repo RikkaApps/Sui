@@ -1,6 +1,5 @@
 package com.android.internal.app;
 
-import android.app.AppOpsManager;
 import android.os.IBinder;
 import android.os.IInterface;
 import android.os.RemoteException;
@@ -11,11 +10,11 @@ import java.util.List;
 
 public interface IAppOpsService extends IInterface {
 
-    List<AppOpsManager.PackageOps> getOpsForPackage(int uid, String packageName, int[] ops)
+    List<$android.app.AppOpsManager.PackageOps> getOpsForPackage(int uid, String packageName, int[] ops)
             throws RemoteException;
 
     @RequiresApi(26)
-    List<AppOpsManager.PackageOps> getUidOps(int uid, int[] ops)
+    List<$android.app.AppOpsManager.PackageOps> getUidOps(int uid, int[] ops)
             throws RemoteException;
 
     void setMode(int code, int uid, String packageName, int mode)
