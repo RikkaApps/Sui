@@ -4,6 +4,11 @@
 
 ## Changelog
 
+### v11.5.0 (2021-03-02)
+
+- Filter out packages without components
+- Filter out nonexistent packages added by `MATCH_UNINSTALLED_PACKAGES` flag
+
 ### v11.4.5 (2021-02-21)
 
 - Fix random authorization dialog or management ui not showing
