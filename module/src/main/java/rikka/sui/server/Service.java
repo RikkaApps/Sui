@@ -4,13 +4,18 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
 import android.os.RemoteException;
 import android.os.SystemProperties;
+import android.system.ErrnoException;
+import android.system.Os;
+import android.system.OsConstants;
 import android.util.ArrayMap;
 
 import java.io.File;
@@ -18,10 +23,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import kotlin.collections.ArraysKt;
+import kotlin.collections.MapsKt;
+import kotlin.jvm.functions.Function0;
 import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
@@ -647,6 +656,9 @@ public class Service extends IShizukuService.Stub {
             users.add(userId);
         }
 
+        Map<String, Boolean> existenceCache = new ArrayMap<>();
+        Map<String, Boolean> hasComponentsCache = new ArrayMap<>();
+
         List<AppInfo> list = new ArrayList<>();
         for (int user : users) {
             for (PackageInfo pi : SystemService.getInstalledPackagesNoThrow(0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, user)) {
@@ -663,6 +675,75 @@ public class Service extends IShizukuService.Stub {
                 int flags = getFlagsForUid(uid, Config.MASK_PERMISSION);
                 if (flags == 0 && uid != 2000 && appId < 10000)
                     continue;
+
+                if (flags == 0) {
+                    String dataDir;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        dataDir = pi.applicationInfo.deviceProtectedDataDir;
+                    } else {
+                        dataDir = pi.applicationInfo.dataDir;
+                    }
+
+                    boolean hasApk = MapsKt.getOrPut(existenceCache, pi.applicationInfo.sourceDir, () -> {
+                        try {
+                            Os.access(pi.applicationInfo.sourceDir, OsConstants.F_OK);
+                            return true;
+                        } catch (ErrnoException e) {
+                            return false;
+                        }
+                    });
+
+                    boolean hasData = MapsKt.getOrPut(existenceCache, dataDir, () -> {
+                        try {
+                            Os.access(dataDir, OsConstants.F_OK);
+                            return true;
+                        } catch (ErrnoException e) {
+                            return false;
+                        }
+                    });
+
+                    // Installed (or hidden): hasApk && hasData
+                    // Uninstalled but keep data: !hasApk && hasData
+                    // Installed in other users only: hasApk && !hasData
+                    if (!(hasApk && hasData)) {
+                        LOGGER.v("skip %d:%s: hasApk=%s, hasData=%s", user, pi.packageName, Boolean.toString(hasApk), Boolean.toString(hasData));
+                        continue;
+                    }
+
+                    boolean hasComponents = MapsKt.getOrPut(hasComponentsCache, pi.packageName, () -> {
+                        try {
+                            int baseFlags = 0x00000200 /*MATCH_DISABLED_COMPONENTS*/ | 0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/;
+                            PackageInfo pi2 = SystemService.getPackageInfoNoThrow(pi.packageName,
+                                    baseFlags | PackageManager.GET_ACTIVITIES | PackageManager.GET_RECEIVERS | PackageManager.GET_SERVICES | PackageManager.GET_PROVIDERS,
+                                    user);
+                            if (pi2 == null) {
+                                // Exceed binder data transfer limit
+                                pi2 = pi;
+                                pi2.activities = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_ACTIVITIES, user).activities;
+                                pi2.receivers = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_RECEIVERS, user).receivers;
+                                pi2.services = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_SERVICES, user).services;
+                                pi2.providers = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_PROVIDERS, user).providers;
+                            }
+                            return pi2.activities != null && pi2.activities.length > 0
+                                    || pi2.receivers != null && pi2.receivers.length > 0
+                                    || pi2.services != null && pi2.services.length > 0
+                                    || pi2.providers != null && pi2.providers.length > 0;
+                        } catch (Throwable e) {
+                            return true;
+                        }
+                    });
+
+                    // Packages without components cannot run as themselves
+                    if (!hasComponents) {
+                        LOGGER.v("skip %d:%s: hasComponents=false", user, pi.packageName);
+                        continue;
+                    }
+                }
+
+                pi.activities = null;
+                pi.receivers = null;
+                pi.services = null;
+                pi.providers = null;
 
                 AppInfo item = new AppInfo();
                 item.packageInfo = pi;
