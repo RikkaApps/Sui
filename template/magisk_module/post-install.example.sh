@@ -24,10 +24,12 @@ copy_cmd_tool() {
 }
 
 # Example: copy the tool to /data/local/tmp (for adb)
-ui_print "- Copy command-line tool to /data/local/tmp"
-copy_cmd_tool com.android.shell 2000 /data/local/tmp sui # Since every app can check if a specific file exists in /data/local/tmp, it's recommended to change the last parameter "sui" to something else
+#
+#ui_print "- Copy command-line tool to /data/local/tmp"
+#copy_cmd_tool com.android.shell 2000 /data/local/tmp sui # Since every app can check if a specific file exists in /data/local/tmp, it's recommended to change the last parameter "sui" to something else
 
 # Example: copy the tool to Termux
-ui_print "- Copy command-line tool to Termux"
-APP_UID=$(stat -c '%u' /data/user/0/com.termux)
-copy_cmd_tool com.termux $APP_UID /data/user/0/com.termux/files/home sui
+#
+#ui_print "- Copy command-line tool to Termux"
+#APP_UID=$(stat -c '%u' /data/user/0/com.termux)
+#copy_cmd_tool com.termux $APP_UID /data/user/0/com.termux/files/home sui
