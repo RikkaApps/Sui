@@ -105,4 +105,8 @@ set_perm_recursive "$ROOT_PATH/res.new" 0 0 0700 0600 $RIRU_SECONTEXT
 ui_print "- Fetching information for SystemUI and Settings"
 /system/bin/app_process -Djava.class.path=$ROOT_PATH/sui.dex.new /system/bin --nice-name=sui_installer rikka.sui.installer.Installer
 
+ui_print "- Extracting sui_cmd"
+extract "$ZIPFILE" 'sui_cmd' $ROOT_PATH
+set_perm "$ROOT_PATH/sui_cmd" 0 2000 0770 $RIRU_SECONTEXT
+
 rm -rf "$ROOT_PATH/tmp"

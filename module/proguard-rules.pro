@@ -25,6 +25,10 @@
     public static void main(java.lang.String[]);
 }
 
+-keep class rikka.sui.cmd.SuiCmd {
+    public static void main(java.lang.String[]);
+}
+
 -keepnames class * implements android.os.Parcelable
 
 -keepclassmembers class * implements android.os.Parcelable {
