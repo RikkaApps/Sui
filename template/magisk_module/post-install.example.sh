@@ -6,8 +6,8 @@
 # Rename this file to /data/adb/sui/post-install.sh to allow this script to be loaded.
 
 # Variables:
-# SUI_DEX:  the path to the dex of the command-line tool
-# SUI_WRAPPER:      the path to the wrapper script to start the dex
+# SUI_DEX:      the path to the dex of the command-line tool
+# SUI_WRAPPER:  the path to the wrapper script to start the dex
 
 copy_cmd_tool() {
   APP_APPLICATION_ID=$1

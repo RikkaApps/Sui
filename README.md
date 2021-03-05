@@ -51,6 +51,18 @@ The behavior of existing apps using "su" will NOT change. You can ask the develo
 
 For existing apps that already support Shizuku, add support for Sui (including changes for Shizuku API v11) should only take less than half an hour.
 
+### Command-line tool
+
+Sui has a command-line tool to allow you to run commands. It's not a full shell (for now).
+
+Since Sui does not add files to `PATH`, the files need to be copied manually. See `/data/adb/sui/post-install.example.sh` to learn how to do this automatically.
+
+After the files are correctly copied, use `sui --help` to see how to use the tool.
+
+> What's the meaning of this tool? There is already "su" from Magisk.
+> 
+> This does helped me to investigate [a bug of Magisk](https://github.com/topjohnwu/Magisk/issues/3976) that happens rarely. At that time, Magisk's su is not available. 
+
 ## Guide for application developers
 
 https://github.com/RikkaApps/Shizuku-API

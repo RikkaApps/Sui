@@ -6,9 +6,13 @@
 
 ### v11.5.0 (2021-03-02)
 
-- (Experimental) Provide a simple tool which can run commands, this tool can be used in terminal apps and adb shell
+- Provide a experimental tool which can run commands, this tool can be used in terminal apps and adb shell (see README for more)
 - Filter out packages without components
 - Filter out nonexistent packages added by `MATCH_UNINSTALLED_PACKAGES` flag
+
+> What's the meaning of the command-line tool? There is already "su" from Magisk.
+> 
+> This does helped me to investigate [a bug of Magisk](https://github.com/topjohnwu/Magisk/issues/3976) that happens rarely. At that time, Magisk's su is not available. 
 
 ### v11.4.5 (2021-02-21)
 
