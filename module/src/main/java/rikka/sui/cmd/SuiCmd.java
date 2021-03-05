@@ -24,10 +24,14 @@ import android.os.Looper;
 import android.system.Os;
 import android.text.TextUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import rikka.shizuku.Shizuku;
 import rikka.sui.BuildConfig;
@@ -101,7 +105,19 @@ public class SuiCmd {
     }
 
     private static void doExec(String[] args) throws InterruptedException {
-        Process process = Shizuku.newProcess(args, null, null);
+        List<String> envList = new ArrayList<>();
+        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+            envList.add(entry.getKey() + "=" + entry.getValue());
+        }
+        String[] env = envList.toArray(new String[0]);
+        String cwd = new File("").getAbsolutePath();
+
+        if (BuildConfig.DEBUG) {
+            System.out.println("[ " + cwd + " ]");
+            System.out.println("[ " + Arrays.toString(env) + " ]");
+        }
+
+        Process process = Shizuku.newProcess(args, env, cwd);
 
         InputStream in = process.getInputStream();
         InputStream err = process.getErrorStream();
