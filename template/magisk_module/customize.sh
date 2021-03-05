@@ -105,8 +105,19 @@ set_perm_recursive "$ROOT_PATH/res.new" 0 0 0700 0600 $RIRU_SECONTEXT
 ui_print "- Fetching information for SystemUI and Settings"
 /system/bin/app_process -Djava.class.path=$ROOT_PATH/sui.dex.new /system/bin --nice-name=sui_installer rikka.sui.installer.Installer
 
-ui_print "- Extracting sui_cmd"
-extract "$ZIPFILE" 'sui_cmd' $ROOT_PATH
-set_perm "$ROOT_PATH/sui_cmd" 0 2000 0770 $RIRU_SECONTEXT
-
 rm -rf "$ROOT_PATH/tmp"
+
+ui_print "- Extracting files for command-line tool"
+extract "$ZIPFILE" 'sui_wrapper' $ROOT_PATH
+extract "$ZIPFILE" 'post-install.example.sh' $ROOT_PATH
+set_perm "$ROOT_PATH/sui_wrapper" 0 2000 0770 $RIRU_SECONTEXT
+set_perm "$ROOT_PATH/post-install.example.sh" 0 0 0600 $RIRU_SECONTEXT
+
+if [ -f $ROOT_PATH/post-install.sh ]; then
+  SUI_DEX=$ROOT_PATH/sui.dex.new
+  SUI_WRAPPER=$ROOT_PATH/sui_wrapper
+  ui_print "- Run /data/adb/sui/post-install.sh"
+  source $ROOT_PATH/post-install.sh
+else
+  ui_print "- Cannot find /data/adb/sui/post-install.sh"
+fi

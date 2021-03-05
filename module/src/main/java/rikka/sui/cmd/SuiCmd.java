@@ -44,8 +44,14 @@ public class SuiCmd {
             System.out.println("args: " + Arrays.toString(args));
         }
 
-        if (args.length == 0 || args.length == 1 && args[0].equals("--help")) {
+        if (args.length == 0 ||
+                args.length >= 1 && (args[0].equals("--help") || args[0].equals("-h"))) {
             printHelp();
+            return;
+        }
+
+        if (args.length >= 1 && (args[0].equals("--version") || args[0].equals("-v"))) {
+            System.out.println(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
             return;
         }
 
@@ -163,8 +169,13 @@ public class SuiCmd {
     }
 
     private static void printHelp() {
-        System.out.println("usage: sui_cmd [CMD...]\n\n" +
+        System.out.println("usage: sui [OPTION]... [CMD]...\n" +
                 "Run command through Sui.\n\n" +
-                "This file can be used in adb shell or terminal apps. For terminal apps, the environment variable SUI_APPLICATION_ID needs to be set to the first.");
+                "Options:\n" +
+                "-h, --help        print this help\n" +
+                "-v, --version     print the version of the sui_wrapper tool\n" +
+                "\n" +
+                "This file can be used in adb shell or terminal apps.\n" +
+                "For terminal apps, the environment variable SUI_APPLICATION_ID needs to be set to the first.");
     }
 }
