@@ -86,6 +86,8 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
 #define ARG_PUSH_DEBUG_ONLY(v, arg)
 #endif
 
+    char buf[PATH_MAX];
+
     ARG(argv)
     ARG_PUSH(argv, "/system/bin/app_process")
     ARG_PUSH_FMT(argv, "-Djava.class.path=%s", dex_path)
@@ -94,6 +96,7 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     ARG_PUSH_FMT(argv, "--nice-name=%s", process_name)
     ARG_PUSH(argv, main_class)
     ARG_PUSH_DEBUG_ONLY(argv, "--debug")
+    ARG_PUSH_FMT(argv, "--dex-path=%s", dex_path)
     ARG_END(argv)
 
     LOGI("exec app_process...");

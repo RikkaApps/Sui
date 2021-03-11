@@ -34,7 +34,7 @@ public class UserService {
 
     public static final String USER_SERVICE_CMD_DEBUG;
 
-    private static final String USER_SERVICE_CMD_FORMAT = "(CLASSPATH=/data/adb/sui/sui.dex /system/bin/app_process%s /system/bin " +
+    private static final String USER_SERVICE_CMD_FORMAT = "(CLASSPATH=%s /system/bin/app_process%s /system/bin " +
             "--nice-name=%s %s " +
             "--token=%s --package=%s --class=%s --uid=%d%s)&";
 
@@ -54,11 +54,17 @@ public class UserService {
         }
     }
 
+    private static String dexPath;
+
+    public static void setStartDex(String path) {
+        UserService.dexPath = path;
+    }
+
     private static void start(UserServiceRecord record, String key, String token, String packageName, String classname, String processNameSuffix, int callingUid, boolean debug) {
         LOGGER.v("starting process for service record %s (%s)...", key, token);
 
         String processName = String.format("%s:%s", packageName, processNameSuffix);
-        String cmd = String.format(Locale.ENGLISH, USER_SERVICE_CMD_FORMAT,
+        String cmd = String.format(Locale.ENGLISH, USER_SERVICE_CMD_FORMAT, dexPath,
                 debug ? (" " + UserService.USER_SERVICE_CMD_DEBUG) : "",
                 processName, "rikka.sui.server.userservice.Starter",
                 token, packageName, classname, callingUid, debug ? (" " + "--debug-name=" + processName) : "");
