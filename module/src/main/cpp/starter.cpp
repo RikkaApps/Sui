@@ -38,7 +38,6 @@
 
 #define SERVER_NAME "sui"
 #define SERVER_CLASS_PATH "rikka.sui.server.Starter"
-#define SERVER_DEX "/data/adb/sui/sui.dex"
 
 static void run_server(const char *dex_path, const char *main_class, const char *process_name) {
     if (setenv("CLASSPATH", dex_path, true)) {
@@ -161,7 +160,7 @@ int main(int argc, char **argv) {
     }
 
     LOGI("starter begin");
-    start_server(SERVER_DEX, SERVER_CLASS_PATH, SERVER_NAME);
+    start_server(argv[1], SERVER_CLASS_PATH, SERVER_NAME);
 
     exit(EXIT_SUCCESS);
 }

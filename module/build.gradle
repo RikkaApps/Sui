@@ -67,7 +67,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'rikka.ndk:riru:10'
+    implementation 'dev.rikka.ndk:riru:24.0.0'
     implementation 'rikka.ndk.thirdparty:nativehelper:20201111'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"

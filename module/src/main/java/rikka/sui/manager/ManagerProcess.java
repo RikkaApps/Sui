@@ -135,7 +135,7 @@ public class ManagerProcess {
         LOGGER.d("main: %s", Arrays.toString(args));
         LOGGER.d("buffers: %s", Arrays.toString(buffers));
         WorkerHandler.get().post(ManagerProcess::sendToService);
-        WorkerHandler.get().postDelayed(ManagerProcess::registerListener, 1000);
+        WorkerHandler.get().postDelayed(ManagerProcess::registerListener, 5000);
 
         Xml.setBuffers(buffers);
     }

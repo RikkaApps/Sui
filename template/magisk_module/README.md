@@ -6,7 +6,7 @@
 
 ### v11.5.0 (2021-03-02)
 
-- Provide a experimental tool which can run commands, this tool can be used in terminal apps and adb shell (see README for more)
+- Provide an experimental tool that can run commands, this tool can be used in terminal apps and adb shell (see README for more)
 - Filter out packages without components
 - Filter out nonexistent packages added by `MATCH_UNINSTALLED_PACKAGES` flag
 

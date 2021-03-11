@@ -24,39 +24,36 @@
 #include "dex_file.h"
 #include "misc.h"
 #include "logging.h"
-#include "rirud.h"
 
-File::File(const char *path)  {
+File::File(const char *path) {
     if (!path) return;
+
+    LOGD("attempt to read %s", path);
 
     bytes = nullptr;
     size = 0;
 
-    if (rirud::ReadFile(path, (char *&) bytes, size)) {
-        LOGI("read %s from from rirud", path);
-    } else {
-        LOGE("failed to read %s from rirud", path);
-
-        auto fd = open(path, O_RDONLY);
-        if (fd == -1) {
-            close(fd);
-            return;
-        }
-        size = lseek(fd, 0, SEEK_END);
-        if (size == -1) {
-            close(fd);
-            return;
-        }
-        lseek(fd, 0, SEEK_SET);
-
-        bytes = static_cast<uint8_t *>(malloc(size));
-        if (read_full(fd, bytes, size) == -1) {
-            size = 0;
-            free(bytes);
-            bytes = nullptr;
-        }
+    auto fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        PLOGE("open %s", path);
         close(fd);
+        return;
     }
+    size = lseek(fd, 0, SEEK_END);
+    if (size == -1) {
+        PLOGE("lseek %s", path);
+        close(fd);
+        return;
+    }
+    lseek(fd, 0, SEEK_SET);
+
+    bytes = static_cast<uint8_t *>(malloc(size));
+    if (read_full(fd, bytes, size) == -1) {
+        size = 0;
+        free(bytes);
+        bytes = nullptr;
+    }
+    close(fd);
 }
 
 File::~File() {

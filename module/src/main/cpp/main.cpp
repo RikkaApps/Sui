@@ -31,14 +31,13 @@
 #include "config.h"
 #include "manager_process.h"
 #include "settings_process.h"
-#include "rirud.h"
 
 static uid_t manager_uid = -1, settings_uid = -1;
 static char manager_process[128], settings_uid_process[128];
 
 static void ReadApplicationInfo(const char *package, uid_t &uid, char *process) {
     char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, "%s/%s", ROOT_PATH, package);
+    snprintf(buf, PATH_MAX, "%s/%s", riru_get_magisk_module_path(), package);
     auto file = File(buf);
     auto bytes = file.getBytes();
     auto size = file.getSize();
@@ -58,14 +57,27 @@ static std::vector<File *> *resources_files = nullptr;
 
 static void PrepareFiles() {
     if (dexFile && dexFile->getBytes()) return;
-    dexFile = new DexFile(DEX_PATH);
+
+    char path[PATH_MAX]{0};
+    snprintf(path, PATH_MAX, "%s/%s", riru_get_magisk_module_path(), DEX_NAME);
+    dexFile = new DexFile(path);
 
     resources_files = new std::vector<File *>();
-    resources_files->emplace_back(new File(RES_PATH "/layout/confirmation_dialog.xml"));
-    resources_files->emplace_back(new File(RES_PATH "/layout/management_dialog.xml"));
-    resources_files->emplace_back(new File(RES_PATH "/layout/management_app_item.xml"));
-    resources_files->emplace_back(new File(RES_PATH "/drawable/ic_su_24.xml"));
-    resources_files->emplace_back(new File(RES_PATH "/drawable/ic_close_24.xml"));
+
+    snprintf(path, PATH_MAX, "%s/res/layout/confirmation_dialog.xml", riru_get_magisk_module_path());
+    resources_files->emplace_back(new File(path));
+
+    snprintf(path, PATH_MAX, "%s/res/layout/management_dialog.xml", riru_get_magisk_module_path());
+    resources_files->emplace_back(new File(path));
+
+    snprintf(path, PATH_MAX, "%s/res/layout/management_app_item.xml", riru_get_magisk_module_path());
+    resources_files->emplace_back(new File(path));
+
+    snprintf(path, PATH_MAX, "%s/res/drawable/ic_su_24.xml", riru_get_magisk_module_path());
+    resources_files->emplace_back(new File(path));
+
+    snprintf(path, PATH_MAX, "%s/res/drawable/ic_close_24.xml", riru_get_magisk_module_path());
+    resources_files->emplace_back(new File(path));
 
     ReadApplicationInfo(MANAGER_APPLICATION_ID, manager_uid, manager_process);
     ReadApplicationInfo(SETTINGS_APPLICATION_ID, settings_uid, settings_uid_process);
@@ -217,57 +229,36 @@ static void onModuleLoaded() {
 extern "C" {
 
 int riru_api_version;
-RiruApiV9 *riru_api_v9;
+RiruApi *riru_api;
+const char *riru_magisk_module_path;
 
-void *init(void *arg) {
-    static int step = 0;
-    step += 1;
-
-    static void *_module;
-
-    switch (step) {
-        case 1: {
-            auto core_max_api_version = *(int *) arg;
-            riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
-            return &riru_api_version;
+static auto module = RiruVersionedModuleInfo{
+        .moduleApiVersion = RIRU_MODULE_API_VERSION,
+        .moduleInfo= RiruModuleInfo{
+                .supportHide = true,
+                .version = RIRU_MODULE_VERSION,
+                .versionName = RIRU_MODULE_VERSION_NAME,
+                .onModuleLoaded = onModuleLoaded,
+                .shouldSkipUid = shouldSkipUid,
+                .forkAndSpecializePre = forkAndSpecializePre,
+                .forkAndSpecializePost = forkAndSpecializePost,
+                .forkSystemServerPre = nullptr,
+                .forkSystemServerPost = forkSystemServerPost,
+                .specializeAppProcessPre = specializeAppProcessPre,
+                .specializeAppProcessPost = specializeAppProcessPost
         }
-        case 2: {
-            switch (riru_api_version) {
-                // RiruApiV10 and RiruModuleInfoV10 are equal to V9
-                case 10:
-                case 9: {
-                    riru_api_v9 = (RiruApiV9 *) arg;
+};
 
-                    auto module = (RiruModuleInfoV9 *) malloc(sizeof(RiruModuleInfoV9));
-                    memset(module, 0, sizeof(RiruModuleInfoV9));
-                    _module = module;
+RiruVersionedModuleInfo *init(Riru *riru) {
+    auto core_max_api_version = riru->riruApiVersion;
+    riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
+    module.moduleApiVersion = riru_api_version;
 
-                    module->supportHide = true;
+    riru_api = riru->riruApi;
+    riru_magisk_module_path = strdup(riru->magiskModulePath);
 
-                    module->version = RIRU_MODULE_VERSION;
-                    module->versionName = RIRU_MODULE_VERSION_NAME;
-                    module->onModuleLoaded = onModuleLoaded;
-                    module->shouldSkipUid = shouldSkipUid;
-                    module->forkAndSpecializePre = forkAndSpecializePre;
-                    module->forkAndSpecializePost = forkAndSpecializePost;
-                    module->specializeAppProcessPre = specializeAppProcessPre;
-                    module->specializeAppProcessPost = specializeAppProcessPost;
-                    module->forkSystemServerPre = nullptr;
-                    module->forkSystemServerPost = forkSystemServerPost;
-                    return module;
-                }
-                default: {
-                    return nullptr;
-                }
-            }
-        }
-        case 3: {
-            free(_module);
-            return nullptr;
-        }
-        default: {
-            return nullptr;
-        }
-    }
+    LOGD("Supported Riru API version: %d", riru_api_version);
+    LOGD("Magisk module path: %s", riru_magisk_module_path);
+    return &module;
 }
 }

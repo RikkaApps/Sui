@@ -44,13 +44,12 @@ public class SuiCmd {
             System.out.println("args: " + Arrays.toString(args));
         }
 
-        if (args.length == 0 ||
-                args.length >= 1 && (args[0].equals("--help") || args[0].equals("-h"))) {
+        if (args.length == 0 || (args[0].equals("--help") || args[0].equals("-h"))) {
             printHelp();
             return;
         }
 
-        if (args.length >= 1 && (args[0].equals("--version") || args[0].equals("-v"))) {
+        if (args[0].equals("--version") || args[0].equals("-v")) {
             System.out.println(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
             return;
         }

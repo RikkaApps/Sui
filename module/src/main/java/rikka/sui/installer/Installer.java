@@ -30,7 +30,7 @@ import rikka.sui.server.api.SystemService;
 
 public class Installer {
 
-    private static void saveApplicationInfoToFile(String packageName, String name) throws IOException {
+    private static void saveApplicationInfoToFile(String path, String packageName, String name) throws IOException {
         ApplicationInfo ai = SystemService.getApplicationInfoNoThrow(packageName, 0, 0);
         if (ai == null) {
             System.out.println("! Can't fetch application info for package " + packageName);
@@ -40,7 +40,7 @@ public class Installer {
         String processName = ai.processName != null ? ai.processName : packageName;
         System.out.println("- " + name + ": uid=" + uid + ", processName=" + processName);
 
-        File file = new File("/data/adb/sui/" + packageName);
+        File file = new File(path, packageName);
         if (!file.exists() && !file.createNewFile()) {
             System.out.println("! Can't create " + file);
             return;
@@ -54,8 +54,8 @@ public class Installer {
 
     public static void main(String[] args) throws IOException {
         System.out.println("- AppProcess: main");
-        saveApplicationInfoToFile("com.android.systemui", "SystemUI");
-        saveApplicationInfoToFile("com.android.settings", "Settings");
+        saveApplicationInfoToFile(args[0], "com.android.systemui", "SystemUI");
+        saveApplicationInfoToFile(args[0], "com.android.settings", "Settings");
         System.out.println("- AppProcess: exit");
     }
 }

@@ -35,7 +35,6 @@ find_package(nativehelper REQUIRED CONFIG)
 
 add_library(${MODULE_NAME} SHARED
         main.cpp
-        rirud.cpp
         socket.cpp
         misc.cpp
         dex_file.cpp
