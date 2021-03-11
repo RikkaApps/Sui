@@ -17,20 +17,11 @@ ext {
     moduleRiruApiVersion = 24
 
     moduleProp = [
-            name       : moduleName,
+            id         : "riru-${moduleId.replace('_', '-')}",
+            name       : "Riru - ${moduleName}",
             version    : "${moduleVersion}.r${gitCommitCount}.${gitCommitId}",
             versionCode: moduleVersionCode.toString(),
             author     : moduleAuthor,
             description: moduleDescription,
-            minApi     : moduleMinRiruApiVersion
-    ]
-
-    magiskModuleProp = [
-            id         : "riru-${moduleId.replace('_', '-')}",
-            name       : "Riru - ${moduleProp['name']}",
-            version    : moduleProp['version'],
-            versionCode: moduleProp['versionCode'],
-            author     : moduleProp['author'],
-            description: moduleProp['description']
     ]
 }

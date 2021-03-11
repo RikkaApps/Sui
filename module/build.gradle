@@ -82,7 +82,6 @@ dependencies {
 
 def outDir = file("$rootDir/out")
 def magiskDir = file("$outDir/magisk_module")
-def riruDir = "$magiskDir/riru"
 
 import org.apache.tools.ant.filters.FixCrLfFilter
 
@@ -133,17 +132,6 @@ android.applicationVariants.all { variant ->
             })
             DexFileFactory.writeDexFile("$magiskDir/sui.dex", rewriter.dexFileRewriter.rewrite(dex))
 
-            // copy apk
-            /*copy {
-                from outputFile
-                into magiskDir
-                rename { fileName -> 'sui.apk' }
-            }
-            exec {
-                executable "zip"
-                args "-d", "$magiskDir/sui.apk", "lib/*", "kotlin/*", "classes.dex", "META-INF/*"
-            }*/
-
             // copy from template
             copy {
                 from "$rootDir/template/magisk_module"
@@ -169,18 +157,9 @@ android.applicationVariants.all { variant ->
 
             // generate module.prop
             def modulePropText = ""
-            magiskModuleProp.each { k, v -> modulePropText += "$k=$v\n" }
+            moduleProp.each { k, v -> modulePropText += "$k=$v\n" }
             modulePropText = modulePropText.trim()
             file("$magiskDir/module.prop").text = modulePropText
-
-            // generate module.prop for Riru
-            def riruModulePropText = ""
-            moduleProp.each { k, v -> riruModulePropText += "$k=$v\n" }
-            riruModulePropText = riruModulePropText.trim()
-            file(riruDir).mkdirs()
-
-            // module.prop.new will be renamed to module.prop in post-fs-data.sh
-            file("$riruDir/module.prop.new").text = riruModulePropText
 
             // copy native files
             def nativeOutDir = file("build/intermediates/cmake/$variant.name/obj")
