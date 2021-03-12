@@ -49,13 +49,15 @@ add_library(${MODULE_NAME} SHARED
 target_link_libraries(${MODULE_NAME} log riru::riru nativehelper::nativehelper_header_only)
 set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
 
-add_custom_command(TARGET ${MODULE_NAME} POST_BUILD
-        COMMAND ${CMAKE_STRIP} --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${MODULE_NAME}.so")
-
 add_executable(libstarter.so
         starter.cpp misc.cpp android.cpp)
 target_link_libraries(libstarter.so log riru::riru)
 set_target_properties(libstarter.so PROPERTIES LINK_FLAGS_RELEASE -s)
 
-add_custom_command(TARGET libstarter.so POST_BUILD
-        COMMAND ${CMAKE_STRIP} --remove-section=.comment "libstarter.so")
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_custom_command(TARGET ${MODULE_NAME} POST_BUILD
+            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${MODULE_NAME}.so")
+
+    add_custom_command(TARGET libstarter.so POST_BUILD
+            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "libstarter.so")
+endif ()
