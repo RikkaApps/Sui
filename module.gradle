@@ -14,7 +14,7 @@ ext {
     moduleVersionCode = gitCommitCount
     moduleMinRiruApiVersion = 24
     moduleMinRiruVersionName = "v24.0.0"
-    moduleRiruApiVersion = 24
+    moduleRiruApiVersion = 25
 
     moduleProp = [
             id         : "riru-${moduleId.replace('_', '-')}",

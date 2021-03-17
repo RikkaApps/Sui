@@ -173,6 +173,7 @@ static void appProcessPost(
                  app_data_dir);
             Settings::main(env, app_data_dir, dexFile, resources_files);
         } else {
+            riru_set_unload_allowed(true);
             DestroyFiles(env);
         }
     }
@@ -218,10 +219,6 @@ static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
     }
 }
 
-static int shouldSkipUid(int uid) {
-    return false;
-}
-
 static void onModuleLoaded() {
     PrepareFiles();
 }
@@ -229,8 +226,8 @@ static void onModuleLoaded() {
 extern "C" {
 
 int riru_api_version;
-RiruApi *riru_api;
 const char *riru_magisk_module_path;
+int *riru_allow_unload;
 
 static auto module = RiruVersionedModuleInfo{
         .moduleApiVersion = RIRU_MODULE_API_VERSION,
@@ -239,7 +236,6 @@ static auto module = RiruVersionedModuleInfo{
                 .version = RIRU_MODULE_VERSION,
                 .versionName = RIRU_MODULE_VERSION_NAME,
                 .onModuleLoaded = onModuleLoaded,
-                .shouldSkipUid = shouldSkipUid,
                 .forkAndSpecializePre = forkAndSpecializePre,
                 .forkAndSpecializePost = forkAndSpecializePost,
                 .forkSystemServerPre = nullptr,
@@ -254,8 +250,10 @@ RiruVersionedModuleInfo *init(Riru *riru) {
     riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
     module.moduleApiVersion = riru_api_version;
 
-    riru_api = riru->riruApi;
     riru_magisk_module_path = strdup(riru->magiskModulePath);
+    if (riru_api_version >= 25) {
+        riru_allow_unload = riru->allowUnload;
+    }
 
     LOGD("Supported Riru API version: %d", riru_api_version);
     LOGD("Magisk module path: %s", riru_magisk_module_path);
