@@ -63,12 +63,11 @@ android {
 repositories {
     mavenLocal()
     jcenter()
-    maven { url 'https://dl.bintray.com/rikkaw/Libraries' }
 }
 
 dependencies {
     implementation 'dev.rikka.ndk:riru:25.0.0'
-    implementation 'rikka.ndk.thirdparty:nativehelper:20201111'
+    implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.0'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
     implementation "androidx.annotation:annotation:1.1.0"
