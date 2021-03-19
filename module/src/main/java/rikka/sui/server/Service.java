@@ -587,7 +587,7 @@ public class Service extends IShizukuService.Stub {
 
         List<ClientRecord> records = clientManager.findClients(requestUid);
         if (records.isEmpty()) {
-            LOGGER.w("dispatchPermissionConfirmationResult: no client for uid % was found", requestUid, requestPid);
+            LOGGER.w("dispatchPermissionConfirmationResult: no client for uid %d was found", requestUid);
         } else {
             for (ClientRecord record : records) {
                 record.allowed = allowed;
