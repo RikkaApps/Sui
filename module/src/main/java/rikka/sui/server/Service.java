@@ -242,7 +242,7 @@ public class Service extends IShizukuService.Stub {
         try {
             process = Runtime.getRuntime().exec(cmd, env, dir != null ? new File(dir) : null);
         } catch (IOException e) {
-            throw new RemoteException(e.getMessage());
+            throw new IllegalStateException(e.getMessage());
         }
 
         return new RemoteProcessHolder(process, record.client.asBinder());
@@ -255,7 +255,7 @@ public class Service extends IShizukuService.Stub {
         try {
             return SystemProperties.get(name, defaultValue);
         } catch (Throwable tr) {
-            throw new RemoteException(tr.getMessage());
+            throw new IllegalStateException(tr.getMessage());
         }
     }
 
@@ -266,7 +266,7 @@ public class Service extends IShizukuService.Stub {
         try {
             SystemProperties.set(name, value);
         } catch (Throwable tr) {
-            throw new RemoteException(tr.getMessage());
+            throw new IllegalStateException(tr.getMessage());
         }
     }
 
