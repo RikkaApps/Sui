@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import rikka.shizuku.Shizuku;
 import rikka.sui.BuildConfig;
@@ -39,19 +40,56 @@ import rikka.sui.Sui;
 
 public class SuiCmd {
 
+    private static boolean verboseMessageAllowed = false;
+    private static boolean preserveEnvironment = false;
+
+    private static void verbose(String message) {
+        if (!verboseMessageAllowed) return;
+
+        System.out.println("[ " + message + " ]");
+        System.out.flush();
+    }
+
+    private static void abort(String message) {
+        System.err.println("[ " + message + " ]");
+        System.err.flush();
+        System.exit(1);
+    }
+
     public static void main(String[] args) throws InterruptedException {
         if (BuildConfig.DEBUG) {
             System.out.println("args: " + Arrays.toString(args));
         }
 
-        if (args.length == 0 || (args[0].equals("--help") || args[0].equals("-h"))) {
+        if (args.length == 0) {
             printHelp();
             return;
         }
 
-        if (args[0].equals("--version") || args[0].equals("-v")) {
-            System.out.println(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
-            return;
+        List<String> cmds = new ArrayList<>();
+
+        for (String arg : args) {
+            switch (arg) {
+                case "--verbose":
+                    verboseMessageAllowed = true;
+                    break;
+                case "--help":
+                case "-h":
+                    printHelp();
+                    return;
+                case "--version":
+                case "-v":
+                    System.out.println(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
+                    return;
+                case "-m":
+                case "-p":
+                case "--preserve-environment":
+                    preserveEnvironment = true;
+                    break;
+                default:
+                    cmds.add(arg);
+                    break;
+            }
         }
 
         String packageName;
@@ -75,7 +113,7 @@ public class SuiCmd {
             abort("Please check if the current SUI_APPLICATION_ID, " + packageName + ", is correct");
         }
 
-        preExec(args);
+        preExec(cmds.toArray(new String[0]));
 
         Looper.loop();
     }
@@ -86,7 +124,7 @@ public class SuiCmd {
         } else if (Shizuku.shouldShowRequestPermissionRationale()) {
             abort("Permission denied, please check the management UI of Sui");
         } else {
-            System.out.println("[ Requesting permission... ]");
+            verbose("Requesting permission...");
 
             Shizuku.addRequestPermissionResultListener(new Shizuku.OnRequestPermissionResultListener() {
                 @Override
@@ -110,30 +148,51 @@ public class SuiCmd {
     }
 
     private static void doExec(String[] args) throws InterruptedException {
-        List<String> envList = new ArrayList<>();
-        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
-            envList.add(entry.getKey() + "=" + entry.getValue());
+        Process process;
+        InputStream in;
+        InputStream err;
+        OutputStream out;
+
+        try {
+            if (preserveEnvironment) {
+                List<String> envList = new ArrayList<>();
+                for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+                    envList.add(entry.getKey() + "=" + entry.getValue());
+                }
+                String[] env = envList.toArray(new String[0]);
+                String cwd = new File("").getAbsolutePath();
+
+                verbose("cwd: " + cwd);
+                verbose("env: " + Arrays.toString(env));
+
+                verbose("Starting command " + args[0] + "...");
+                process = Shizuku.newProcess(args, env, cwd);
+            } else {
+                verbose("Starting command " + args[0] + "...");
+                process = Shizuku.newProcess(args, null, null);
+            }
+
+            in = process.getInputStream();
+            err = process.getErrorStream();
+            out = process.getOutputStream();
+        } catch (Throwable e) {
+            if (BuildConfig.DEBUG) {
+                e.printStackTrace();
+            }
+            abort(e.getMessage());
+            return;
         }
-        String[] env = envList.toArray(new String[0]);
-        String cwd = new File("").getAbsolutePath();
 
-        if (BuildConfig.DEBUG) {
-            System.out.println("[ " + cwd + " ]");
-            System.out.println("[ " + Arrays.toString(env) + " ]");
-        }
+        CountDownLatch latch = new CountDownLatch(2);
 
-        Process process = Shizuku.newProcess(args, env, cwd);
-
-        InputStream in = process.getInputStream();
-        InputStream err = process.getErrorStream();
-        OutputStream out = process.getOutputStream();
-
-        new TransferThread(in, System.out).start();
-        new TransferThread(err, System.out).start();
-        new TransferThread(System.in, out).start();
+        new TransferThread(in, System.out, latch).start();
+        new TransferThread(err, System.out, latch).start();
+        new TransferThread(System.in, out, null).start();
 
         int exitCode = process.waitFor();
-        System.out.println("[ " + "Command " + args[0] + " exited with " + exitCode + " ]");
+        latch.await();
+
+        System.out.println("Command " + args[0] + " exited with " + exitCode);
         System.exit(exitCode);
     }
 
@@ -141,10 +200,12 @@ public class SuiCmd {
 
         private final InputStream input;
         private final OutputStream output;
+        private final CountDownLatch latch;
 
-        public TransferThread(InputStream input, OutputStream output) {
+        public TransferThread(InputStream input, OutputStream output, CountDownLatch latch) {
             this.input = input;
             this.output = output;
+            this.latch = latch;
         }
 
         @Override
@@ -159,20 +220,22 @@ public class SuiCmd {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            if (latch != null) {
+                latch.countDown();
+            }
         }
-    }
-
-    private static void abort(String message) {
-        System.err.println("[ " + message + " ]");
-        System.exit(1);
     }
 
     private static void printHelp() {
         System.out.println("usage: sui [OPTION]... [CMD]...\n" +
                 "Run command through Sui.\n\n" +
                 "Options:\n" +
-                "-h, --help        print this help\n" +
-                "-v, --version     print the version of the sui_wrapper tool\n" +
+                "Options:\n" +
+                "-h, --help               print this help\n" +
+                "-v, --version            print the version of the sui_wrapper tool\n" +
+                "--verbose                print more messages\n" +
+                "-m, -p,\n" +
+                "--preserve-environment   preserve the entire environment\n" +
                 "\n" +
                 "This file can be used in adb shell or terminal apps.\n" +
                 "For terminal apps, the environment variable SUI_APPLICATION_ID needs to be set to the first.");
