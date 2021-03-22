@@ -4,17 +4,18 @@ ext {
     gitCommitId = 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim()
     gitCommitCount = Integer.parseInt('git rev-list --count HEAD'.execute([], project.rootDir).text.trim())
 
+    moduleMinRiruApiVersion = 25
+    moduleMinRiruVersionName = "v25.0.0"
+    moduleRiruApiVersion = 25
+
     moduleId = "sui"
     moduleName = "Sui"
     moduleAuthor = "Rikka"
-    moduleDescription = "Modern superuser interface implementation, shares the same API design from Shizuku."
+    moduleDescription = "Modern superuser interface implementation, shares the same API design from Shizuku. This modules requires Riru $moduleMinRiruVersionName or above."
     moduleVersionMinor = 6
     moduleVersionPatch = 0
     moduleVersion = "v${api_version_major}.${moduleVersionMinor}.${moduleVersionPatch}"
     moduleVersionCode = gitCommitCount
-    moduleMinRiruApiVersion = 24
-    moduleMinRiruVersionName = "v24.0.0"
-    moduleRiruApiVersion = 25
 
     moduleProp = [
             id         : "riru-${moduleId.replace('_', '-')}",

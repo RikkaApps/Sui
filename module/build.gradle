@@ -96,6 +96,20 @@ static def calcSha256(file) {
 }
 
 android.applicationVariants.all { variant ->
+    def variantCapped = variant.name.capitalize()
+    def variantLowered = variant.name.toLowerCase()
+
+    def zipName = "${moduleId}-${moduleVersion}-${variantLowered}.zip"
+
+    def is_windows = org.gradle.internal.os.OperatingSystem.current().isWindows()
+
+    task ("zip${variantCapped}", type: Zip) {
+        dependsOn("assemble${variantCapped}")
+        from magiskDir
+        archiveName zipName
+        destinationDir outDir
+    }
+
     variant.outputs.all {
         def task = variant.assembleProvider.get()
         task.doLast {
@@ -176,22 +190,40 @@ android.applicationVariants.all { variant ->
                 file(f.file.path + ".sha256sum").text = calcSha256(f.file)
             }
         }
-        if (variant.buildType.name == "debug") {
-            task.finalizedBy zipMagiskMoudleDebug
+        task.finalizedBy("zip${variantCapped}")
+    }
+
+    task ("push${variantCapped}", type: Exec) {
+        dependsOn("assemble${variantCapped}")
+        workingDir outDir
+        def commands = [android.adbExecutable, "push",
+                        zipName,
+                        "/data/local/tmp/"]
+        if (is_windows) {
+            commandLine 'cmd', '/c', commands.join(" ")
         } else {
-            task.finalizedBy zipMagiskMoudleRelease
+            commandLine commands
         }
     }
-}
 
-task zipMagiskMoudleRelease(type: Zip) {
-    from magiskDir
-    archiveName "riru-${moduleId}-${moduleVersion}-release.zip"
-    destinationDir outDir
-}
+    task("flash${variantCapped}", type: Exec) {
+        dependsOn("push${variantCapped}")
+        def commands = [android.adbExecutable, "shell", "su", "-c",
+                        "magisk --install-module /data/local/tmp/${zipName}"]
+        if (is_windows) {
+            commandLine 'cmd', '/c', commands.join(" ")
+        } else {
+            commandLine commands
+        }
+    }
 
-task zipMagiskMoudleDebug(type: Zip) {
-    from magiskDir
-    archiveName "riru-${moduleId}-${moduleVersion}-debug.zip"
-    destinationDir outDir
+    task("flashAndReoot${variantCapped}", type: Exec) {
+        dependsOn("flash${variantCapped}")
+        def commands = [android.adbExecutable, "shell", "reboot"]
+        if (is_windows) {
+            commandLine 'cmd', '/c', commands.join(" ")
+        } else {
+            commandLine commands
+        }
+    }
 }

@@ -36,8 +36,25 @@ In conclusion, we can get a superuser interface similar to standard Android APIs
 
 ## Build
 
-* Clone with `git clone --recurse-submodules`
-* Run gradle task `:module:assembleRelease` task from Android Studio or the terminal, zip will be saved to `out`
+Clone with `git clone --recurse-submodules`.
+
+Gradle tasks:
+
+* `:riru:assembleDebug/Release`
+   
+   Generate Magisk module zip to `out`.
+
+* `:riru:pushDebug/Release`
+   
+   Push the zip with adb to `/data/local/tmp`.
+
+* `:riru:flashDebug/Release`
+   
+   Flash the zip with `adb shell su -c magisk --install-module`.
+
+* `:riru:flashAndRebootDebug/Release`
+
+   Flash the zip and reboot the device.
 
 ## Guide for users
 
