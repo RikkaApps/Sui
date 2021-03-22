@@ -21,7 +21,7 @@ android {
         versionName moduleVersion.substring(1)
         externalNativeBuild {
             cmake {
-                arguments "-DMODULE_NAME:STRING=riru_$moduleId",
+                arguments "-DMODULE_NAME:STRING=$moduleId",
                         "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
                         "-DRIRU_MODULE_VERSION=$moduleVersionCode",
                         "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\""
