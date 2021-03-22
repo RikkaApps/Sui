@@ -40,25 +40,44 @@ import rikka.sui.Sui;
 
 public class SuiCmd {
 
+    private static void printHelp() {
+        printf("usage: sui [OPTION]... [CMD]...\n" +
+                "Run command through Sui.\n\n" +
+                "Options:\n" +
+                "Options:\n" +
+                "-h, --help               print this help\n" +
+                "-v, --version            print the version of the sui_wrapper tool\n" +
+                "--verbose                print more messages\n" +
+                "-m, -p,\n" +
+                "--preserve-environment   preserve the entire environment\n" +
+                "\n" +
+                "This file can be used in adb shell or terminal apps.\n" +
+                "For terminal apps, the environment variable SUI_APPLICATION_ID needs to be set to the first.");
+    }
+
     private static boolean verboseMessageAllowed = false;
     private static boolean preserveEnvironment = false;
 
-    private static void verbose(String message) {
-        if (!verboseMessageAllowed) return;
-
-        System.out.println("[ " + message + " ]");
+    private static void printf(String format, Object ... args) {
+        System.out.printf(format + "\n", args);
         System.out.flush();
     }
 
-    private static void abort(String message) {
-        System.err.println("[ " + message + " ]");
+    private static void verbose(String format, Object ... args) {
+        if (!verboseMessageAllowed) return;
+
+        printf(format, args);
+    }
+
+    private static void abort(String format, Object ... args) {
+        System.err.printf(format + "\n", args);
         System.err.flush();
         System.exit(1);
     }
 
     public static void main(String[] args) throws InterruptedException {
         if (BuildConfig.DEBUG) {
-            System.out.println("args: " + Arrays.toString(args));
+            printf("args: " + Arrays.toString(args));
         }
 
         if (args.length == 0) {
@@ -79,7 +98,7 @@ public class SuiCmd {
                     return;
                 case "--version":
                 case "-v":
-                    System.out.println(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
+                    printf("%s (%d)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE);
                     return;
                 case "-m":
                 case "-p":
@@ -154,23 +173,23 @@ public class SuiCmd {
         OutputStream out;
 
         try {
+            String[] env;
+            String cwd = new File("").getAbsolutePath();
+
             if (preserveEnvironment) {
                 List<String> envList = new ArrayList<>();
                 for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
                     envList.add(entry.getKey() + "=" + entry.getValue());
                 }
-                String[] env = envList.toArray(new String[0]);
-                String cwd = new File("").getAbsolutePath();
-
-                verbose("cwd: " + cwd);
-                verbose("env: " + Arrays.toString(env));
-
-                verbose("Starting command " + args[0] + "...");
-                process = Shizuku.newProcess(args, env, cwd);
+                env = envList.toArray(new String[0]);
             } else {
-                verbose("Starting command " + args[0] + "...");
-                process = Shizuku.newProcess(args, null, null);
+                env = null;
             }
+
+            verbose("cwd: " + cwd);
+            verbose("env: " + Arrays.toString(env));
+            verbose("Starting command " + args[0] + "...");
+            process = Shizuku.newProcess(args, env, cwd);
 
             in = process.getInputStream();
             err = process.getErrorStream();
@@ -192,7 +211,7 @@ public class SuiCmd {
         int exitCode = process.waitFor();
         latch.await();
 
-        System.out.println("Command " + args[0] + " exited with " + exitCode);
+        verbose("Command " + args[0] + " exited with " + exitCode);
         System.exit(exitCode);
     }
 
@@ -224,20 +243,5 @@ public class SuiCmd {
                 latch.countDown();
             }
         }
-    }
-
-    private static void printHelp() {
-        System.out.println("usage: sui [OPTION]... [CMD]...\n" +
-                "Run command through Sui.\n\n" +
-                "Options:\n" +
-                "Options:\n" +
-                "-h, --help               print this help\n" +
-                "-v, --version            print the version of the sui_wrapper tool\n" +
-                "--verbose                print more messages\n" +
-                "-m, -p,\n" +
-                "--preserve-environment   preserve the entire environment\n" +
-                "\n" +
-                "This file can be used in adb shell or terminal apps.\n" +
-                "For terminal apps, the environment variable SUI_APPLICATION_ID needs to be set to the first.");
     }
 }
