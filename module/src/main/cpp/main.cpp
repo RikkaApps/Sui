@@ -161,6 +161,7 @@ static void appProcessPost(
             LOGV("%s: settings process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
             Settings::main(env, app_data_dir, dexFile, resources_files);
         } else {
+            riru_set_unload_allowed(true);
             DestroyFiles(env);
         }
     } else {
