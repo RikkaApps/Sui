@@ -14,7 +14,7 @@ message("Build type: ${CMAKE_BUILD_TYPE}")
 set(CMAKE_CXX_STANDARD 11)
 
 set(LINKER_FLAGS "-ffixed-x18 -Wl,--hash-style=both")
-set(C_FLAGS "-Werror=format -fdata-sections -ffunction-sections -fno-exceptions")
+set(C_FLAGS "-Werror=format -fdata-sections -ffunction-sections -fno-exceptions -fno-rtti -fno-threadsafe-statics")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(C_FLAGS "${C_FLAGS} -O2 -fvisibility=hidden -fvisibility-inlines-hidden")
