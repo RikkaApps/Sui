@@ -42,14 +42,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import kotlin.collections.ArraysKt;
 import kotlin.collections.MapsKt;
-import kotlin.jvm.functions.Function0;
 import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
@@ -233,10 +230,10 @@ public class Service extends IShizukuService.Stub {
     }
 
     @Override
-    public IRemoteProcess newProcess(String[] cmd, String[] env, String dir) throws RemoteException {
+    public IRemoteProcess newProcess(String[] cmd, String[] env, String dir) {
         ClientRecord record = requireClient(Binder.getCallingUid(), Binder.getCallingPid(), true);
 
-        LOGGER.d("newProcess: uid=%d, cmd=%s, env=%s, dir=%s", Binder.getCallingUid(), Arrays.toString(cmd), Arrays.toString(env), dir);
+        LOGGER.v("newProcess: uid=%d, cmd=%s, env=%s, dir=%s", Binder.getCallingUid(), Arrays.toString(cmd), Arrays.toString(env), dir);
 
         Process process;
         try {
@@ -703,23 +700,8 @@ public class Service extends IShizukuService.Stub {
                         dataDir = pi.applicationInfo.dataDir;
                     }
 
-                    boolean hasApk = MapsKt.getOrPut(existenceCache, pi.applicationInfo.sourceDir, () -> {
-                        try {
-                            Os.access(pi.applicationInfo.sourceDir, OsConstants.F_OK);
-                            return true;
-                        } catch (ErrnoException e) {
-                            return false;
-                        }
-                    });
-
-                    boolean hasData = MapsKt.getOrPut(existenceCache, dataDir, () -> {
-                        try {
-                            Os.access(dataDir, OsConstants.F_OK);
-                            return true;
-                        } catch (ErrnoException e) {
-                            return false;
-                        }
-                    });
+                    boolean hasApk = MapsKt.getOrPut(existenceCache, pi.applicationInfo.sourceDir, () -> new File(pi.applicationInfo.sourceDir).exists());
+                    boolean hasData = MapsKt.getOrPut(existenceCache, dataDir, () -> new File(dataDir).exists());
 
                     // Installed (or hidden): hasApk && hasData
                     // Uninstalled but keep data: !hasApk && hasData
