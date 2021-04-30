@@ -2,8 +2,6 @@
 
 Modern super user interface implementation on Android. It's is "fileless", which means no binary files like "su" is required. The API is built on Android's binder mechanism, this is the same as most Android APIs.
 
-In the future, Sui will be shipped with Magisk.
-
 > The name, Sui, also comes from a character. (<https://www.pixiv.net/artworks/71435059>)
 
 ## Background
