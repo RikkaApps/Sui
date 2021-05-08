@@ -1,13 +1,14 @@
-import org.jf.dexlib2.DexFileFactory
-import org.jf.dexlib2.Opcodes
-import org.jf.dexlib2.rewriter.DexRewriter
-import org.jf.dexlib2.rewriter.Rewriter
-import org.jf.dexlib2.rewriter.RewriterModule
-import org.jf.dexlib2.rewriter.Rewriters
+import org.apache.tools.ant.filters.FixCrLfFilter
 
 plugins {
     id('com.android.application')
     id('kotlin-android')
+    id('dev.rikka.tools.hidden-api-refine')
+}
+
+hiddenApiRefine {
+    refinePrefix = ['$']
+    log = true
 }
 
 apply from: file(rootProject.file('module.gradle'))
@@ -81,7 +82,6 @@ dependencies {
 
 def outDir = file("$rootDir/out")
 
-import org.apache.tools.ant.filters.FixCrLfFilter
 
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -162,23 +162,6 @@ afterEvaluate {
                     from zipTree(apk).matching { include 'res/*/*.xml' }
                     into magiskDir
                 }
-
-                // patch dex
-                def dex = DexFileFactory.loadDexFile("$magiskDir/sui.dex", Opcodes.forApi(minSdkVersion))
-                def rewriter = new DexRewriter(new RewriterModule() {
-                    @Override
-                    Rewriter<String> getTypeRewriter(Rewriters rewriters) {
-                        return new Rewriter<String>() {
-                            @Override
-                            String rewrite(String value) {
-                                if (value.startsWith("L\$"))
-                                    return "L" + value.substring(2)
-                                return value
-                            }
-                        }
-                    }
-                })
-                DexFileFactory.writeDexFile("$magiskDir/sui.dex", rewriter.dexFileRewriter.rewrite(dex))
 
                 // generate sha1sum
                 fileTree("$magiskDir").matching {
