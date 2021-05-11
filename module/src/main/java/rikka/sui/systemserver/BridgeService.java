@@ -99,7 +99,13 @@ public class BridgeService {
         switch (action) {
             case ACTION_SEND_BINDER: {
                 if (Binder.getCallingUid() == 0) {
-                    sendBinder(data.readStrongBinder());
+                    IBinder binder = data.readStrongBinder();
+                    long identity = Binder.clearCallingIdentity();
+                    try {
+                        sendBinder(binder);
+                    } finally {
+                        Binder.restoreCallingIdentity(identity);
+                    }
                     if (reply != null) {
                         reply.writeNoException();
                     }
