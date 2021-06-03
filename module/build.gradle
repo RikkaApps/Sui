@@ -61,17 +61,12 @@ android {
     }
 }
 
-repositories {
-    mavenLocal()
-    jcenter()
-}
-
 dependencies {
     implementation 'dev.rikka.ndk:riru:25.0.0'
-    implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.0'
+    implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.1'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
-    implementation "androidx.annotation:annotation:1.1.0"
+    implementation "androidx.annotation:annotation:1.2.0"
 
     implementation project(':aidl')
     implementation project(':shared')
