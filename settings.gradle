@@ -1,5 +1,9 @@
 include ':module', ':hidden-api-common', ':hidden-api-21'
 
+import org.apache.tools.ant.DirectoryScanner
+
+DirectoryScanner.removeDefaultExclude('**/.gitattributes')
+
 def root = "api"
 
 def propFile = file('local.properties')

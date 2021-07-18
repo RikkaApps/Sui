@@ -42,11 +42,11 @@ mkdir "$MODPATH/riru/lib64"
 
 if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
   ui_print "- Extracting x86 libraries"
-  extract "$ZIPFILE" "lib/x86/lib$RIRU_MODULE_ID.so" "$MODPATH/riru/lib" true
+  extract "$ZIPFILE" "lib/x86/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting x64 libraries"
-    extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_ID.so" "$MODPATH/riru/lib64" true
+    extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
     extract "$ZIPFILE" "lib/x86_64/libstarter.so" "$MODPATH" true
   else
     extract "$ZIPFILE" "lib/x86/libstarter.so" "$MODPATH" true
@@ -55,11 +55,11 @@ fi
 
 if [ "$ARCH" = "arm" ] || [ "$ARCH" = "arm64" ]; then
   ui_print "- Extracting arm libraries"
-  extract "$ZIPFILE" "lib/armeabi-v7a/lib$RIRU_MODULE_ID.so" "$MODPATH/riru/lib" true
+  extract "$ZIPFILE" "lib/armeabi-v7a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting arm64 libraries"
-    extract "$ZIPFILE" "lib/arm64-v8a/lib$RIRU_MODULE_ID.so" "$MODPATH/riru/lib64" true
+    extract "$ZIPFILE" "lib/arm64-v8a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
     extract "$ZIPFILE" "lib/arm64-v8a/libstarter.so" "$MODPATH" true
   else
     extract "$ZIPFILE" "lib/armeabi-v7a/libstarter.so" "$MODPATH" true
