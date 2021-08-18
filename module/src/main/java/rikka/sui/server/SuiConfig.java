@@ -17,14 +17,16 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.server.config;
+package rikka.sui.server;
 
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Config {
+import rikka.shizuku.server.ConfigPackageEntry;
+
+public class SuiConfig {
 
     public static final int LATEST_VERSION = 1;
 
@@ -37,7 +39,7 @@ public class Config {
 
     public List<PackageEntry> packages = new ArrayList<>();
 
-    public static class PackageEntry {
+    public static class PackageEntry extends ConfigPackageEntry {
 
         public final int uid;
 
@@ -61,10 +63,10 @@ public class Config {
         }
     }
 
-    public Config() {
+    public SuiConfig() {
     }
 
-    public Config(@NonNull List<PackageEntry> packages) {
+    public SuiConfig(@NonNull List<PackageEntry> packages) {
         this.version = LATEST_VERSION;
         this.packages = packages;
     }

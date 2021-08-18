@@ -1,4 +1,4 @@
-include ':module', ':hidden-api-common', ':hidden-api-21'
+include ':module'
 
 import org.apache.tools.ant.DirectoryScanner
 
@@ -8,27 +8,34 @@ def root = "api"
 
 def propFile = file('local.properties')
 def props = new Properties()
-def apiUseLocal = false
-def apiDir = null
 
 if (propFile.canRead()) {
     props.load(new FileInputStream(propFile))
 
     if (props != null) {
-        apiDir = props["api.dir"]
-        apiUseLocal = props["api.useLocal"].equals("true")
+        if (props["api.useLocal"].equals("true")) {
+            root = props["api.dir"]
+        }
     }
-}
-
-if (apiUseLocal) {
-    root = apiDir
 }
 
 include ':aidl'
 project(':aidl').projectDir = file("$root${File.separator}aidl")
+
+include ':rish'
+project(':rish').projectDir = file("$root${File.separator}rish")
 
 include ':shared'
 project(':shared').projectDir = file("$root${File.separator}shared")
 
 include ':api'
 project(':api').projectDir = file("$root${File.separator}api")
+
+include ':provider'
+project(':provider').projectDir = file("$root${File.separator}provider")
+
+include ':server-shared'
+project(':server-shared').projectDir = file("$root${File.separator}server-shared")
+
+include ':hidden-api-stub'
+project(':hidden-api-stub').projectDir = file("$root${File.separator}hidden-api-stub")

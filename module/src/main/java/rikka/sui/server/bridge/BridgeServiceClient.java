@@ -22,12 +22,11 @@ package rikka.sui.server.bridge;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.ServiceManager;
-import android.view.LayoutInflater;
 
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import rikka.sui.server.Service;
+import rikka.sui.server.SuiService;
 
 import static rikka.sui.server.ServerConstants.LOGGER;
 
@@ -124,7 +123,7 @@ public class BridgeServiceClient {
             try {
                 data.writeInterfaceToken(BRIDGE_SERVICE_DESCRIPTOR);
                 data.writeInt(ACTION_SEND_BINDER);
-                IBinder binder = Service.getInstance();
+                IBinder binder = SuiService.getInstance();
                 LOGGER.v("binder %s", binder);
                 data.writeStrongBinder(binder);
                 res = bridgeService.transact(BRIDGE_TRANSACTION_CODE, data, reply, 0);

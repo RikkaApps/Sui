@@ -38,6 +38,10 @@ import rikka.shizuku.Shizuku;
 import rikka.sui.BuildConfig;
 import rikka.sui.Sui;
 
+/**
+ * Replaced by rish which provides the full functionality of interactive shells.
+ * This will be removed in the next major version.
+ */
 public class SuiCmd {
 
     private static void printHelp() {

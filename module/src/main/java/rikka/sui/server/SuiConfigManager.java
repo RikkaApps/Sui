@@ -17,41 +17,43 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.server.config;
+package rikka.sui.server;
 
 import androidx.annotation.Nullable;
 
-import static rikka.sui.server.ServerConstants.LOGGER;
+import java.util.List;
 
-public class ConfigManager {
+import rikka.shizuku.server.ConfigManager;
 
-    public static Config load() {
-        Config config = SuiDatabase.readConfig();
+public class SuiConfigManager extends ConfigManager {
+
+    public static SuiConfig load() {
+        SuiConfig config = SuiDatabase.readConfig();
         if (config == null) {
             LOGGER.i("failed to read database, starting empty");
-            return new Config();
+            return new SuiConfig();
         }
         return config;
     }
 
-    private static ConfigManager instance;
+    private static SuiConfigManager instance;
 
-    public static ConfigManager getInstance() {
+    public static SuiConfigManager getInstance() {
         if (instance == null) {
-            instance = new ConfigManager();
+            instance = new SuiConfigManager();
         }
         return instance;
     }
 
 
-    private final Config config;
+    private final SuiConfig config;
 
-    private ConfigManager() {
+    public SuiConfigManager() {
         this.config = load();
     }
 
-    private Config.PackageEntry findLocked(int uid) {
-        for (Config.PackageEntry entry : config.packages) {
+    private SuiConfig.PackageEntry findLocked(int uid) {
+        for (SuiConfig.PackageEntry entry : config.packages) {
             if (uid == entry.uid) {
                 return entry;
             }
@@ -60,17 +62,22 @@ public class ConfigManager {
     }
 
     @Nullable
-    public Config.PackageEntry find(int uid) {
+    public SuiConfig.PackageEntry find(int uid) {
         synchronized (this) {
             return findLocked(uid);
         }
     }
 
+    @Override
+    public void update(int uid, List<String> packages, int mask, int values) {
+        update(uid, mask, values);
+    }
+
     public void update(int uid, int mask, int values) {
         synchronized (this) {
-            Config.PackageEntry entry = findLocked(uid);
+            SuiConfig.PackageEntry entry = findLocked(uid);
             if (entry == null) {
-                entry = new Config.PackageEntry(uid, mask & values);
+                entry = new SuiConfig.PackageEntry(uid, mask & values);
                 config.packages.add(entry);
             } else {
                 int newValue = (entry.flags & ~mask) | (mask & values);
@@ -83,9 +90,10 @@ public class ConfigManager {
         }
     }
 
+    @Override
     public void remove(int uid) {
         synchronized (this) {
-            Config.PackageEntry entry = findLocked(uid);
+            SuiConfig.PackageEntry entry = findLocked(uid);
             if (entry == null) {
                 return;
             }
@@ -95,10 +103,10 @@ public class ConfigManager {
     }
 
     public boolean isHidden(int uid) {
-        Config.PackageEntry entry = find(uid);
+        SuiConfig.PackageEntry entry = find(uid);
         if (entry == null) {
             return false;
         }
-        return (entry.flags & Config.FLAG_HIDDEN) != 0;
+        return (entry.flags & SuiConfig.FLAG_HIDDEN) != 0;
     }
 }

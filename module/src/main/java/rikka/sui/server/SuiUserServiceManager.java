@@ -17,24 +17,20 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.server.userservice;
+package rikka.sui.server;
 
 import android.os.Build;
 
-import java.io.OutputStream;
+import java.io.File;
 import java.util.Locale;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
-import static rikka.sui.server.ServerConstants.LOGGER;
+import rikka.shizuku.server.UserServiceManager;
 
-public class UserService {
-
-    private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
+public class SuiUserServiceManager extends UserServiceManager {
 
     public static final String USER_SERVICE_CMD_DEBUG;
 
-    private static final String USER_SERVICE_CMD_FORMAT = "(CLASSPATH=%s /system/bin/app_process%s /system/bin " +
+    private static final String USER_SERVICE_CMD_FORMAT = "(CLASSPATH=%s %s%s /system/bin " +
             "--nice-name=%s %s " +
             "--token=%s --package=%s --class=%s --uid=%d%s)&";
 
@@ -57,41 +53,19 @@ public class UserService {
     private static String dexPath;
 
     public static void setStartDex(String path) {
-        UserService.dexPath = path;
+        SuiUserServiceManager.dexPath = path;
     }
 
-    private static void start(UserServiceRecord record, String key, String token, String packageName, String classname, String processNameSuffix, int callingUid, boolean debug) {
-        LOGGER.v("starting process for service record %s (%s)...", key, token);
-
+    @Override
+    public String getUserServiceStartCmd(rikka.shizuku.server.UserServiceRecord record, String key, String token, String packageName, String classname, String processNameSuffix, int callingUid, boolean use32Bits, boolean debug) {
+        String appProcess = "/system/bin/app_process";
+        if (use32Bits && new File("/system/bin/app_process32").exists()) {
+            appProcess = "/system/bin/app_process32";
+        }
         String processName = String.format("%s:%s", packageName, processNameSuffix);
-        String cmd = String.format(Locale.ENGLISH, USER_SERVICE_CMD_FORMAT, dexPath,
-                debug ? (" " + UserService.USER_SERVICE_CMD_DEBUG) : "",
+        return String.format(Locale.ENGLISH, USER_SERVICE_CMD_FORMAT, dexPath, appProcess,
+                debug ? (" " + SuiUserServiceManager.USER_SERVICE_CMD_DEBUG) : "",
                 processName, "rikka.sui.server.userservice.Starter",
                 token, packageName, classname, callingUid, debug ? (" " + "--debug-name=" + processName) : "");
-
-        Process process;
-        int exitCode;
-        try {
-            process = Runtime.getRuntime().exec("sh");
-            OutputStream os = process.getOutputStream();
-            os.write(cmd.getBytes());
-            os.flush();
-            os.close();
-
-            exitCode = process.waitFor();
-        } catch (Throwable e) {
-            LOGGER.w(e, "exec");
-            return;
-        }
-
-        if (exitCode != 0) {
-            LOGGER.w("sh exited with " + exitCode);
-        }
     }
-
-    public static void schedule(UserServiceRecord record, String key, String token, String packageName, String classname, String processNameSuffix, int callingUid, boolean debug) {
-        Runnable runnable = () -> UserService.start(record, key, token, packageName, classname, processNameSuffix, callingUid, debug);
-        EXECUTOR.execute(runnable);
-    }
-
 }

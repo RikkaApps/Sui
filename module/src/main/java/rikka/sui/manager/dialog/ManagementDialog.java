@@ -72,7 +72,7 @@ import rikka.sui.resource.Res;
 import rikka.sui.resource.Strings;
 import rikka.sui.resource.Xml;
 import rikka.sui.model.AppInfo;
-import rikka.sui.server.config.Config;
+import rikka.sui.server.SuiConfig;
 import rikka.sui.util.UserHandleCompat;
 
 import static rikka.sui.manager.ManagerConstants.LOGGER;
@@ -338,13 +338,13 @@ public class ManagementDialog {
                 int newValue;
                 switch (position) {
                     case 0:
-                        newValue = Config.FLAG_ALLOWED;
+                        newValue = SuiConfig.FLAG_ALLOWED;
                         break;
                     case 1:
-                        newValue = Config.FLAG_DENIED;
+                        newValue = SuiConfig.FLAG_DENIED;
                         break;
                     case 2:
-                        newValue = Config.FLAG_HIDDEN;
+                        newValue = SuiConfig.FLAG_HIDDEN;
                         break;
                     default:
                         newValue = 0;
@@ -352,14 +352,14 @@ public class ManagementDialog {
                 }
 
                 try {
-                    BridgeServiceClient.getService().updateFlagsForUid(data.packageInfo.applicationInfo.uid, Config.MASK_PERMISSION, newValue);
+                    BridgeServiceClient.getService().updateFlagsForUid(data.packageInfo.applicationInfo.uid, SuiConfig.MASK_PERMISSION, newValue);
 
                 } catch (Throwable e) {
                     LOGGER.e("updateFlagsForUid");
                     return;
                 }
 
-                data.flags = (data.flags & ~Config.MASK_PERMISSION) | newValue;
+                data.flags = (data.flags & ~SuiConfig.MASK_PERMISSION) | newValue;
                 parent.setSelection(position);
                 syncViewStateForFlags();
             }
@@ -445,9 +445,9 @@ public class ManagementDialog {
         }
 
         private void syncViewStateForFlags() {
-            boolean allowed = (data.flags & Config.FLAG_ALLOWED) != 0;
-            boolean denied = (data.flags & Config.FLAG_DENIED) != 0;
-            boolean hidden = (data.flags & Config.FLAG_HIDDEN) != 0;
+            boolean allowed = (data.flags & SuiConfig.FLAG_ALLOWED) != 0;
+            boolean denied = (data.flags & SuiConfig.FLAG_DENIED) != 0;
+            boolean hidden = (data.flags & SuiConfig.FLAG_HIDDEN) != 0;
             if (allowed) {
                 binding.title.setTextColor(textColorPrimary);
 

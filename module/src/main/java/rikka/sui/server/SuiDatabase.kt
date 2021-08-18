@@ -17,7 +17,7 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.server.config
+package rikka.sui.server
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
@@ -54,17 +54,19 @@ object SuiDatabase {
         }
 
     @JvmStatic
-    fun readConfig(): Config? {
+    fun readConfig(): SuiConfig? {
         return database?.query(UID_CONFIG_TABLE, null, null, null, null, null, null, null)?.use { cursor ->
-            val res = Config()
+            val res = SuiConfig()
             val cursorIndexOfUid = cursor.getColumnIndexOrThrow("uid")
             val cursorIndexOfFlags = cursor.getColumnIndexOrThrow("flags")
             if (cursor.moveToFirst()) {
                 do {
-                    res.packages.add(Config.PackageEntry(
+                    res.packages.add(
+                        SuiConfig.PackageEntry(
                             cursor.getInt(cursorIndexOfUid),
                             cursor.getInt(cursorIndexOfFlags)
-                    ))
+                        )
+                    )
                 } while (cursor.moveToNext())
             }
             res

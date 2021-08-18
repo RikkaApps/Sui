@@ -73,8 +73,9 @@ dependencies {
     implementation project(':aidl')
     implementation project(':shared')
     implementation project(':api')
-    compileOnly project(':hidden-api-common')
-    compileOnly project(':hidden-api-21')
+    implementation project(':rish')
+    implementation project(':server-shared')
+    compileOnly project(':hidden-api-stub')
 }
 
 def outDir = file("$rootDir/out")

@@ -23,8 +23,6 @@ import android.content.Context;
 import android.ddm.DdmHandleAppName;
 import android.os.ServiceManager;
 
-import rikka.sui.server.userservice.UserService;
-
 import static rikka.sui.server.ServerConstants.LOGGER;
 
 public class Starter {
@@ -46,7 +44,7 @@ public class Starter {
                 if (arg.equals("--debug")) {
                     DdmHandleAppName.setAppName("sui", 0);
                 } else if (arg.startsWith("--dex-path=")) {
-                    UserService.setStartDex(arg.substring("--dex-path=".length()));
+                    SuiUserServiceManager.setStartDex(arg.substring("--dex-path=".length()));
                 }
             }
         }
@@ -56,6 +54,6 @@ public class Starter {
         waitSystemService(Context.USER_SERVICE);
         waitSystemService(Context.APP_OPS_SERVICE);
 
-        Service.main();
+        SuiService.main();
     }
 }
