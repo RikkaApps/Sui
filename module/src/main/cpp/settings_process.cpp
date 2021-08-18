@@ -97,6 +97,10 @@ namespace Settings {
     }
 
     void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files) {
+        if (android::GetApiLevel() <= 26) {
+            return;
+        }
+
         LOGD("dex size=%" PRIdPTR, dexFile->getSize());
 
         if (!dexFile->getBytes()) {

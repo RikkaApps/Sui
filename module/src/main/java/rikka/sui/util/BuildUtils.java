@@ -27,6 +27,10 @@ public class BuildUtils {
 
     private static final int PREVIEW_SDK = SDK >= 23 ? Build.VERSION.PREVIEW_SDK_INT : 0;
 
+    public static boolean atLeast31() {
+        return SDK >= 31;
+    }
+
     public static boolean atLeast30() {
         return SDK >= 30;
     }

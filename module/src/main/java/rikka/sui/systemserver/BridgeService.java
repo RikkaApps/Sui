@@ -19,6 +19,8 @@
 
 package rikka.sui.systemserver;
 
+import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
+
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Parcel;
@@ -30,8 +32,6 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 import moe.shizuku.server.IShizukuService;
-
-import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
 
 public class BridgeService {
 

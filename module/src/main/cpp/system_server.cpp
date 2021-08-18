@@ -49,6 +49,8 @@ namespace SystemServer {
     static jclass mainClass = nullptr;
     static jmethodID my_execTransactMethodID;
 
+    static jint startShortcutTransactionCode = -1;
+
     static bool installDex(JNIEnv *env, DexFile *dexFile) {
         if (android::GetApiLevel() >= 26) {
             dexFile->createInMemoryDexClassLoader(env);
@@ -71,7 +73,7 @@ namespace SystemServer {
             return false;
         }
 
-        my_execTransactMethodID = env->GetStaticMethodID(mainClass, "execTransact", "(IJJI)Z");
+        my_execTransactMethodID = env->GetStaticMethodID(mainClass, "execTransact", "(Landroid/os/IBinder;IJJI)Z");
         if (!my_execTransactMethodID) {
             LOGE("unable to find execTransact");
             env->ExceptionDescribe();
@@ -96,17 +98,29 @@ namespace SystemServer {
         return true;
     }
 
+    /*
+     * return true = consumed
+     */
     static bool ExecTransact(jboolean *res, JNIEnv *env, jobject obj, va_list args) {
         jint code;
+        jlong dataObj;
+        jlong replyObj;
+        jint flags;
 
         va_list copy;
         va_copy(copy, args);
         code = va_arg(copy, jint);
+        dataObj = va_arg(copy, jlong);
+        replyObj = va_arg(copy, jlong);
+        flags = va_arg(copy, jint);
         va_end(copy);
 
         if (code == BridgeService::BRIDGE_TRANSACTION_CODE) {
-            *res = env->CallStaticBooleanMethodV(mainClass, my_execTransactMethodID, args);
+            *res = env->CallStaticBooleanMethod(mainClass, my_execTransactMethodID, obj, code, dataObj, replyObj, flags);
             return true;
+        } else if (startShortcutTransactionCode != -1 && code == startShortcutTransactionCode) {
+            *res = env->CallStaticBooleanMethod(mainClass, my_execTransactMethodID, obj, code, dataObj, replyObj, flags);
+            if (*res) return true;
         }
 
         return false;
@@ -135,5 +149,19 @@ namespace SystemServer {
         env->GetJavaVM(&javaVm);
 
         BinderHook::Install(javaVm, env, ExecTransact);
+
+        if (android::GetApiLevel() >= 26) {
+            jclass launcherAppsClass;
+            jfieldID startShortcutId;
+
+            launcherAppsClass = env->FindClass("android/content/pm/ILauncherApps$Stub");
+            if (!launcherAppsClass) goto clean;
+            startShortcutId = env->GetStaticFieldID(launcherAppsClass, "TRANSACTION_startShortcut", "I");
+            if (!startShortcutId) goto clean;
+            startShortcutTransactionCode = env->GetStaticIntField(launcherAppsClass, startShortcutId);
+
+            clean:
+            env->ExceptionClear();
+        }
     }
 }

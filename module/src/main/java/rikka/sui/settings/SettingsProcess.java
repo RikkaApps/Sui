@@ -19,26 +19,23 @@
 
 package rikka.sui.settings;
 
+import static rikka.sui.settings.SettingsConstants.LOGGER;
+import static rikka.sui.settings.SettingsConstants.SHORTCUT_ID;
+
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.Application;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationChannelGroup;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ResolveInfo;
-import android.content.res.Configuration;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
 import android.graphics.drawable.VectorDrawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -51,121 +48,57 @@ import java.util.Arrays;
 
 import rikka.sui.ktx.DrawableKt;
 import rikka.sui.resource.Res;
-import rikka.sui.resource.Strings;
 import rikka.sui.resource.Xml;
-import rikka.sui.util.BridgeServiceClient;
 
-import static rikka.sui.settings.SettingsConstants.LOGGER;
-
+@TargetApi(Build.VERSION_CODES.O)
 public class SettingsProcess {
 
-    private static final String SHOW_MANAGEMENT_ACTION = "rikka.sui.SHOW_MANAGEMENT";
-    private static final String CHANNEL_SHOW_MANAGEMENT_ID = "rikka.sui:show_management";
-    private static final String CHANNEL_GROUP_ID = "rikka.sui";
-    private static final int NOTIFICATION_ID = ('_' << 24) | ('S' << 16) | ('U' << 8) | 'I';
-    private static final String NOTIFICATION_TAG = "rikka.sui";
+    private static void onEnterDeveloperOptions(Context context) {
+        LOGGER.d("onEnterDeveloperOptions");
 
-    private static final BroadcastReceiver SHOW_MANAGEMENT_RECEIVER = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            LOGGER.i("showManagement");
-            BridgeServiceClient.showManagement();
+        ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
+        if (!shortcutManager.isRequestPinShortcutSupported()) {
+            return;
         }
-    };
 
-    private static void cancelNotification(Context context) {
-        LOGGER.i("cancelNotification");
-
-        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.cancel("rikka.sui", NOTIFICATION_ID);
-
-        try {
-            context.unregisterReceiver(SHOW_MANAGEMENT_RECEIVER);
-            LOGGER.i("unregisterReceiver");
-        } catch (Throwable e) {
-            LOGGER.w(e, "unregisterReceiver");
-        }
-    }
-
-    private static void showNotification(Context context) {
-        LOGGER.i("showNotification");
-
-        boolean isNight = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
-
-        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannelGroup group = new NotificationChannelGroup(CHANNEL_GROUP_ID, "Sui");
-            nm.createNotificationChannelGroup(group);
-
-            NotificationChannel channel = new NotificationChannel(CHANNEL_SHOW_MANAGEMENT_ID, Strings.get(Res.string.notification_channel_group_name), NotificationManager.IMPORTANCE_DEFAULT);
-            channel.enableLights(false);
-            channel.enableVibration(false);
-            channel.setShowBadge(false);
-            channel.setBypassDnd(true);
-            channel.setGroup(CHANNEL_GROUP_ID);
-            channel.setSound(null, null);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                channel.setAllowBubbles(false);
+        for (ShortcutInfo shortcutInfo : shortcutManager.getPinnedShortcuts()) {
+            if (SHORTCUT_ID.equals(shortcutInfo.getId())) {
+                LOGGER.i("Sui shortcut exists");
+                return;
             }
-            nm.createNotificationChannel(channel);
-        }
-
-        Notification.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder = new Notification.Builder(context, CHANNEL_SHOW_MANAGEMENT_ID);
-        } else {
-            builder = new Notification.Builder(context)
-                    .setPriority(Notification.PRIORITY_DEFAULT)
-                    .setSound(Uri.EMPTY)
-                    .setVibrate(new long[0]);
         }
 
         Bitmap bitmap;
+        Icon icon;
         try {
             Drawable drawable = VectorDrawable.createFromXml(context.getResources(), Xml.get(Res.drawable.ic_su_24));
             int size = Math.round(Resources.getSystem().getDisplayMetrics().density * 24);
             bitmap = DrawableKt.toBitmap(drawable, size, size, null);
-            builder.setSmallIcon(Icon.createWithBitmap(bitmap));
+            icon = Icon.createWithBitmap(bitmap);
         } catch (Throwable e) {
             LOGGER.e(e, "create icon");
-            builder.setSmallIcon(android.R.drawable.ic_dialog_info);
+            icon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info);
         }
 
-        Intent intent = new Intent(SHOW_MANAGEMENT_ACTION)
-                .setPackage(context.getPackageName());
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+        ShortcutInfo shortcut = new ShortcutInfo.Builder(context, SHORTCUT_ID)
+                .setShortLabel("Sui")
+                .setLongLabel("Open Sui")
+                .setIcon(icon)
+                .setIntent(intent)
+                .build();
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        builder.setContentTitle(Strings.get(Res.string.notification_show_management_title))
-                .setContentText(Strings.get(Res.string.notification_show_management_text))
-                .setSubText("Sui")
-                .setContentIntent(pendingIntent)
-                .setColor(isNight ? 0xffc8e6c9 : 0xff338158);
-
-        Notification notification = builder.build();
-
-        nm.notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification);
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(SHOW_MANAGEMENT_ACTION);
-
-        try {
-            context.registerReceiver(SHOW_MANAGEMENT_RECEIVER, intentFilter,
-                    "android.permission.MANAGE_DEVICE_ADMINS", null);
-            LOGGER.i("registerReceiver");
-        } catch (Throwable e) {
-            LOGGER.w(e, "registerReceiver");
-        }
+        shortcutManager.requestPinShortcut(shortcut, null);
     }
 
     private static void init() {
-        Application application = null;
+        Application application;
         try {
             application = ActivityThread.currentActivityThread().getApplication();
         } catch (Throwable e) {
-            LOGGER.w(e, "getApplication");
+            LOGGER.w(e, "getApplication is failed, wait 1s");
+            WorkerHandler.get().postDelayed(SettingsProcess::init, 1000);
+            return;
         }
 
         if (application == null) {
@@ -202,7 +135,7 @@ public class SettingsProcess {
 
                 if (fragment != null && fragment.contains("Development")
                         || activity.getComponentName().getClassName().contains(developmentActivityName)) {
-                    WorkerHandler.get().post(() -> showNotification(activity));
+                    WorkerHandler.get().post(() -> onEnterDeveloperOptions(activity));
                 }
             }
 
@@ -218,18 +151,7 @@ public class SettingsProcess {
 
             @Override
             public void onActivityStopped(@NonNull Activity activity) {
-                if (activity.isChangingConfigurations()) return;
 
-                Intent intent = activity.getIntent();
-                String fragment = intent.getStringExtra(":settings:show_fragment");
-
-                LOGGER.d("onActivityStopped: %s, action=%s, fragment=%s",
-                        activity.getLocalClassName(), activity.getIntent().getAction(), fragment);
-
-                if (fragment != null && fragment.contains("Development")
-                        || activity.getComponentName().getClassName().contains(developmentActivityName)) {
-                    WorkerHandler.get().post(() -> cancelNotification(activity));
-                }
             }
 
             @Override

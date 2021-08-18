@@ -19,18 +19,22 @@
 
 package rikka.sui.systemserver;
 
+import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
+
 import android.os.IBinder;
 import android.os.Parcel;
+import android.util.ArrayMap;
 
 import java.util.Arrays;
+import java.util.Map;
 
+import rikka.sui.systemserver.launcherapps.LauncherAppsWrapper;
 import rikka.sui.util.ParcelUtils;
-
-import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
 
 public final class SystemProcess {
 
     private static final BridgeService SERVICE = new BridgeService();
+    private static final Map<IBinder, LauncherAppsWrapper> LAUNCHER_APPS_WRAPPER_CACHE = new ArrayMap<>();
 
     private final int versionCode;
 
@@ -38,11 +42,7 @@ public final class SystemProcess {
         this.versionCode = versionCode;
     }
 
-    public static boolean execTransact(int code, long dataObj, long replyObj, int flags) {
-        if (!SERVICE.isServiceTransaction(code)) {
-            return false;
-        }
-
+    public static boolean execTransact(IBinder binder, int code, long dataObj, long replyObj, int flags) {
         Parcel data = ParcelUtils.fromNativePointer(dataObj);
         Parcel reply = ParcelUtils.fromNativePointer(replyObj);
 
@@ -56,21 +56,33 @@ public final class SystemProcess {
             String descriptor = ParcelUtils.readInterfaceDescriptor(data);
             data.setDataPosition(0);
 
-            if (SERVICE.isServiceDescriptor(descriptor)) {
+            if (SERVICE.isServiceDescriptor(descriptor) && SERVICE.isServiceTransaction(code)) {
                 res = SERVICE.onTransact(code, data, reply, flags);
+            } else if ("android.content.pm.ILauncherApps".equals(descriptor)) {
+                LauncherAppsWrapper wrapper = LAUNCHER_APPS_WRAPPER_CACHE.get(binder);
+                if (wrapper == null) {
+                    wrapper = new LauncherAppsWrapper(binder);
+                    LAUNCHER_APPS_WRAPPER_CACHE.put(binder, wrapper);
+                }
+                res = wrapper.transact(code, data, reply, flags);
             }
         } catch (Exception e) {
             if ((flags & IBinder.FLAG_ONEWAY) != 0) {
                 LOGGER.w(e, "Caught a Exception from the binder stub implementation.");
             } else {
-                reply.setDataPosition(0);
-                reply.writeException(e);
+                if (reply != null) {
+                    reply.setDataPosition(0);
+                    reply.writeException(e);
+                }
             }
-            res = true;
+            res = false;
+        } finally {
+            data.setDataPosition(0);
+            if (reply != null) reply.setDataPosition(0);
         }
 
         if (res) {
-            if (data != null) data.recycle();
+            data.recycle();
             if (reply != null) reply.recycle();
         }
 
