@@ -58,7 +58,7 @@ Gradle tasks:
 
 * Install the zip from Magisk manager
 * Open Management UI:
-  - Through a notification, this notification will show when you are in "Developer options"
+  - (Android 8.0+) Through shortcut, enter "Developer options" to add the shortcut
   - Enter `*#*#784784#*#*` in the default dialer app
 * Play with apps that support Sui
 
