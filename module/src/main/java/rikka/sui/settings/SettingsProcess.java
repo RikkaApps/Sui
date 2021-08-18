@@ -105,7 +105,7 @@ public class SettingsProcess {
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         ShortcutInfo shortcut = new ShortcutInfo.Builder(context, SHORTCUT_ID)
                 .setShortLabel("Sui")
-                .setLongLabel("Open Sui")
+                .setLongLabel("Sui")
                 .setIcon(icon)
                 .setIntent(intent)
                 .build();
