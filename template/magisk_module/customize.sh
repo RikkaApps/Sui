@@ -108,7 +108,7 @@ if [ -f $ROOT_PATH/post-install.sh ]; then
     ui_print "- Run /data/adb/sui/post-install.sh"
     source $ROOT_PATH/post-install.sh
   else
-    ui_print "! To use new interactive shell tool (shell), post-install.sh needs update"
+    ui_print "! To use new interactive shell tool (rish), post-install.sh needs update"
     ui_print "! Please check post-install.example.sh for more"
   fi
 else
