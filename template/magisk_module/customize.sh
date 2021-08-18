@@ -48,9 +48,11 @@ if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
     ui_print "- Extracting x64 libraries"
     extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
     extract "$ZIPFILE" "lib/x86_64/libstarter.so" "$MODPATH" true
+    extract "$ZIPFILE" "lib/x86_64/librish.so" "$MODPATH" true
   else
     extract "$ZIPFILE" "lib/x86/libstarter.so" "$MODPATH" true
-  fi
+    extract "$ZIPFILE" "lib/x86/librish.so" "$MODPATH" true
+fi
 fi
 
 if [ "$ARCH" = "arm" ] || [ "$ARCH" = "arm64" ]; then
@@ -61,8 +63,10 @@ if [ "$ARCH" = "arm" ] || [ "$ARCH" = "arm64" ]; then
     ui_print "- Extracting arm64 libraries"
     extract "$ZIPFILE" "lib/arm64-v8a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
     extract "$ZIPFILE" "lib/arm64-v8a/libstarter.so" "$MODPATH" true
+    extract "$ZIPFILE" "lib/arm64-v8a/librish.so" "$MODPATH" true
   else
     extract "$ZIPFILE" "lib/armeabi-v7a/libstarter.so" "$MODPATH" true
+    extract "$ZIPFILE" "lib/armeabi-v7a/librish.so" "$MODPATH" true
   fi
 fi
 
@@ -88,17 +92,24 @@ set_perm_recursive "$MODPATH/res" 0 0 0700 0600
 ui_print "- Fetching information for SystemUI and Settings"
 /system/bin/app_process -Djava.class.path="$MODPATH"/sui.dex /system/bin --nice-name=sui_installer rikka.sui.installer.Installer "$MODPATH"
 
-ui_print "- Extracting files for command-line tool"
-extract "$ZIPFILE" 'sui_wrapper' "$MODPATH"
+ui_print "- Extracting files for rish"
+extract "$ZIPFILE" 'rish' "$MODPATH"
 extract "$ZIPFILE" 'post-install.example.sh' "$MODPATH"
-set_perm "$MODPATH/sui_wrapper" 0 2000 0770
+set_perm "$MODPATH/rish" 0 2000 0770
 set_perm "$MODPATH/post-install.example.sh" 0 0 0600
 
 if [ -f $ROOT_PATH/post-install.sh ]; then
-  SUI_DEX=$MODPATH/sui.dex
-  SUI_WRAPPER=$MODPATH/sui_wrapper
-  ui_print "- Run /data/adb/sui/post-install.sh"
-  source $ROOT_PATH/post-install.sh
+  cat "$ROOT_PATH/post-install.sh" | grep -q "SCRIPT_VERSION=2"
+  if [ "$?" -eq 0 ]; then
+    RISH_DEX=$MODPATH/sui.dex
+    RISH_LIB=$MODPATH/librish.so
+    RISH_SCRIPT=$MODPATH/rish
+    ui_print "- Run /data/adb/sui/post-install.sh"
+    source $ROOT_PATH/post-install.sh
+  else
+    ui_print "! To use new interactive shell tool (shell), post-install.sh needs update"
+    ui_print "! Please check post-install.example.sh for more"
+  fi
 else
   ui_print "- Cannot find /data/adb/sui/post-install.sh"
 fi

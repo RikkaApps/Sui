@@ -39,7 +39,7 @@
 #define SERVER_NAME "sui"
 #define SERVER_CLASS_PATH "rikka.sui.server.Starter"
 
-static void run_server(const char *dex_path, const char *main_class, const char *process_name) {
+static void run_server(const char *dex_path, const char *lib_path, const char *main_class, const char *process_name) {
     if (setenv("CLASSPATH", dex_path, true)) {
         LOGE("can't set CLASSPATH");
         exit(EXIT_FAILURE);
@@ -91,6 +91,7 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     ARG(argv)
     ARG_PUSH(argv, "/system/bin/app_process")
     ARG_PUSH_FMT(argv, "-Djava.class.path=%s", dex_path)
+    ARG_PUSH_FMT(argv, "-Djava.library.path=%s", lib_path)
     ARG_PUSH_DEBUG_VM_PARAMS(argv)
     ARG_PUSH(argv, "/system/bin")
     ARG_PUSH_FMT(argv, "--nice-name=%s", process_name)
@@ -106,7 +107,7 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     }
 }
 
-static int start_server(const char *path, const char *main_class, const char *process_name) {
+static int start_server(const char *dex_path, const char *lib_path, const char *main_class, const char *process_name) {
     pid_t pid = fork();
     if (pid == 0) {
         daemon(false, false);
@@ -146,7 +147,7 @@ static int start_server(const char *path, const char *main_class, const char *pr
             sleep(1);
         }
 
-        run_server(path, main_class, process_name);
+        run_server(dex_path, lib_path, main_class, process_name);
         return EXIT_SUCCESS;
     } else if (pid == -1) {
         PLOGE("fork");
@@ -156,14 +157,14 @@ static int start_server(const char *path, const char *main_class, const char *pr
 }
 
 int main(int argc, char **argv) {
-    int uid = getuid();
+    auto uid = getuid();
     if (uid != 0) {
         LOGE("run Sui from uid=%d", uid);
         exit(EXIT_FAILURE);
     }
 
     LOGI("starter begin");
-    start_server(argv[1], SERVER_CLASS_PATH, SERVER_NAME);
+    start_server(argv[1], argv[2], SERVER_CLASS_PATH, SERVER_NAME);
 
     exit(EXIT_SUCCESS);
 }

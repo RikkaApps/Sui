@@ -25,7 +25,7 @@
     public static void main(java.lang.String[]);
 }
 
--keep class rikka.sui.cmd.SuiCmd {
+-keep class rikka.sui.shell.Shell {
     public static void main(java.lang.String[]);
 }
 
@@ -40,6 +40,10 @@
 }
 
 -assumenosideeffects class rikka.sui.util.Logger {
+    public *** d(...);
+}
+
+-assumenosideeffects class rikka.shizuku.server.util.Logger {
     public *** d(...);
 }
 

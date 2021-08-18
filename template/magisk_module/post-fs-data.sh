@@ -13,4 +13,4 @@ rm -f /data/adb/sui/sui.dex.new
 rm -f /data/adb/sui/sui_wrapper
 
 chmod 700 "$MODDIR"/starter
-exec "$MODDIR"/starter "$MODDIR"/sui.dex
+exec "$MODDIR"/starter "$MODDIR"/sui.dex "$MODDIR"

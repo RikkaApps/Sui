@@ -1,0 +1,11 @@
+#!/system/bin/sh
+BASEDIR=$(dirname "$0")
+DEX="$BASEDIR"/rish.dex
+
+if [ ! -f "$DEX" ]; then
+  echo "Cannot find $DEX, please check post-install.sh"
+  exit 1
+fi
+
+[ -z "$RISH_APPLICATION_ID" ] && export RISH_APPLICATION_ID="%%%RISH_APPLICATION_ID%%%"
+/system/bin/app_process -Djava.class.path="$DEX" -Djava.library.path="$BASEDIR" /system/bin --nice-name=rish rikka.sui.shell.Shell "$@"
