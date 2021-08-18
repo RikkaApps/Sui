@@ -31,8 +31,13 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
 import android.graphics.drawable.VectorDrawable;
@@ -47,6 +52,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import rikka.sui.ktx.DrawableKt;
+import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.resource.Res;
 import rikka.sui.resource.Xml;
 
@@ -68,13 +74,29 @@ public class SettingsProcess {
             }
         }
 
-        Bitmap bitmap;
         Icon icon;
+
         try {
-            Drawable drawable = VectorDrawable.createFromXml(context.getResources(), Xml.get(Res.drawable.ic_su_24));
-            int size = Math.round(Resources.getSystem().getDisplayMetrics().density * 24);
-            bitmap = DrawableKt.toBitmap(drawable, size, size, null);
-            icon = Icon.createWithBitmap(bitmap);
+            Configuration configuration = new Configuration(context.getResources().getConfiguration());
+            configuration.uiMode &= ~Configuration.UI_MODE_NIGHT_MASK;
+            configuration.uiMode |= Configuration.UI_MODE_NIGHT_NO;
+            Context themedContext = context.createConfigurationContext(configuration);
+
+            int size = Math.round(Resources.getSystem().getDisplayMetrics().density * 108);
+            int extraInsetsSize = Math.round(size * AdaptiveIconDrawable.getExtraInsetFraction());
+
+            Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            Paint paint = new Paint();
+            paint.setColor(Color.WHITE);
+            canvas.drawRect(0, 0, size, size, paint);
+
+            Drawable drawable = VectorDrawable.createFromXml(themedContext.getResources(), Xml.get(Res.drawable.ic_shortcut_24));
+            drawable.setBounds(extraInsetsSize, extraInsetsSize, size - extraInsetsSize, size - extraInsetsSize);
+            drawable.setTint(ResourcesKt.resolveColor(themedContext.getTheme(), android.R.attr.colorAccent));
+            drawable.draw(canvas);
+
+            icon = Icon.createWithAdaptiveBitmap(bitmap);
         } catch (Throwable e) {
             LOGGER.e(e, "create icon");
             icon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info);

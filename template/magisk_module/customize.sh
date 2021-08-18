@@ -85,6 +85,7 @@ extract "$ZIPFILE" 'res/layout/management_dialog.xml' "$MODPATH"
 extract "$ZIPFILE" 'res/layout/management_app_item.xml' "$MODPATH"
 extract "$ZIPFILE" 'res/drawable/ic_su_24.xml' "$MODPATH"
 extract "$ZIPFILE" 'res/drawable/ic_close_24.xml' "$MODPATH"
+extract "$ZIPFILE" 'res/drawable/ic_shortcut_24.xml' "$MODPATH"
 
 set_perm "$MODPATH/sui.dex" 0 0 0600
 set_perm_recursive "$MODPATH/res" 0 0 0700 0600

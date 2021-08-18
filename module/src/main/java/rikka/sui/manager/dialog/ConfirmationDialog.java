@@ -96,7 +96,7 @@ public class ConfirmationDialog {
         float l1 = density * 8;
 
         int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
-        int colorAccent = isNight ? 0xffc8e6c9 : 0xff338158/*ResourcesKt.resolveColor(theme, android.R.attr.colorAccent)*/;
+        int colorAccent = ResourcesKt.resolveColor(theme, android.R.attr.colorAccent);
 
         ColorStateList buttonTextColor = new ColorStateList(
                 new int[][]{

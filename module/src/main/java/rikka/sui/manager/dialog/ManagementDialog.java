@@ -380,7 +380,7 @@ public class ManagementDialog {
             Context context = binding.getRoot().getContext();
             Resources.Theme theme = context.getTheme();
             boolean isNight = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
-            int colorAccent = isNight ? 0xffc8e6c9 : 0xff338158/*ResourcesKt.resolveColor(theme, android.R.attr.colorAccent)*/;
+            int colorAccent = ResourcesKt.resolveColor(theme, android.R.attr.colorAccent);
             int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
             ColorStateList textColorTertiary = ResourcesKt.resolveColorStateList(theme, android.R.attr.textColorTertiary);
             int colorError = isNight ? 0xFF8A80 : 0xFF5252;
