@@ -39,15 +39,15 @@ Clone with `git clone --recurse-submodules`.
 Gradle tasks:
 
 * `:riru:assembleDebug/Release`
-   
+
    Generate Magisk module zip to `out`.
 
 * `:riru:pushDebug/Release`
-   
+
    Push the zip with adb to `/data/local/tmp`.
 
 * `:riru:flashDebug/Release`
-   
+
    Flash the zip with `adb shell su -c magisk --install-module`.
 
 * `:riru:flashAndRebootDebug/Release`
@@ -66,17 +66,17 @@ The behavior of existing apps using "su" will NOT change. You can ask the develo
 
 For existing apps that already support Shizuku, add support for Sui (including changes for Shizuku API v11) should only take less than half an hour.
 
-### Command-line tool
+### Interactive shell
 
-Sui has a command-line tool to allow you to run commands. It's not a full shell (for now).
+Sui provides interactive shell.
 
 Since Sui does not add files to `PATH`, the files need to be copied manually. See `/data/adb/sui/post-install.example.sh` to learn how to do this automatically.
 
-After the files are correctly copied, use `sui --help` to see how to use the tool.
+After the files are correctly copied, use `rish` as 'sh'.
 
 > What's the meaning of this tool? There is already "su" from Magisk.
-> 
-> This does helped me to investigate [a bug of Magisk](https://github.com/topjohnwu/Magisk/issues/3976) that happens rarely. At that time, Magisk's su is not available. 
+>
+> This does helped me to investigate [a bug of Magisk](https://github.com/topjohnwu/Magisk/issues/3976) that happens rarely. At that time, Magisk's su is not available.
 
 ## Guide for application developers
 
