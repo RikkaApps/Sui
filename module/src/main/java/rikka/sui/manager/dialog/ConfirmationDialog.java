@@ -89,7 +89,7 @@ public class ConfirmationDialog {
         }
         boolean isNight = (application.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
 
-        Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_Material_Dialog_Alert : android.R.style.Theme_Material_Light_Dialog_Alert);
+        Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_DeviceDefault_Dialog_Alert : android.R.style.Theme_DeviceDefault_Light_Dialog_Alert);
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         Resources.Theme theme = context.getTheme();
         float density = context.getResources().getDisplayMetrics().density;

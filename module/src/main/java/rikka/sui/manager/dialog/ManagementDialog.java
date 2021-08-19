@@ -19,6 +19,8 @@
 
 package rikka.sui.manager.dialog;
 
+import static rikka.sui.manager.ManagerConstants.LOGGER;
+
 import android.app.ActivityThread;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -66,16 +68,14 @@ import rikka.sui.ktx.DrawableKt;
 import rikka.sui.ktx.HandlerKt;
 import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.ktx.WindowKt;
-import rikka.sui.util.BridgeServiceClient;
 import rikka.sui.manager.WorkerHandler;
+import rikka.sui.model.AppInfo;
 import rikka.sui.resource.Res;
 import rikka.sui.resource.Strings;
 import rikka.sui.resource.Xml;
-import rikka.sui.model.AppInfo;
 import rikka.sui.server.SuiConfig;
+import rikka.sui.util.BridgeServiceClient;
 import rikka.sui.util.UserHandleCompat;
-
-import static rikka.sui.manager.ManagerConstants.LOGGER;
 
 public class ManagementDialog {
 
@@ -140,7 +140,7 @@ public class ManagementDialog {
         }
 
         boolean isNight = (application.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
-        Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_Material : android.R.style.Theme_Material_Light);
+        Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_DeviceDefault : android.R.style.Theme_DeviceDefault_Light);
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         Resources.Theme theme = context.getTheme();
 
