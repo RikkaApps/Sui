@@ -10,7 +10,7 @@
 
 -keep class rikka.sui.systemserver.SystemProcess {
     public static void main(java.lang.String[]);
-    public static boolean execTransact(android.os.IBinder, int, long, long, int);
+    public static boolean execTransact(android.os.Binder, int, long, long, int);
 }
 
 -keep class rikka.sui.manager.ManagerProcess {

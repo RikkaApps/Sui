@@ -73,7 +73,7 @@ namespace SystemServer {
             return false;
         }
 
-        my_execTransactMethodID = env->GetStaticMethodID(mainClass, "execTransact", "(Landroid/os/IBinder;IJJI)Z");
+        my_execTransactMethodID = env->GetStaticMethodID(mainClass, "execTransact", "(Landroid/os/Binder;IJJI)Z");
         if (!my_execTransactMethodID) {
             LOGE("unable to find execTransact");
             env->ExceptionDescribe();
@@ -81,11 +81,7 @@ namespace SystemServer {
             return false;
         }
 
-        auto args = env->NewObjectArray(1, env->FindClass("java/lang/String"), nullptr);
-
-        char buf[64];
-        sprintf(buf, "--version-code=%d", RIRU_MODULE_VERSION);
-        env->SetObjectArrayElement(args, 0, env->NewStringUTF(buf));
+        auto args = env->NewObjectArray(0, env->FindClass("java/lang/String"), nullptr);
 
         env->CallStaticVoidMethod(mainClass, mainMethod, args);
         if (env->ExceptionCheck()) {

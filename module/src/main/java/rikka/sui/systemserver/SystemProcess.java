@@ -21,9 +21,13 @@ package rikka.sui.systemserver;
 
 import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
 
+import android.os.Binder;
 import android.os.IBinder;
 import android.os.Parcel;
+import android.os.RemoteException;
 import android.util.ArrayMap;
+
+import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -36,13 +40,27 @@ public final class SystemProcess {
     private static final BridgeService SERVICE = new BridgeService();
     private static final Map<IBinder, LauncherAppsWrapper> LAUNCHER_APPS_WRAPPER_CACHE = new ArrayMap<>();
 
-    private final int versionCode;
-
-    private SystemProcess(int versionCode) {
-        this.versionCode = versionCode;
+    private static boolean execActivityTransaction(@NonNull Binder binder, int code, Parcel data, Parcel reply, int flags) {
+        return SERVICE.onTransact(code, data, reply, flags);
     }
 
-    public static boolean execTransact(IBinder binder, int code, long dataObj, long replyObj, int flags) {
+    private static boolean execLauncherAppsTransaction(@NonNull Binder binder, int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+        LauncherAppsWrapper wrapper = LAUNCHER_APPS_WRAPPER_CACHE.get(binder);
+        if (wrapper == null) {
+            wrapper = new LauncherAppsWrapper(binder);
+            LAUNCHER_APPS_WRAPPER_CACHE.put(binder, wrapper);
+        }
+        return wrapper.transact(code, data, reply, flags);
+    }
+
+    public static boolean execTransact(@NonNull Binder binder, int code, long dataObj, long replyObj, int flags) {
+        String descriptor = binder.getInterfaceDescriptor();
+
+        if (!(SERVICE.isServiceDescriptor(descriptor) && SERVICE.isServiceTransaction(code)
+                || "android.content.pm.ILauncherApps".equals(descriptor))) {
+            return false;
+        }
+
         Parcel data = ParcelUtils.fromNativePointer(dataObj);
         Parcel reply = ParcelUtils.fromNativePointer(replyObj);
 
@@ -50,21 +68,15 @@ public final class SystemProcess {
             return false;
         }
 
-        boolean res = false;
+        boolean res;
 
         try {
-            String descriptor = ParcelUtils.readInterfaceDescriptor(data);
-            data.setDataPosition(0);
-
             if (SERVICE.isServiceDescriptor(descriptor) && SERVICE.isServiceTransaction(code)) {
-                res = SERVICE.onTransact(code, data, reply, flags);
+                res = execActivityTransaction(binder, code, data, reply, flags);
             } else if ("android.content.pm.ILauncherApps".equals(descriptor)) {
-                LauncherAppsWrapper wrapper = LAUNCHER_APPS_WRAPPER_CACHE.get(binder);
-                if (wrapper == null) {
-                    wrapper = new LauncherAppsWrapper(binder);
-                    LAUNCHER_APPS_WRAPPER_CACHE.put(binder, wrapper);
-                }
-                res = wrapper.transact(code, data, reply, flags);
+                res = execLauncherAppsTransaction(binder, code, data, reply, flags);
+            } else {
+                res = false;
             }
         } catch (Exception e) {
             if ((flags & IBinder.FLAG_ONEWAY) != 0) {
@@ -91,19 +103,5 @@ public final class SystemProcess {
 
     public static void main(String[] args) {
         LOGGER.d("main: %s", Arrays.toString(args));
-
-        int versionCode = -1;
-        if (args != null) {
-            for (String arg : args) {
-                if (arg.startsWith("--version-code=")) {
-                    try {
-                        versionCode = Integer.parseInt(arg.substring("--version-code=".length()));
-                    } catch (Throwable ignored) {
-                    }
-                }
-            }
-        }
-
-        LOGGER.d("version code %d", versionCode);
     }
 }
