@@ -54,6 +54,7 @@ import java.util.Map;
 
 import kotlin.collections.MapsKt;
 import moe.shizuku.server.IShizukuApplication;
+import rikka.parcelablelist.ParcelableListSlice;
 import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.server.ClientRecord;
 import rikka.shizuku.server.Service;
@@ -62,7 +63,6 @@ import rikka.sui.model.AppInfo;
 import rikka.sui.server.bridge.BridgeServiceClient;
 import rikka.sui.util.Logger;
 import rikka.sui.util.OsUtils;
-import rikka.sui.util.ParceledListSlice;
 import rikka.sui.util.Unsafe;
 import rikka.sui.util.UserHandleCompat;
 
@@ -380,7 +380,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         }
     }
 
-    private ParceledListSlice<AppInfo> getApplications(int userId) {
+    private ParcelableListSlice<AppInfo> getApplications(int userId) {
         if (Binder.getCallingUid() != managerUid) {
             LOGGER.w("getApplications is allowed to be called only from the manager");
             return null;
@@ -473,7 +473,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
                 list.add(item);
             }
         }
-        return new ParceledListSlice<>(list);
+        return new ParcelableListSlice<>(list);
     }
 
     private void showManagement() {
@@ -523,7 +523,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         if (code == ServerConstants.BINDER_TRANSACTION_getApplications) {
             data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
             int userId = data.readInt();
-            ParceledListSlice<AppInfo> result = getApplications(userId);
+            ParcelableListSlice<AppInfo> result = getApplications(userId);
             reply.writeNoException();
             if (result != null) {
                 reply.writeInt(1);

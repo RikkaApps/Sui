@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import moe.shizuku.server.IShizukuService;
+import rikka.parcelablelist.ParcelableListSlice;
 import rikka.sui.model.AppInfo;
 
 public class BridgeServiceClient {
@@ -117,7 +118,7 @@ public class BridgeServiceClient {
             reply.readException();
             if ((0 != reply.readInt())) {
                 //noinspection unchecked
-                result = ParceledListSlice.CREATOR.createFromParcel(reply).getList();
+                result = ParcelableListSlice.CREATOR.createFromParcel(reply).getList();
             } else {
                 result = null;
             }
