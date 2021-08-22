@@ -30,9 +30,12 @@ import java.util.List;
 
 import moe.shizuku.server.IShizukuService;
 import rikka.sui.model.AppInfo;
-import rikka.sui.server.ServerConstants;
 
 public class BridgeServiceClient {
+
+    private static final int BINDER_TRANSACTION_getApplications = 10001;
+    private static final int BINDER_TRANSACTION_showManagement = 10002;
+    private static final int BINDER_TRANSACTION_openApk = 10003;
 
     private static IBinder binder;
     private static IShizukuService service;
@@ -107,7 +110,7 @@ public class BridgeServiceClient {
             data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
             data.writeInt(userId);
             try {
-                getService().asBinder().transact(ServerConstants.BINDER_TRANSACTION_getApplications, data, reply, 0);
+                getService().asBinder().transact(BINDER_TRANSACTION_getApplications, data, reply, 0);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
@@ -130,7 +133,7 @@ public class BridgeServiceClient {
         try {
             data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
             try {
-                getService().asBinder().transact(ServerConstants.BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
+                getService().asBinder().transact(BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
@@ -147,7 +150,7 @@ public class BridgeServiceClient {
         try {
             data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
             try {
-                getService().asBinder().transact(ServerConstants.BINDER_TRANSACTION_openApk, data, reply, 0);
+                getService().asBinder().transact(BINDER_TRANSACTION_openApk, data, reply, 0);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }

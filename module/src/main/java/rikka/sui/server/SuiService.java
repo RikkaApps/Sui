@@ -37,13 +37,17 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import android.system.ErrnoException;
+import android.system.Os;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,13 +69,16 @@ import rikka.sui.util.UserHandleCompat;
 public class SuiService extends Service<SuiUserServiceManager, SuiClientManager, SuiConfigManager> {
 
     private static SuiService instance;
+    private static String filesPath;
 
     public static SuiService getInstance() {
         return instance;
     }
 
-    public static void main() {
+    public static void main(String filesPath) {
         LOGGER.i("starting server...");
+
+        SuiService.filesPath = filesPath;
 
         Looper.prepare();
         new SuiService();
@@ -118,6 +125,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     }
 
     public SuiService() {
+        super();
+
         SuiService.instance = this;
 
         configManager = getConfigManager();
@@ -488,6 +497,26 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         }
     }
 
+    private ParcelFileDescriptor openApk() {
+        if (Binder.getCallingUid() != settingsUid && Binder.getCallingUid() != managerUid) {
+            LOGGER.w("showManagement is allowed to be called only from settings and system ui");
+            return null;
+        }
+        String pathname = filesPath + "/sui.apk";
+        try {
+            //noinspection OctalInteger
+            Os.chmod(pathname, 0655);
+        } catch (ErrnoException e) {
+            LOGGER.e(e, "Cannot chmod %s", pathname);
+        }
+
+        try {
+            return ParcelFileDescriptor.open(new File(pathname), ParcelFileDescriptor.MODE_READ_ONLY);
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
         //LOGGER.d("transact: code=%d, calling uid=%d", code, Binder.getCallingUid());
@@ -506,6 +535,17 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         } else if (code == ServerConstants.BINDER_TRANSACTION_showManagement) {
             data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
             showManagement();
+            return true;
+        } else if (code == ServerConstants.BINDER_TRANSACTION_openApk) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            ParcelFileDescriptor result = openApk();
+            reply.writeNoException();
+            if (result != null) {
+                reply.writeInt(1);
+                result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+            } else {
+                reply.writeInt(0);
+            }
             return true;
         }
         return super.onTransact(code, data, reply, flags);

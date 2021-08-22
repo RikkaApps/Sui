@@ -1,0 +1,75 @@
+plugins {
+    id('com.android.application')
+    id('kotlin-android')
+    id('dev.rikka.tools.hidden-api-refine')
+}
+
+hiddenApiRefine {
+    refinePrefix = ['$']
+    log = true
+}
+
+apply from: file(rootProject.file('module.gradle'))
+
+android {
+    compileSdkVersion rootProject.ext.targetSdkVersion
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode gitCommitCount
+        versionName moduleVersion.substring(1)
+    }
+    buildFeatures {
+        viewBinding true
+    }
+    buildTypes {
+        debug {
+            multiDexEnabled false
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    packagingOptions {
+        exclude '/META-INF/*.version'
+        exclude '/META-INF/*.kotlin_module'
+        exclude '/kotlin/**'
+    }
+    lintOptions {
+        checkReleaseBuilds false
+    }
+    dependenciesInfo {
+        includeInApk false
+    }
+}
+
+configurations.all {
+    exclude group: 'androidx.appcompat', module: 'appcompat'
+}
+
+repositories {
+    mavenLocal()
+}
+
+dependencies {
+    implementation "androidx.annotation:annotation:1.2.0"
+    implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'
+    implementation project(':aidl')
+    compileOnly project(':hidden-api-stub')
+
+    implementation 'dev.rikka.rikkax.appcompat:appcompat:1.2.0-rc01'
+    implementation 'dev.rikka.rikkax.material:material:1.6.6'
+    implementation 'dev.rikka.rikkax.insets:insets:1.1.0'
+}
+
+
+afterEvaluate {
+    android.applicationVariants.all { variant ->
+
+    }
+}

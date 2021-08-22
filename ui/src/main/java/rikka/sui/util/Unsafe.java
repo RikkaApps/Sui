@@ -17,14 +17,12 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.settings;
+package rikka.sui.util;
 
-import rikka.sui.util.Logger;
-
-public class SettingsConstants {
-
-    public static final Logger LOGGER = new Logger("SuiSettings");
-
-    public static final String SHORTCUT_ID = "rikka.sui.SUI";
-    public static final String SHORTCUT_EXTRA = "rikka.sui.SUI";
+public class Unsafe {
+    @SuppressWarnings("unchecked")
+    public static <T> T unsafeCast(Object object) {
+        return (T) object;
+    }
 }
+

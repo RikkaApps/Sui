@@ -17,14 +17,18 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.settings;
+package rikka.sui.util;
 
-import rikka.sui.util.Logger;
+public class UserHandleCompat {
 
-public class SettingsConstants {
+    public static final int PER_USER_RANGE = 100000;
 
-    public static final Logger LOGGER = new Logger("SuiSettings");
+    public static int getUserId(int uid) {
+        return uid / PER_USER_RANGE;
+    }
 
-    public static final String SHORTCUT_ID = "rikka.sui.SUI";
-    public static final String SHORTCUT_EXTRA = "rikka.sui.SUI";
+    public static int getAppId(int uid) {
+        return uid % PER_USER_RANGE;
+    }
 }
+

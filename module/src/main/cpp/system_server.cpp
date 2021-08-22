@@ -114,10 +114,10 @@ namespace SystemServer {
         if (code == BridgeService::BRIDGE_TRANSACTION_CODE) {
             *res = env->CallStaticBooleanMethod(mainClass, my_execTransactMethodID, obj, code, dataObj, replyObj, flags);
             return true;
-        } else if (startShortcutTransactionCode != -1 && code == startShortcutTransactionCode) {
+        }/* else if (startShortcutTransactionCode != -1 && code == startShortcutTransactionCode) {
             *res = env->CallStaticBooleanMethod(mainClass, my_execTransactMethodID, obj, code, dataObj, replyObj, flags);
             if (*res) return true;
-        }
+        }*/
 
         return false;
     }
@@ -146,7 +146,7 @@ namespace SystemServer {
 
         BinderHook::Install(javaVm, env, ExecTransact);
 
-        if (android::GetApiLevel() >= 26) {
+        /*if (android::GetApiLevel() >= 26) {
             jclass launcherAppsClass;
             jfieldID startShortcutId;
 
@@ -158,6 +158,6 @@ namespace SystemServer {
 
             clean:
             env->ExceptionClear();
-        }
+        }*/
     }
 }

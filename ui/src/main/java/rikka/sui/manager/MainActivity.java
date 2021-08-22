@@ -17,14 +17,26 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.settings;
+package rikka.sui.manager;
 
-import rikka.sui.util.Logger;
+import android.content.res.Resources;
+import android.os.Bundle;
 
-public class SettingsConstants {
+import androidx.annotation.Nullable;
 
-    public static final Logger LOGGER = new Logger("SuiSettings");
+import rikka.sui.R;
+import rikka.sui.app.InjectedActivity;
 
-    public static final String SHORTCUT_ID = "rikka.sui.SUI";
-    public static final String SHORTCUT_EXTRA = "rikka.sui.SUI";
+public class MainActivity extends InjectedActivity {
+
+    public MainActivity(Resources resources) {
+        super(resources);
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+        setTitle("Sui");
+    }
 }

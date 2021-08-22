@@ -88,6 +88,8 @@ afterEvaluate {
         def zipName = "sui-${moduleVersion}-${variantLowered}.zip"
         def magiskDir = file("$outDir/magisk_module_${variantLowered}")
 
+        tasks.getByName("pre${variantCapped}Build").dependsOn(":ui:assemble${variantCapped}")
+
         task("prepareMagiskFiles${variantCapped}", type: Sync) {
             dependsOn("assemble$variantCapped")
 
@@ -129,6 +131,10 @@ afterEvaluate {
             }
             from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
                 into 'lib'
+            }
+            from("${rootProject.findProject('ui').buildDir}/outputs/apk/$variantLowered") {
+                exclude 'output-metadata.json'
+                rename { 'sui.apk' }
             }
             doLast {
                 copy {

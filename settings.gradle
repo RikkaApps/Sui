@@ -1,4 +1,4 @@
-include ':module'
+include ':module', ':ui'
 
 import org.apache.tools.ant.DirectoryScanner
 

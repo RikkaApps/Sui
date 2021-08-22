@@ -19,6 +19,7 @@
 
 -keep class rikka.sui.settings.SettingsProcess {
     public static void main(java.lang.String[], java.nio.ByteBuffer[]);
+    public static boolean execTransact(android.os.Binder, int, long, long, int);
 }
 
 -keep class rikka.sui.installer.Installer {

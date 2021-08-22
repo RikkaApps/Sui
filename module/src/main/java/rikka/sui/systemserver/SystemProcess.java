@@ -73,9 +73,9 @@ public final class SystemProcess {
         try {
             if (SERVICE.isServiceDescriptor(descriptor) && SERVICE.isServiceTransaction(code)) {
                 res = execActivityTransaction(binder, code, data, reply, flags);
-            } else if ("android.content.pm.ILauncherApps".equals(descriptor)) {
+            }/* else if ("android.content.pm.ILauncherApps".equals(descriptor)) {
                 res = execLauncherAppsTransaction(binder, code, data, reply, flags);
-            } else {
+            }*/ else {
                 res = false;
             }
         } catch (Exception e) {

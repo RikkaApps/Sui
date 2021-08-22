@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base theme -->
+    <style name="Theme.Light" parent="Theme.Material.Light.LightStatusBar">
+        <item name="android:statusBarColor">?toolbarColor</item>
+        <item name="android:fastScrollThumbDrawable">@drawable/fastscroll_thumb_material</item>
+        <item name="android:fastScrollTrackDrawable">@drawable/fastscroll_track_material</item>
+
+        <item name="actionBarStyle">@style/Widget.Material.ActionBar.Surface</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.ActionBar</item>
+        <item name="toolbarStyle">@style/Widget.Material.Toolbar</item>
+        <item name="appBarStyle">@style/Widget.AppBar.Surface.Raisable</item>
+
+        <item name="colorPrimary">@color/material_teal_500</item>
+        <item name="colorPrimaryVariant">@color/material_teal_600</item>
+        <item name="colorSecondary">@color/material_teal_700</item>
+        <item name="colorSecondaryVariant">@color/material_teal_700</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="toolbarColor">@color/background_light</item>
+        <item name="notificationColor">@color/material_teal_500</item>
+    </style>
+
+    <style name="Theme" parent="Theme.Material">
+        <item name="android:statusBarColor">?toolbarColor</item>
+        <item name="android:fastScrollThumbDrawable">@drawable/fastscroll_thumb_material</item>
+        <item name="android:fastScrollTrackDrawable">@drawable/fastscroll_track_material</item>
+
+        <item name="actionBarStyle">@style/Widget.Material.ActionBar.Surface</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.ActionBar</item>
+        <item name="toolbarStyle">@style/Widget.Material.Toolbar</item>
+        <item name="appBarStyle">@style/Widget.AppBar.Surface.Raisable</item>
+
+        <item name="colorPrimary">@color/material_blue_grey_200</item>
+        <item name="colorPrimaryVariant">@color/material_blue_grey_200</item>
+        <item name="colorSecondary">@color/material_blue_grey_200</item>
+        <item name="colorSecondaryVariant">@color/material_blue_grey_200</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="notificationColor">@color/material_teal_500</item>
+        <item name="toolbarColor">@color/background_dark</item>
+    </style>
+
+    <style name="Widget.AppBar" parent="">
+        <item name="android:background">?toolbarColor</item>
+        <item name="android:theme">?actionBarTheme</item>
+        <item name="android:stateListAnimator">@animator/raise_animator</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+
+    <style name="Widget.Material.Toolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">?android:colorBackground</item>
+    </style>
+
+    <style name="Widget.AppBar.Surface">
+        <item name="android:background">?android:colorBackground</item>
+        <item name="android:stateListAnimator">@animator/alpha_animator</item>
+        <item name="android:elevation">@dimen/app_bar_elevation</item>
+    </style>
+
+    <style name="Widget.AppBar.Surface.Raisable">
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@animator/raise_animator</item>
+    </style>
+
+    <style name="ThemeOverlay.ActionBar" parent="ThemeOverlay.MaterialComponents.ActionBar">
+        <item name="elevation">0dp</item>
+        <item name="titleTextAppearance">@android:style/TextAppearance.Material.Widget.Toolbar.Title</item>
+        <item name="subtitleTextAppearance">@android:style/TextAppearance.Material.Widget.Toolbar.Subtitle</item>
+    </style>
+
+</resources>

@@ -19,11 +19,13 @@
 
 package rikka.sui.server;
 
+import static rikka.sui.server.ServerConstants.LOGGER;
+
 import android.content.Context;
 import android.ddm.DdmHandleAppName;
 import android.os.ServiceManager;
 
-import static rikka.sui.server.ServerConstants.LOGGER;
+import java.util.Objects;
 
 public class Starter {
 
@@ -39,21 +41,24 @@ public class Starter {
     }
 
     public static void main(String[] args) {
-        if (args.length > 0) {
-            for (String arg : args) {
-                if (arg.equals("--debug")) {
-                    DdmHandleAppName.setAppName("sui", 0);
-                } else if (arg.startsWith("--dex-path=")) {
-                    SuiUserServiceManager.setStartDex(arg.substring("--dex-path=".length()));
-                }
+        String filesPath = null;
+
+        for (String arg : args) {
+            if (arg.equals("--debug")) {
+                DdmHandleAppName.setAppName("sui", 0);
+            } else if (arg.startsWith("--files-path=")) {
+                filesPath = arg.substring("--files-path=".length());
+                SuiUserServiceManager.setStartDex(filesPath + "/sui.dex");
             }
         }
+
+        Objects.requireNonNull(filesPath, "--files-path not set");
 
         waitSystemService("package");
         waitSystemService("activity");
         waitSystemService(Context.USER_SERVICE);
         waitSystemService(Context.APP_OPS_SERVICE);
 
-        SuiService.main();
+        SuiService.main(filesPath);
     }
 }

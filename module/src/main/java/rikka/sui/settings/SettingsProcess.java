@@ -20,14 +20,19 @@
 package rikka.sui.settings;
 
 import static rikka.sui.settings.SettingsConstants.LOGGER;
+import static rikka.sui.settings.SettingsConstants.SHORTCUT_EXTRA;
 import static rikka.sui.settings.SettingsConstants.SHORTCUT_ID;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.Application;
+import android.app.Instrumentation;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
@@ -41,23 +46,29 @@ import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
 import android.graphics.drawable.VectorDrawable;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import rikka.sui.ktx.DrawableKt;
 import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.resource.Res;
 import rikka.sui.resource.Xml;
 
 @TargetApi(Build.VERSION_CODES.O)
 public class SettingsProcess {
+
+    private static boolean reflection = false;
 
     private static void onEnterDeveloperOptions(Context context) {
         LOGGER.d("onEnterDeveloperOptions");
@@ -102,7 +113,10 @@ public class SettingsProcess {
             icon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info);
         }
 
-        Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName())
+                .putExtra(SHORTCUT_EXTRA, 1)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
         ShortcutInfo shortcut = new ShortcutInfo.Builder(context, SHORTCUT_ID)
                 .setShortLabel("Sui")
                 .setLongLabel("Sui")
@@ -190,9 +204,60 @@ public class SettingsProcess {
         LOGGER.d("registerActivityLifecycleCallbacks");
     }
 
+
+    @SuppressLint("DiscouragedPrivateApi")
+    public static boolean execTransact(@NonNull Binder binder, int code, long dataObj, long replyObj, int flags) {
+        if (!reflection) {
+            return false;
+        }
+
+        String descriptor = binder.getInterfaceDescriptor();
+
+        if (!"android.app.IApplicationThread".equals(descriptor)) {
+            return false;
+        }
+
+        WorkerHandler.get().postDelayed(SettingsProcess::init, 1000);
+
+        ActivityThread activityThread = ActivityThread.currentActivityThread();
+        if (activityThread == null) {
+            LOGGER.w("ActivityThread is null");
+            return false;
+        }
+
+        Handler handler = ActivityThreadUtil.getH(activityThread);
+        int bindApplicationCode = ActivityThreadUtil.getBindApplication();
+
+        Handler.Callback original = HandlerUtil.getCallback(handler);
+        HandlerUtil.setCallback(handler, msg -> {
+            if (msg.what == bindApplicationCode
+                    && ActivityThreadUtil.isAppBindData(msg.obj)) {
+                LOGGER.d("bindApplication");
+
+                handler.post(() -> {
+                    Instrumentation instrumentation = ActivityThreadUtil.getInstrumentation(activityThread);
+                    ActivityThreadUtil.setInstrumentation(activityThread, new SettingsInstrumentation(instrumentation));
+                });
+            }
+            if (original != null) {
+                return original.handleMessage(msg);
+            }
+            return false;
+        });
+
+        return false;
+    }
+
     public static void main(String[] args, ByteBuffer[] buffers) {
         LOGGER.d("main: %s", Arrays.toString(args));
-        WorkerHandler.get().postDelayed(SettingsProcess::init, 1000);
+
+        try {
+            ActivityThreadUtil.init();
+            HandlerUtil.init();
+            reflection = true;
+        } catch (Throwable e) {
+            LOGGER.e(Log.getStackTraceString(e));
+        }
 
         Xml.setBuffers(buffers);
     }

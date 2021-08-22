@@ -48,6 +48,8 @@
 namespace Settings {
 
     static jclass mainClass = nullptr;
+    static jmethodID my_execTransactMethodID;
+    static jint bindApplicationTransactionCode = -1;
 
     static bool installDex(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files) {
         if (android::GetApiLevel() >= 26) {
@@ -74,11 +76,15 @@ namespace Settings {
             return false;
         }
 
-        auto args = env->NewObjectArray(1, env->FindClass("java/lang/String"), nullptr);
-        char buf[64];
-        sprintf(buf, "--version-code=%d", RIRU_MODULE_VERSION);
-        env->SetObjectArrayElement(args, 0, env->NewStringUTF(buf));
+        my_execTransactMethodID = env->GetStaticMethodID(mainClass, "execTransact", "(Landroid/os/Binder;IJJI)Z");
+        if (!my_execTransactMethodID) {
+            LOGE("unable to find execTransact");
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+            return false;
+        }
 
+        auto args = env->NewObjectArray(0, env->FindClass("java/lang/String"), nullptr);
         auto buffers = env->NewObjectArray(files->size(), env->FindClass("java/nio/ByteBuffer"), nullptr);
         for (auto i = 0; i < files->size(); ++i) {
             auto file = files->at(i);
@@ -94,6 +100,31 @@ namespace Settings {
         }
 
         return true;
+    }
+
+    /*
+     * return true = consumed
+     */
+    static bool ExecTransact(jboolean *res, JNIEnv *env, jobject obj, va_list args) {
+        jint code;
+        jlong dataObj;
+        jlong replyObj;
+        jint flags;
+
+        va_list copy;
+        va_copy(copy, args);
+        code = va_arg(copy, jint);
+        dataObj = va_arg(copy, jlong);
+        replyObj = va_arg(copy, jlong);
+        flags = va_arg(copy, jint);
+        va_end(copy);
+
+        if (bindApplicationTransactionCode != -1 && code == bindApplicationTransactionCode) {
+            *res = env->CallStaticBooleanMethod(mainClass, my_execTransactMethodID, obj, code, dataObj, replyObj, flags);
+            if (*res) return true;
+        }
+
+        return false;
     }
 
     void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files) {
@@ -118,5 +149,24 @@ namespace Settings {
         }
 
         LOGV("install dex finished");
+
+        JavaVM *javaVm;
+        env->GetJavaVM(&javaVm);
+
+        BinderHook::Install(javaVm, env, ExecTransact);
+
+        if (android::GetApiLevel() >= 26) {
+            jclass applicationThreadClass;
+            jfieldID bindApplicationId;
+
+            applicationThreadClass = env->FindClass("android/app/IApplicationThread$Stub");
+            if (!applicationThreadClass) goto clean;
+            bindApplicationId = env->GetStaticFieldID(applicationThreadClass, "TRANSACTION_bindApplication", "I");
+            if (!bindApplicationId) goto clean;
+            bindApplicationTransactionCode = env->GetStaticIntField(applicationThreadClass, bindApplicationId);
+
+            clean:
+            env->ExceptionClear();
+        }
     }
 }
