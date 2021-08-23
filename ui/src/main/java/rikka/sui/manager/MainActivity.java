@@ -25,9 +25,9 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 
 import rikka.sui.R;
-import rikka.sui.app.InjectedActivity;
+import rikka.sui.app.AppActivity;
 
-public class MainActivity extends InjectedActivity {
+public class MainActivity extends AppActivity {
 
     public MainActivity(Resources resources) {
         super(resources);
