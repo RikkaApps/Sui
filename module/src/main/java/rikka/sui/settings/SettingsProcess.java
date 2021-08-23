@@ -29,10 +29,10 @@ import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.Application;
 import android.app.Instrumentation;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
@@ -57,9 +57,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import rikka.sui.ktx.ResourcesKt;
 import rikka.sui.resource.Res;
@@ -69,6 +67,57 @@ import rikka.sui.resource.Xml;
 public class SettingsProcess {
 
     private static boolean reflection = false;
+
+    private static Intent searchIntent(Context context, boolean requiresStandardLaunchMode) {
+        String[] actions = new String[]{
+                Settings.ACTION_WIFI_SETTINGS,
+                Settings.ACTION_NETWORK_OPERATOR_SETTINGS,
+                Settings.ACTION_DEVICE_INFO_SETTINGS,
+                Settings.ACTION_DISPLAY_SETTINGS,
+                Settings.ACTION_SOUND_SETTINGS,
+                Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
+                Settings.ACTION_SECURITY_SETTINGS,
+                Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS
+        };
+
+        Intent intent = new Intent("null").setPackage(context.getPackageName());
+        PackageManager pm = context.getPackageManager();
+
+        for (String action : actions) {
+            intent.setAction(action);
+
+            try {
+                ResolveInfo resolveInfo = pm.resolveActivity(intent, 0);
+                if (resolveInfo != null
+                        && resolveInfo.activityInfo != null
+                        && (!requiresStandardLaunchMode || resolveInfo.activityInfo.launchMode == ActivityInfo.LAUNCH_MULTIPLE)) {
+                    if (requiresStandardLaunchMode) {
+                        LOGGER.i("Found action for Sui shortcut (standard launch mode): %s", action);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                                | Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                | Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+                    } else {
+                        LOGGER.w("Found action for Sui shortcut: %s", action);
+                    }
+                    break;
+                }
+            } catch (Throwable e) {
+                LOGGER.w(e, "getApplication is failed, wait 1s");
+            }
+        }
+
+        if ("null".equals(intent.getAction())) {
+            if (requiresStandardLaunchMode) {
+                intent = searchIntent(context, false);
+            } else {
+                LOGGER.w("Use launch intent for Sui shortcut");
+                intent = pm.getLaunchIntentForPackage(context.getPackageName());
+            }
+        }
+
+        intent.putExtra(SHORTCUT_EXTRA, 1);
+        return intent;
+    }
 
     private static void onEnterDeveloperOptions(Context context) {
         LOGGER.d("onEnterDeveloperOptions");
@@ -113,15 +162,12 @@ public class SettingsProcess {
             icon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info);
         }
 
-        Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName())
-                .putExtra(SHORTCUT_EXTRA, 1)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         ShortcutInfo shortcut = new ShortcutInfo.Builder(context, SHORTCUT_ID)
                 .setShortLabel("Sui")
                 .setLongLabel("Sui")
                 .setIcon(icon)
-                .setIntent(intent)
+                .setIntent(searchIntent(context, true))
                 .build();
 
         shortcutManager.requestPinShortcut(shortcut, null);
@@ -132,14 +178,12 @@ public class SettingsProcess {
         try {
             application = ActivityThread.currentActivityThread().getApplication();
         } catch (Throwable e) {
-            LOGGER.w(e, "getApplication is failed, wait 1s");
-            WorkerHandler.get().postDelayed(SettingsProcess::init, 1000);
+            LOGGER.w(e, "getApplication is failed");
             return;
         }
 
         if (application == null) {
-            LOGGER.w("application is null, wait 1s");
-            WorkerHandler.get().postDelayed(SettingsProcess::init, 1000);
+            LOGGER.w("application is null");
             return;
         }
 
@@ -217,8 +261,6 @@ public class SettingsProcess {
             return false;
         }
 
-        WorkerHandler.get().postDelayed(SettingsProcess::init, 1000);
-
         ActivityThread activityThread = ActivityThread.currentActivityThread();
         if (activityThread == null) {
             LOGGER.w("ActivityThread is null");
@@ -236,7 +278,11 @@ public class SettingsProcess {
 
                 handler.post(() -> {
                     Instrumentation instrumentation = ActivityThreadUtil.getInstrumentation(activityThread);
-                    ActivityThreadUtil.setInstrumentation(activityThread, new SettingsInstrumentation(instrumentation));
+                    SettingsInstrumentation newInstrumentation = new SettingsInstrumentation(instrumentation);
+                    ActivityThreadUtil.setInstrumentation(activityThread, newInstrumentation);
+                    LOGGER.d("setInstrumentation: %s -> %s", instrumentation, newInstrumentation);
+
+                    init();
                 });
             }
             if (original != null) {

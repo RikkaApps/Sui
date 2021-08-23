@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layoutAnimation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:animationOrder="normal"
+    android:delay="10%">
+    <aapt:attr name="android:animation">
+        <set
+            android:duration="150"
+            android:shareInterpolator="true">
+            <alpha
+                android:fromAlpha="0"
+                android:toAlpha="1" />
+            <translate
+                android:fromYDelta="50%"
+                android:toYDelta="0" />
+        </set>
+    </aapt:attr>
+    <aapt:attr name="android:interpolator">
+        <pathInterpolator
+            android:controlX1="0"
+            android:controlX2="0.2"
+            android:controlY1="0"
+            android:controlY2="1" />
+    </aapt:attr>
+</layoutAnimation>

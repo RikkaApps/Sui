@@ -17,23 +17,17 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.util;
+package rikka.sui.app;
 
-public class UserHandleCompat {
+import androidx.fragment.app.Fragment;
 
-    private static final int UID = android.system.Os.getuid();
-    public static final int PER_USER_RANGE = 100000;
+public class AppFragment extends Fragment {
 
-    public static int getUserId(int uid) {
-        return uid / PER_USER_RANGE;
+    public AppActivity getAppActivity() {
+        return (AppActivity) getActivity();
     }
 
-    public static int getAppId(int uid) {
-        return uid % PER_USER_RANGE;
-    }
-
-    public static int myUserId() {
-        return getUserId(UID);
+    public AppActivity requireAppActivity() {
+        return (AppActivity) requireActivity();
     }
 }
-

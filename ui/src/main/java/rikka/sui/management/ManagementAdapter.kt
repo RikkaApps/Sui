@@ -16,24 +16,30 @@
  *
  * Copyright (c) 2021 Sui Contributors
  */
+package rikka.sui.management
 
-package rikka.sui.util;
+import rikka.recyclerview.BaseRecyclerViewAdapter
+import rikka.recyclerview.ClassCreatorPool
+import rikka.sui.model.AppInfo
 
-public class UserHandleCompat {
+class ManagementAdapter : BaseRecyclerViewAdapter<ClassCreatorPool>() {
 
-    private static final int UID = android.system.Os.getuid();
-    public static final int PER_USER_RANGE = 100000;
-
-    public static int getUserId(int uid) {
-        return uid / PER_USER_RANGE;
+    init {
+        creatorPool.putRule(AppInfo::class.java, ManagementAppItemViewHolder.CREATOR)
+        setHasStableIds(true)
     }
 
-    public static int getAppId(int uid) {
-        return uid % PER_USER_RANGE;
+    override fun getItemId(position: Int): Long {
+        return getItemAt<Any>(position).hashCode().toLong()
     }
 
-    public static int myUserId() {
-        return getUserId(UID);
+    override fun onCreateCreatorPool(): ClassCreatorPool {
+        return ClassCreatorPool()
+    }
+
+    fun updateData(data: List<AppInfo>) {
+        getItems<Any>().clear()
+        getItems<Any>().addAll(data)
+        notifyDataSetChanged()
     }
 }
-

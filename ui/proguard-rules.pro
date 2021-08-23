@@ -1,6 +1,6 @@
 -repackageclasses rikka.sui
 
--keepclasseswithmembers class rikka.sui.manager.MainActivity {
+-keepclasseswithmembers class rikka.sui.SuiActivity {
      public <init>(...);
 }
 

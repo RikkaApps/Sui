@@ -17,7 +17,7 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.manager;
+package rikka.sui;
 
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -26,10 +26,11 @@ import androidx.annotation.Nullable;
 
 import rikka.sui.R;
 import rikka.sui.app.AppActivity;
+import rikka.sui.management.ManagementFragment;
 
-public class MainActivity extends AppActivity {
+public class SuiActivity extends AppActivity {
 
-    public MainActivity(Resources resources) {
+    public SuiActivity(Resources resources) {
         super(resources);
     }
 
@@ -38,5 +39,9 @@ public class MainActivity extends AppActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         setTitle("Sui");
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new ManagementFragment())
+                .commit();
     }
 }

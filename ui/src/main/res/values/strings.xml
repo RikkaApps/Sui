@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_warning_template"><![CDATA[Allow <b>%1$s</b> to %2$s?]]></string>
+    <string name="permission_description">have the full access of the device</string>
+    <string name="grant_dialog_button_allow_always">Allow all the time</string>
+    <string name="grant_dialog_button_allow_one_time">Only this time</string>
+    <string name="grant_dialog_button_deny">Deny</string>
+    <string name="grant_dialog_button_deny_and_dont_ask_again">Deny, don\'t ask again</string>
+    <string name="brackets_format">%1$s (%2$s)</string>
+    <string name="management_title">Superuser management</string>
+    <string name="close">Close</string>
+    <string name="permission_allowed">Allowed</string>
+    <string name="permission_denied">Denied</string>
+    <string name="permission_hidden">Hidden</string>
+    <string name="permission_ask">Ask</string>
+    <string name="notification_channel_group_name">Show management</string>
+    <string name="notification_show_management_title">You have entered \"Developer options\"</string>
+    <string name="notification_show_management_text">Tap to show superuser management</string>
+</resources>

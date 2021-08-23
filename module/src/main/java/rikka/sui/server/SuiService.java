@@ -174,7 +174,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public boolean checkCallerManagerPermission(String func, int callingUid, int callingPid) {
-        return false;
+        return callingUid == settingsUid || callingUid == managerUid;
     }
 
     @Override
@@ -330,7 +330,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public int getFlagsForUid(int uid, int mask) {
-        if (Binder.getCallingUid() != managerUid) {
+        if (Binder.getCallingUid() != managerUid && Binder.getCallingUid() != settingsUid) {
             LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
             return 0;
         }
@@ -339,7 +339,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public void updateFlagsForUid(int uid, int mask, int value) {
-        if (Binder.getCallingUid() != managerUid) {
+        if (Binder.getCallingUid() != managerUid && Binder.getCallingUid() != settingsUid) {
             LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
             return;
         }
@@ -381,8 +381,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     }
 
     private ParcelableListSlice<AppInfo> getApplications(int userId) {
-        if (Binder.getCallingUid() != managerUid) {
-            LOGGER.w("getApplications is allowed to be called only from the manager");
+        if (!checkCallerManagerPermission("getApplications", Binder.getCallingUid(), Binder.getCallingPid())) {
+            LOGGER.w("getApplications is allowed to be called only from the manager or settings");
             return null;
         }
 
@@ -477,7 +477,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     }
 
     private void showManagement() {
-        if (Binder.getCallingUid() != settingsUid) {
+        if (!checkCallerManagerPermission("showManagement", Binder.getCallingUid(), Binder.getCallingPid())) {
             LOGGER.w("showManagement is allowed to be called only from settings");
             return;
         }
@@ -498,8 +498,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     }
 
     private ParcelFileDescriptor openApk() {
-        if (Binder.getCallingUid() != settingsUid && Binder.getCallingUid() != managerUid) {
-            LOGGER.w("showManagement is allowed to be called only from settings and system ui");
+        if (!checkCallerManagerPermission("openApk", Binder.getCallingUid(), Binder.getCallingPid())) {
+            LOGGER.w("openApk is allowed to be called only from settings and system ui");
             return null;
         }
         String pathname = filesPath + "/sui.apk";

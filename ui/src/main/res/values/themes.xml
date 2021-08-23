@@ -2,7 +2,7 @@
 <resources>
     <!-- Base theme -->
     <style name="Theme.Light" parent="Theme.Material.Light.LightStatusBar">
-        <item name="android:statusBarColor">?toolbarColor</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:fastScrollThumbDrawable">@drawable/fastscroll_thumb_material</item>
         <item name="android:fastScrollTrackDrawable">@drawable/fastscroll_track_material</item>
 
@@ -27,7 +27,7 @@
     </style>
 
     <style name="Theme" parent="Theme.Material">
-        <item name="android:statusBarColor">?toolbarColor</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:fastScrollThumbDrawable">@drawable/fastscroll_thumb_material</item>
         <item name="android:fastScrollTrackDrawable">@drawable/fastscroll_track_material</item>
 

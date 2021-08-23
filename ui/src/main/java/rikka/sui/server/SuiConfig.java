@@ -17,23 +17,12 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.util;
+package rikka.sui.server;
 
-public class UserHandleCompat {
+public class SuiConfig {
 
-    private static final int UID = android.system.Os.getuid();
-    public static final int PER_USER_RANGE = 100000;
-
-    public static int getUserId(int uid) {
-        return uid / PER_USER_RANGE;
-    }
-
-    public static int getAppId(int uid) {
-        return uid % PER_USER_RANGE;
-    }
-
-    public static int myUserId() {
-        return getUserId(UID);
-    }
+    public static final int FLAG_ALLOWED = 1 << 1;
+    public static final int FLAG_DENIED = 1 << 2;
+    public static final int FLAG_HIDDEN = 1 << 3;
+    public static final int MASK_PERMISSION = FLAG_ALLOWED | FLAG_DENIED | FLAG_HIDDEN;
 }
-

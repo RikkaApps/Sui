@@ -49,13 +49,13 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
 import dalvik.system.PathClassLoader;
 import rikka.sui.util.BridgeServiceClient;
-import rikka.sui.util.OsUtils;
 
 @SuppressLint("DiscouragedPrivateApi")
 @SuppressWarnings("JavaReflectionMemberAccess")
@@ -65,7 +65,8 @@ public class SettingsInstrumentation extends Instrumentation {
 
     @SuppressWarnings("FieldCanBeLocal")
     private ClassLoader classLoader;
-    private Constructor<?> mainActivityConstructor;
+    private Class<?> suiActivityClass;
+    private Constructor<?> suiActivityConstructor;
     private Resources resources;
 
     public SettingsInstrumentation(Instrumentation original) {
@@ -84,7 +85,8 @@ public class SettingsInstrumentation extends Instrumentation {
 
         try {
             classLoader = new PathClassLoader(apkPath, ClassLoader.getSystemClassLoader());
-            mainActivityConstructor = classLoader.loadClass("rikka.sui.manager.MainActivity").getDeclaredConstructor(Resources.class);
+            suiActivityClass = classLoader.loadClass("rikka.sui.SuiActivity");
+            suiActivityConstructor = suiActivityClass.getDeclaredConstructor(Resources.class);
         } catch (Throwable e) {
             LOGGER.e(e, "Cannot load class");
             return;
@@ -95,18 +97,28 @@ public class SettingsInstrumentation extends Instrumentation {
             Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
             addAssetPath.setAccessible(true);
             addAssetPath.invoke(am, apkPath);
-            this.resources = new Resources(am, null, null);
+            resources = new Resources(am, null, null);
         } catch (Throwable e) {
             LOGGER.e(e, "Cannot create resource");
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            try {
+                Field classLoaderField = Resources.class.getDeclaredField("mClassLoader");
+                classLoaderField.setAccessible(true);
+                classLoaderField.set(resources, classLoader);
+            } catch (Throwable e) {
+                LOGGER.e(e, "Cannot set classloader for resource");
+            }
     }
 
     @Override
     public Activity newActivity(ClassLoader cl, String className, Intent intent) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         LOGGER.d("newActivity: %s", className);
-        if (mainActivityConstructor != null && intent.hasExtra(SHORTCUT_EXTRA)) {
+        if (suiActivityConstructor != null && intent.hasExtra(SHORTCUT_EXTRA)) {
+            LOGGER.d("creating SuiActivity");
             try {
-                return (Activity) mainActivityConstructor.newInstance(resources);
+                return (Activity) suiActivityConstructor.newInstance(resources);
             } catch (InvocationTargetException e) {
                 LOGGER.e(e, "Cannot create activity");
             }
@@ -318,10 +330,6 @@ public class SettingsInstrumentation extends Instrumentation {
         return original.newApplication(cl, className, context);
     }
 
-    public static Application newApplication(Class<?> clazz, Context context) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        return Instrumentation.newApplication(clazz, context);
-    }
-
     @Override
     public void callApplicationOnCreate(Application app) {
         original.callApplicationOnCreate(app);
@@ -333,12 +341,20 @@ public class SettingsInstrumentation extends Instrumentation {
     }
 
     @Override
-    public void callActivityOnCreate(Activity activity, Bundle icicle) {
+    public void callActivityOnCreate(Activity activity, @Nullable Bundle icicle) {
+        LOGGER.d("callActivityOnCreate: %s", activity);
+        if (icicle != null && suiActivityClass.isAssignableFrom(activity.getClass())) {
+            icicle.setClassLoader(classLoader);
+        }
         original.callActivityOnCreate(activity, icicle);
     }
 
     @Override
-    public void callActivityOnCreate(Activity activity, Bundle icicle, PersistableBundle persistentState) {
+    public void callActivityOnCreate(Activity activity, @Nullable Bundle icicle, PersistableBundle persistentState) {
+        LOGGER.d("callActivityOnCreate: %s", activity);
+        if (icicle != null && suiActivityClass.isAssignableFrom(activity.getClass())) {
+            icicle.setClassLoader(classLoader);
+        }
         original.callActivityOnCreate(activity, icicle, persistentState);
     }
 
@@ -349,21 +365,37 @@ public class SettingsInstrumentation extends Instrumentation {
 
     @Override
     public void callActivityOnRestoreInstanceState(@NonNull Activity activity, @NonNull Bundle savedInstanceState) {
+        LOGGER.d("callActivityOnRestoreInstanceState: %s", activity);
+        if (suiActivityClass.isAssignableFrom(activity.getClass())) {
+            savedInstanceState.setClassLoader(classLoader);
+        }
         original.callActivityOnRestoreInstanceState(activity, savedInstanceState);
     }
 
     @Override
     public void callActivityOnRestoreInstanceState(@NonNull Activity activity, @Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
+        LOGGER.d("callActivityOnRestoreInstanceState: %s", activity);
+        if (savedInstanceState != null && suiActivityClass.isAssignableFrom(activity.getClass())) {
+            savedInstanceState.setClassLoader(classLoader);
+        }
         original.callActivityOnRestoreInstanceState(activity, savedInstanceState, persistentState);
     }
 
     @Override
     public void callActivityOnPostCreate(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
+        LOGGER.d("callActivityOnPostCreate: %s", activity);
+        if (savedInstanceState != null && suiActivityClass.isAssignableFrom(activity.getClass())) {
+            savedInstanceState.setClassLoader(classLoader);
+        }
         original.callActivityOnPostCreate(activity, savedInstanceState);
     }
 
     @Override
     public void callActivityOnPostCreate(@NonNull Activity activity, @Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
+        LOGGER.d("callActivityOnPostCreate: %s", activity);
+        if (savedInstanceState != null && suiActivityClass.isAssignableFrom(activity.getClass())) {
+            savedInstanceState.setClassLoader(classLoader);
+        }
         original.callActivityOnPostCreate(activity, savedInstanceState, persistentState);
     }
 
@@ -394,11 +426,19 @@ public class SettingsInstrumentation extends Instrumentation {
 
     @Override
     public void callActivityOnSaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
+        LOGGER.d("callActivityOnSaveInstanceState: %s", activity);
+        if (suiActivityClass.isAssignableFrom(activity.getClass())) {
+            outState.setClassLoader(classLoader);
+        }
         original.callActivityOnSaveInstanceState(activity, outState);
     }
 
     @Override
     public void callActivityOnSaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        LOGGER.d("callActivityOnSaveInstanceState: %s", activity);
+        if (suiActivityClass.isAssignableFrom(activity.getClass())) {
+            outState.setClassLoader(classLoader);
+        }
         original.callActivityOnSaveInstanceState(activity, outState, outPersistentState);
     }
 
