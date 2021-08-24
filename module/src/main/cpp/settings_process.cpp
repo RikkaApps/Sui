@@ -51,7 +51,7 @@ namespace Settings {
     static jmethodID my_execTransactMethodID;
     static jint bindApplicationTransactionCode = -1;
 
-    static bool installDex(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files) {
+    static bool installDex(JNIEnv *env, const char *appDataDir, DexFile *dexFile) {
         if (android::GetApiLevel() >= 26) {
             dexFile->createInMemoryDexClassLoader(env);
         } else {
@@ -68,7 +68,7 @@ namespace Settings {
         }
         mainClass = (jclass) env->NewGlobalRef(mainClass);
 
-        auto mainMethod = env->GetStaticMethodID(mainClass, "main", "([Ljava/lang/String;[Ljava/nio/ByteBuffer;)V");
+        auto mainMethod = env->GetStaticMethodID(mainClass, "main", "([Ljava/lang/String;)V");
         if (!mainMethod) {
             LOGE("unable to find main method");
             env->ExceptionDescribe();
@@ -85,13 +85,8 @@ namespace Settings {
         }
 
         auto args = env->NewObjectArray(0, env->FindClass("java/lang/String"), nullptr);
-        auto buffers = env->NewObjectArray(files->size(), env->FindClass("java/nio/ByteBuffer"), nullptr);
-        for (auto i = 0; i < files->size(); ++i) {
-            auto file = files->at(i);
-            env->SetObjectArrayElement(buffers, i, env->NewDirectByteBuffer(file->getBytes(), file->getSize()));
-        }
 
-        env->CallStaticVoidMethod(mainClass, mainMethod, args, buffers);
+        env->CallStaticVoidMethod(mainClass, mainMethod, args);
         if (env->ExceptionCheck()) {
             LOGE("unable to call main method");
             env->ExceptionDescribe();
@@ -127,7 +122,7 @@ namespace Settings {
         return false;
     }
 
-    void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile, std::vector<File *> *files) {
+    void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile) {
         if (android::GetApiLevel() <= 26) {
             return;
         }
@@ -143,7 +138,7 @@ namespace Settings {
 
         LOGV("install dex");
 
-        if (!installDex(env, appDataDir, dexFile, files)) {
+        if (!installDex(env, appDataDir, dexFile)) {
             LOGE("can't install dex");
             return;
         }

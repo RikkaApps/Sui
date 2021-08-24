@@ -150,7 +150,7 @@ static void appProcessPost(
         } else if (strcmp(package_name, SETTINGS_APPLICATION_ID) == 0
                    && strcmp(process_name, MANAGER_APPLICATION_ID) == 0) {
             LOGV("%s: settings process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
-            Settings::main(env, app_data_dir, dexFile, resources_files);
+            Settings::main(env, app_data_dir, dexFile);
         } else {
             riru_set_unload_allowed(true);
             DestroyFiles(env);
@@ -163,7 +163,7 @@ static void appProcessPost(
         } else if (uid == settings_uid && strcmp(process_name, settings_uid_process) == 0) {
             LOGV("%s: settings process, uid=%d, package=%s, proc=%s, dir=%s", from, uid, package_name, saved_process_name,
                  app_data_dir);
-            Settings::main(env, app_data_dir, dexFile, resources_files);
+            Settings::main(env, app_data_dir, dexFile);
         } else {
             riru_set_unload_allowed(true);
             DestroyFiles(env);

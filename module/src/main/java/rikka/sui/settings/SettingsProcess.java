@@ -183,7 +183,7 @@ public class SettingsProcess {
         return false;
     }
 
-    public static void main(String[] args, ByteBuffer[] buffers) {
+    public static void main(String[] args) {
         LOGGER.d("main: %s", Arrays.toString(args));
 
         try {
@@ -193,7 +193,5 @@ public class SettingsProcess {
         } catch (Throwable e) {
             LOGGER.e(Log.getStackTraceString(e));
         }
-
-        Xml.setBuffers(buffers);
     }
 }
