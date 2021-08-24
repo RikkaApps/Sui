@@ -93,7 +93,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     private final SuiClientManager clientManager;
     private final SuiConfigManager configManager;
-    private final int managerUid;
+    private final int systemUIUid;
     private final int settingsUid;
     private IShizukuApplication managerApplication;
 
@@ -132,7 +132,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         configManager = getConfigManager();
         clientManager = getClientManager();
 
-        managerUid = waitForPackage(MANAGER_APPLICATION_ID, true);
+        systemUIUid = waitForPackage(MANAGER_APPLICATION_ID, true);
         settingsUid = waitForPackage(SETTINGS_APPLICATION_ID, true);
 
         int gmsUid = waitForPackage("com.google.android.gms", false);
@@ -174,7 +174,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public boolean checkCallerManagerPermission(String func, int callingUid, int callingPid) {
-        return callingUid == settingsUid || callingUid == managerUid;
+        return callingUid == settingsUid || callingUid == systemUIUid;
     }
 
     @Override
@@ -283,12 +283,12 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
             return false;
         }
 
-        return uid != managerUid && configManager.isHidden(uid);
+        return uid != systemUIUid && uid != settingsUid && configManager.isHidden(uid);
     }
 
     @Override
     public void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) {
-        if (Binder.getCallingUid() != managerUid) {
+        if (Binder.getCallingUid() != systemUIUid) {
             LOGGER.w("dispatchPermissionConfirmationResult is allowed to be called only from the manager");
             return;
         }
@@ -330,19 +330,13 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public int getFlagsForUid(int uid, int mask) {
-        if (Binder.getCallingUid() != managerUid && Binder.getCallingUid() != settingsUid) {
-            LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
-            return 0;
-        }
+        enforceManagerPermission("getFlagsForUid");
         return getFlagsForUidInternal(uid, mask);
     }
 
     @Override
     public void updateFlagsForUid(int uid, int mask, int value) {
-        if (Binder.getCallingUid() != managerUid && Binder.getCallingUid() != settingsUid) {
-            LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
-            return;
-        }
+        enforceManagerPermission("updateFlagsForUid");
 
         int oldValue = getFlagsForUidInternal(uid, mask);
         boolean wasHidden = (oldValue & SuiConfig.FLAG_HIDDEN) != 0;
@@ -381,10 +375,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     }
 
     private ParcelableListSlice<AppInfo> getApplications(int userId) {
-        if (!checkCallerManagerPermission("getApplications", Binder.getCallingUid(), Binder.getCallingPid())) {
-            LOGGER.w("getApplications is allowed to be called only from the manager or settings");
-            return null;
-        }
+        enforceManagerPermission("getApplications");
 
         List<Integer> users = new ArrayList<>();
         if (userId == -1) {
@@ -406,7 +397,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
                 int uid = pi.applicationInfo.uid;
                 int appId = UserHandleCompat.getAppId(uid);
-                if (uid == managerUid)
+                if (uid == systemUIUid)
                     continue;
 
                 int flags = getFlagsForUidInternal(uid, SuiConfig.MASK_PERMISSION);
@@ -477,10 +468,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     }
 
     private void showManagement() {
-        if (!checkCallerManagerPermission("showManagement", Binder.getCallingUid(), Binder.getCallingPid())) {
-            LOGGER.w("showManagement is allowed to be called only from settings");
-            return;
-        }
+        enforceManagerPermission("showManagement");
 
         if (managerApplication != null) {
             Parcel data = Parcel.obtain();
