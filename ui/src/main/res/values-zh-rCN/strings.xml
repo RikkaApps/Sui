@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_warning_template"><![CDATA[要允许<b>%1$s</b>%2$s吗？]]></string>
+    <string name="permission_description">拥有设备的完全访问权限</string>
+    <string name="grant_dialog_button_allow_always">始终允许</string>
+    <string name="grant_dialog_button_allow_one_time">仅限这一次</string>
+    <string name="grant_dialog_button_deny">拒绝</string>
+    <string name="grant_dialog_button_deny_and_dont_ask_again">拒绝，不要再询问</string>
+    <string name="brackets_format">%1$s（%2$s）</string>
+    <string name="management_title">超级用户管理</string>
+    <string name="close">关闭</string>
+    <string name="permission_allowed">允许</string>
+    <string name="permission_denied">拒绝</string>
+    <string name="permission_hidden">隐藏</string>
+    <string name="permission_ask">询问</string>
+    <string name="notification_channel_group_name">显示管理界面</string>
+    <string name="notification_show_management_title">您已进入“开发者设置”</string>
+    <string name="notification_show_management_text">点按以显示超级用户管理界面</string>
+</resources>
