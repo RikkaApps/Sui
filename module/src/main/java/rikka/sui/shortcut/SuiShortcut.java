@@ -114,18 +114,19 @@ public class SuiShortcut {
         boolean hasDynamic = false;
         boolean shouldUpdate = false;
         ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-        List<ShortcutInfo> existingShortcuts = new ArrayList<>();
+        List<ShortcutInfo> existingShortcuts;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            shortcutManager.getShortcuts(ShortcutManager.FLAG_MATCH_PINNED | ShortcutManager.FLAG_MATCH_DYNAMIC);
+            existingShortcuts = shortcutManager.getShortcuts(ShortcutManager.FLAG_MATCH_PINNED | ShortcutManager.FLAG_MATCH_DYNAMIC);
         } else {
+            existingShortcuts = new ArrayList<>();
             existingShortcuts.addAll(shortcutManager.getDynamicShortcuts());
             existingShortcuts.addAll(shortcutManager.getPinnedShortcuts());
         }
 
         for (ShortcutInfo shortcutInfo : existingShortcuts) {
             String id = shortcutInfo.getId();
-            if (!id.startsWith("rikka.sui.")) {
+            if (!SHORTCUT_ID.equals(id)) {
                 continue;
             }
 
@@ -147,7 +148,8 @@ public class SuiShortcut {
         if (shouldUpdate) {
             List<ShortcutInfo> shortcutsToUpdate = new ArrayList<>();
             shortcutsToUpdate.add(createShortcut(context, resources));
-            shortcutManager.updateShortcuts(shortcutsToUpdate);
+            boolean res = shortcutManager.updateShortcuts(shortcutsToUpdate);
+            LOGGER.v("updateShortcuts: %s", Boolean.toString(res));
         }
 
         return hasDynamic;
@@ -226,7 +228,7 @@ public class SuiShortcut {
         boolean hasPinned = false;
 
         for (ShortcutInfo shortcutInfo : shortcutManager.getPinnedShortcuts()) {
-            if (shortcutInfo.getId().startsWith("rikka.sui.")) {
+            if (SHORTCUT_ID.equals(shortcutInfo.getId())) {
                 hasPinned = true;
                 LOGGER.i("Pinned shortcut exists");
                 break;

@@ -25,6 +25,6 @@ public class ShortcutConstants {
 
     public static final Logger LOGGER = new Logger("SuiShortcut");
 
-    public static final String SHORTCUT_ID = "rikka.sui.SUI";
-    public static final String SHORTCUT_EXTRA = "rikka.sui.SUI";
+    public static final String SHORTCUT_ID = "rikka.sui.shortcut.SUI";
+    public static final String SHORTCUT_EXTRA = "rikka.sui.extra.SUI";
 }

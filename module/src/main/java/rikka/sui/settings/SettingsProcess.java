@@ -155,7 +155,7 @@ public class SettingsProcess {
             LOGGER.e(e, "requestPinnedShortcutInDeveloperOptions");
         }
 
-        handler = new Handler(Looper.getMainLooper());
+        handlerThread.quit();
     }
 
     private static void postBindApplication(ActivityThread activityThread) {
