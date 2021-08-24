@@ -19,6 +19,7 @@
 
 package rikka.sui;
 
+import android.app.ActivityManager;
 import android.content.res.Resources;
 import android.os.Bundle;
 
@@ -43,5 +44,7 @@ public class SuiActivity extends AppActivity {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new ManagementFragment())
                 .commit();
+
+        setTaskDescription(new ActivityManager.TaskDescription("Sui"));
     }
 }
