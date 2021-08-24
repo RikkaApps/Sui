@@ -19,6 +19,8 @@
 
 package rikka.sui.manager;
 
+import static rikka.sui.manager.ManagerConstants.LOGGER;
+
 import android.app.ActivityThread;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,16 +36,15 @@ import java.util.Arrays;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 import rikka.shizuku.ShizukuApiConstants;
-import rikka.sui.ktx.HandlerKt;
 import rikka.sui.manager.dialog.ConfirmationDialog;
-import rikka.sui.manager.dialog.ManagementDialog;
 import rikka.sui.resource.Xml;
 import rikka.sui.server.ServerConstants;
+import rikka.sui.shortcut.SuiShortcut;
 import rikka.sui.util.BridgeServiceClient;
 
-import static rikka.sui.manager.ManagerConstants.LOGGER;
-
 public class ManagerProcess {
+
+    private static Intent intent;
 
     private static final IShizukuApplication APPLICATION = new IShizukuApplication.Stub() {
 
@@ -68,7 +69,7 @@ public class ManagerProcess {
             if (code == ServerConstants.BINDER_TRANSACTION_showManagement) {
                 data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
                 LOGGER.i("showManagement");
-                ManagementDialog.show();
+                showManagement();
                 return true;
             } else {
                 return super.onTransact(code, data, reply, flags);
@@ -76,12 +77,26 @@ public class ManagerProcess {
         }
     };
 
+    private static void showManagement() {
+        Context context;
+        try {
+            context = ActivityThread.currentActivityThread().getApplication();
+            if (intent == null) {
+                intent = SuiShortcut.getIntent(context, true);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+            context.startActivity(intent);
+        } catch (Throwable e) {
+            LOGGER.w(e, "showManagement");
+        }
+    }
+
     private static final BroadcastReceiver SHOW_MANAGEMENT_RECEIVER = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             LOGGER.i("showManagement: action=%s", intent != null ? intent.getAction() : "(null)");
-            ManagementDialog.show();
+            showManagement();
         }
     };
 

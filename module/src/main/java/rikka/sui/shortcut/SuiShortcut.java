@@ -53,6 +53,8 @@ import rikka.sui.resource.Xml;
 
 public class SuiShortcut {
 
+    private static final String PACKAGE_NAME = "com.android.settings";
+
     public static Intent getIntent(Context context, boolean requiresStandardLaunchMode) {
         String[] actions = new String[]{
                 Settings.ACTION_WIFI_SETTINGS,
@@ -65,7 +67,7 @@ public class SuiShortcut {
                 Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS
         };
 
-        Intent intent = new Intent("null").setPackage(context.getPackageName());
+        Intent intent = new Intent("null").setPackage(PACKAGE_NAME);
         PackageManager pm = context.getPackageManager();
 
         for (String action : actions) {
@@ -90,6 +92,8 @@ public class SuiShortcut {
             } catch (Throwable e) {
                 LOGGER.w(e, "resolveActivity %s", intent);
             }
+
+            intent.setAction("null");
         }
 
         if ("null".equals(intent.getAction())) {
@@ -97,7 +101,7 @@ public class SuiShortcut {
                 intent = getIntent(context, false);
             } else {
                 LOGGER.w("Use launch intent for Sui shortcut");
-                intent = pm.getLaunchIntentForPackage(context.getPackageName());
+                intent = pm.getLaunchIntentForPackage(PACKAGE_NAME);
             }
         }
 

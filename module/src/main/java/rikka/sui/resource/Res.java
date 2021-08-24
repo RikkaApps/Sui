@@ -23,15 +23,12 @@ public final class Res {
 
     public final static class drawable {
 
-        public final static int ic_su_24 = 3;
-        public final static int ic_close_24 = 4;
+        public final static int ic_su_24 = 1;
     }
 
     public final static class layout {
 
         public final static int confirmation_dialog = 0;
-        public final static int management_dialog = 1;
-        public final static int management_app_item = 2;
     }
 
     public final static class string {

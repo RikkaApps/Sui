@@ -67,16 +67,7 @@ static void PrepareFiles() {
     snprintf(path, PATH_MAX, "%s/res/layout/confirmation_dialog.xml", riru_get_magisk_module_path());
     resources_files->emplace_back(new File(path));
 
-    snprintf(path, PATH_MAX, "%s/res/layout/management_dialog.xml", riru_get_magisk_module_path());
-    resources_files->emplace_back(new File(path));
-
-    snprintf(path, PATH_MAX, "%s/res/layout/management_app_item.xml", riru_get_magisk_module_path());
-    resources_files->emplace_back(new File(path));
-
     snprintf(path, PATH_MAX, "%s/res/drawable/ic_su_24.xml", riru_get_magisk_module_path());
-    resources_files->emplace_back(new File(path));
-
-    snprintf(path, PATH_MAX, "%s/res/drawable/ic_close_24.xml", riru_get_magisk_module_path());
     resources_files->emplace_back(new File(path));
 
     ReadApplicationInfo(MANAGER_APPLICATION_ID, manager_uid, manager_process);

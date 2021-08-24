@@ -93,9 +93,9 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     private final SuiClientManager clientManager;
     private final SuiConfigManager configManager;
-    private final int systemUIUid;
+    private final int systemUiUid;
     private final int settingsUid;
-    private IShizukuApplication managerApplication;
+    private IShizukuApplication systemUiApplication;
 
     private final Object managerBinderLock = new Object();
     private final Logger flog = new Logger("Sui", "/cache/sui.log");
@@ -132,7 +132,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         configManager = getConfigManager();
         clientManager = getClientManager();
 
-        systemUIUid = waitForPackage(MANAGER_APPLICATION_ID, true);
+        systemUiUid = waitForPackage(MANAGER_APPLICATION_ID, true);
         settingsUid = waitForPackage(SETTINGS_APPLICATION_ID, true);
 
         int gmsUid = waitForPackage("com.google.android.gms", false);
@@ -174,7 +174,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public boolean checkCallerManagerPermission(String func, int callingUid, int callingPid) {
-        return callingUid == settingsUid || callingUid == systemUIUid;
+        return callingUid == settingsUid || callingUid == systemUiUid;
     }
 
     @Override
@@ -211,8 +211,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
                         flog.w("manager binder is dead, pid=%d", callingPid);
 
                         synchronized (managerBinderLock) {
-                            if (managerApplication.asBinder() == binder) {
-                                managerApplication = null;
+                            if (systemUiApplication.asBinder() == binder) {
+                                systemUiApplication = null;
                             } else {
                                 flog.w("binderDied is called later than the arrival of the new binder ?!");
                             }
@@ -226,7 +226,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
             }
 
             synchronized (managerBinderLock) {
-                managerApplication = application;
+                systemUiApplication = application;
                 flog.i("manager attached: pid=%d", callingPid);
             }
         }
@@ -260,9 +260,9 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public void showPermissionConfirmation(int requestCode, @NonNull ClientRecord clientRecord, int callingUid, int callingPid, int userId) {
-        if (managerApplication != null) {
+        if (systemUiApplication != null) {
             try {
-                managerApplication.showPermissionConfirmation(callingUid, callingPid, clientRecord.packageName, requestCode);
+                systemUiApplication.showPermissionConfirmation(callingUid, callingPid, clientRecord.packageName, requestCode);
             } catch (Throwable e) {
                 LOGGER.w(e, "showPermissionConfirmation");
             }
@@ -283,12 +283,12 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
             return false;
         }
 
-        return uid != systemUIUid && uid != settingsUid && configManager.isHidden(uid);
+        return uid != systemUiUid && uid != settingsUid && configManager.isHidden(uid);
     }
 
     @Override
     public void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) {
-        if (Binder.getCallingUid() != systemUIUid) {
+        if (Binder.getCallingUid() != systemUiUid) {
             LOGGER.w("dispatchPermissionConfirmationResult is allowed to be called only from the manager");
             return;
         }
@@ -397,7 +397,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
                 int uid = pi.applicationInfo.uid;
                 int appId = UserHandleCompat.getAppId(uid);
-                if (uid == systemUIUid)
+                if (uid == systemUiUid)
                     continue;
 
                 int flags = getFlagsForUidInternal(uid, SuiConfig.MASK_PERMISSION);
@@ -470,11 +470,11 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     private void showManagement() {
         enforceManagerPermission("showManagement");
 
-        if (managerApplication != null) {
+        if (systemUiApplication != null) {
             Parcel data = Parcel.obtain();
             data.writeInterfaceToken(ShizukuApiConstants.BINDER_DESCRIPTOR);
             try {
-                managerApplication.asBinder().transact(ServerConstants.BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
+                systemUiApplication.asBinder().transact(ServerConstants.BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
             } catch (Throwable e) {
                 LOGGER.w(e, "showPermissionConfirmation");
             } finally {
