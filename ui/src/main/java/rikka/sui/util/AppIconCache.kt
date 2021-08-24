@@ -3,9 +3,7 @@ package rikka.sui.util
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ApplicationInfo
-import android.content.res.Resources
 import android.graphics.Bitmap
-import android.os.Build
 import android.util.Log
 import android.widget.ImageView
 import androidx.collection.LruCache
@@ -74,8 +72,7 @@ object AppIconCache : CoroutineScope {
             return cachedBitmap
         }
         val loader = appIconLoaders.getOrPut(size) {
-            AppIconLoader(size, Build.VERSION.SDK_INT >= Build.VERSION_CODES.O, object : ContextWrapper(context) {
-
+            AppIconLoader(size, AppIconUtil.shouldShrinkNonAdaptiveIcons(context), object : ContextWrapper(context) {
                 override fun getApplicationContext(): Context {
                     return context
                 }
