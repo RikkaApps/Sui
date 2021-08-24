@@ -53,7 +53,6 @@ static void ReadApplicationInfo(const char *package, uid_t &uid, char *process) 
 }
 
 static DexFile *dexFile = nullptr;
-static std::vector<File *> *resources_files = nullptr;
 
 static void PrepareFiles() {
     if (dexFile && dexFile->getBytes()) return;
@@ -61,14 +60,6 @@ static void PrepareFiles() {
     char path[PATH_MAX]{0};
     snprintf(path, PATH_MAX, "%s/%s", riru_get_magisk_module_path(), DEX_NAME);
     dexFile = new DexFile(path);
-
-    resources_files = new std::vector<File *>();
-
-    snprintf(path, PATH_MAX, "%s/res/layout/confirmation_dialog.xml", riru_get_magisk_module_path());
-    resources_files->emplace_back(new File(path));
-
-    snprintf(path, PATH_MAX, "%s/res/drawable/ic_su_24.xml", riru_get_magisk_module_path());
-    resources_files->emplace_back(new File(path));
 
     ReadApplicationInfo(MANAGER_APPLICATION_ID, manager_uid, manager_process);
     ReadApplicationInfo(SETTINGS_APPLICATION_ID, settings_uid, settings_uid_process);
@@ -79,13 +70,6 @@ static void DestroyFiles(JNIEnv *env) {
         dexFile->destroy(env);
         delete dexFile;
         dexFile = nullptr;
-    }
-    if (resources_files) {
-        for (auto *file : *resources_files) {
-            delete file;
-        }
-        delete resources_files;
-        resources_files = nullptr;
     }
 }
 
@@ -146,7 +130,7 @@ static void appProcessPost(
         if (strcmp(package_name, MANAGER_APPLICATION_ID) == 0
             && strcmp(process_name, MANAGER_APPLICATION_ID) == 0) {
             LOGV("%s: manager process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
-            Manager::main(env, app_data_dir, dexFile, resources_files);
+            Manager::main(env, app_data_dir, dexFile);
         } else if (strcmp(package_name, SETTINGS_APPLICATION_ID) == 0
                    && strcmp(process_name, MANAGER_APPLICATION_ID) == 0) {
             LOGV("%s: settings process, uid=%d, package=%s, dir=%s", from, uid, package_name, app_data_dir);
@@ -159,7 +143,7 @@ static void appProcessPost(
         if (uid == manager_uid && strcmp(process_name, manager_process) == 0) {
             LOGV("%s: manager process, uid=%d, package=%s, proc=%s, dir=%s", from, uid, package_name, saved_process_name,
                  app_data_dir);
-            Manager::main(env, app_data_dir, dexFile, resources_files);
+            Manager::main(env, app_data_dir, dexFile);
         } else if (uid == settings_uid && strcmp(process_name, settings_uid_process) == 0) {
             LOGV("%s: settings process, uid=%d, package=%s, proc=%s, dir=%s", from, uid, package_name, saved_process_name,
                  app_data_dir);

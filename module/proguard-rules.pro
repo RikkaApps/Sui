@@ -14,7 +14,7 @@
 }
 
 -keep class rikka.sui.manager.ManagerProcess {
-    public static void main(java.lang.String[], java.nio.ByteBuffer[]);
+    public static void main(java.lang.String[]);
 }
 
 -keep class rikka.sui.settings.SettingsProcess {

@@ -30,14 +30,13 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.RemoteException;
 
-import java.nio.ByteBuffer;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuService;
 import rikka.shizuku.ShizukuApiConstants;
-import rikka.sui.manager.dialog.ConfirmationDialog;
-import rikka.sui.resource.Xml;
+import rikka.sui.resource.SuiApk;
 import rikka.sui.server.ServerConstants;
 import rikka.sui.shortcut.SuiShortcut;
 import rikka.sui.util.BridgeServiceClient;
@@ -45,6 +44,7 @@ import rikka.sui.util.BridgeServiceClient;
 public class ManagerProcess {
 
     private static Intent intent;
+    private static SuiApk suiApk;
 
     private static final IShizukuApplication APPLICATION = new IShizukuApplication.Stub() {
 
@@ -61,7 +61,15 @@ public class ManagerProcess {
         @Override
         public void showPermissionConfirmation(int requestUid, int requestPid, String requestPackageName, int requestCode) {
             LOGGER.i("showPermissionConfirmation: %d %d %s %d", requestUid, requestPid, requestPackageName, requestCode);
-            ConfirmationDialog.show(requestUid, requestPid, requestPackageName, requestCode);
+
+            try {
+                suiApk.getSuiRequestPermissionDialogConstructor().newInstance(
+                        ActivityThread.currentActivityThread().getApplication(), suiApk.getResources(),
+                        requestUid, requestPid, requestPackageName, requestCode
+                );
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                LOGGER.e(e, "showPermissionConfirmation");
+            }
         }
 
         @Override
@@ -108,6 +116,9 @@ public class ManagerProcess {
             return;
         }
 
+        suiApk = new SuiApk();
+        suiApk.loadSuiRequestPermissionDialog();
+
         try {
             service.attachApplication(APPLICATION, "com.android.systemui");
             LOGGER.i("attachApplication");
@@ -146,12 +157,9 @@ public class ManagerProcess {
         }
     }
 
-    public static void main(String[] args, ByteBuffer[] buffers) {
+    public static void main(String[] args) {
         LOGGER.d("main: %s", Arrays.toString(args));
-        LOGGER.d("buffers: %s", Arrays.toString(buffers));
         WorkerHandler.get().post(ManagerProcess::sendToService);
         WorkerHandler.get().postDelayed(ManagerProcess::registerListener, 5000);
-
-        Xml.setBuffers(buffers);
     }
 }

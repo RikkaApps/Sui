@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="24dp"
     android:elevation="8dp"
-    tools:background="?android:colorBackground">
+    tools:background="@drawable/confirmation_dialog_background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,22 +18,22 @@
             android:layout_height="24dp"
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="12dp"
             android:importantForAccessibility="no"
+            android:tint="?android:colorAccent"
             android:tintMode="src_in"
             tools:src="@drawable/ic_su_24"
             tools:tint="@color/accent_color_light" />
 
         <TextView
             android:id="@android:id/title"
+            style="@android:style/TextAppearance.DeviceDefault.WindowTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginEnd="24dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
-            android:textColor="?android:textColorPrimary"
-            android:textSize="18sp"
             tools:text="Allow %s to have full access of the device?" />
 
         <View
@@ -44,16 +44,15 @@
 
         <TextView
             android:id="@android:id/button1"
+            style="@android:style/Widget.DeviceDefault.Button.Borderless"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:selectableItemBackground"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
             android:minHeight="56dp"
-            android:padding="16dp"
-            android:textSize="14sp"
+            android:padding="8dp"
+            android:textAllCaps="false"
             tools:text="Allow all the time"
-            tools:textColor="@color/accent_color_light" />
+            tools:textColor="@color/confirmation_dialog_button_text" />
 
         <View
             android:layout_width="match_parent"
@@ -63,16 +62,15 @@
 
         <TextView
             android:id="@android:id/button2"
+            style="@android:style/Widget.DeviceDefault.Button.Borderless"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:selectableItemBackground"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
             android:minHeight="56dp"
-            android:padding="16dp"
-            android:textSize="14sp"
+            android:padding="8dp"
+            android:textAllCaps="false"
             tools:text="Only this time"
-            tools:textColor="@color/accent_color_light" />
+            tools:textColor="@color/confirmation_dialog_button_text" />
 
         <View
             android:layout_width="match_parent"
@@ -82,16 +80,15 @@
 
         <TextView
             android:id="@android:id/button3"
+            style="@android:style/Widget.DeviceDefault.Button.Borderless"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:selectableItemBackground"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
             android:minHeight="56dp"
-            android:padding="16dp"
-            android:textSize="14sp"
+            android:padding="8dp"
+            android:textAllCaps="false"
             tools:text="Deny"
-            tools:textColor="@color/accent_color_light" />
+            tools:textColor="@color/confirmation_dialog_button_text" />
 
     </LinearLayout>
 

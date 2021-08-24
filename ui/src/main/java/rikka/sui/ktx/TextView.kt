@@ -21,8 +21,7 @@ package rikka.sui.ktx
 
 import android.view.View
 import android.widget.TextView
-import rikka.sui.resource.Res
-import rikka.sui.resource.Strings
+import rikka.sui.R
 
 private const val tag_countdown = 1599296841
 
@@ -36,7 +35,7 @@ fun TextView.applyCountdown(countdownSecond: Int, message: CharSequence? = null,
                 if (message != null) text = message
             } else {
                 isEnabled = false
-                if (message != null && format != 0) text = String.format(Strings.get(Res.string.brackets_format), message, countdown.toString())
+                if (message != null && format != 0) text = context.getString(R.string.brackets_format, message, countdown.toString())
                 postDelayed(this, 1000)
             }
         }

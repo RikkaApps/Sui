@@ -17,60 +17,88 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.manager.dialog;
+package rikka.sui.permission;
 
-import android.app.ActivityThread;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
+
+import android.app.Application;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.VectorDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.Html;
-import android.view.ContextThemeWrapper;
+import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
-import org.xmlpull.v1.XmlPullParserException;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import java.io.IOException;
+import java.util.Objects;
 
+import rikka.html.text.HtmlCompat;
+import rikka.sui.R;
 import rikka.sui.databinding.ConfirmationDialogBinding;
 import rikka.sui.ktx.HandlerKt;
-import rikka.sui.ktx.ResourcesKt;
+import rikka.sui.ktx.LayoutInflaterKt;
 import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
-import rikka.sui.resource.Res;
-import rikka.sui.resource.Strings;
-import rikka.sui.resource.Utils;
-import rikka.sui.resource.Xml;
+import rikka.sui.util.AppLabel;
 import rikka.sui.util.BridgeServiceClient;
+import rikka.sui.util.Logger;
 import rikka.sui.util.Unsafe;
 import rikka.sui.util.UserHandleCompat;
-
-import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
-import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
-import static rikka.sui.manager.ManagerConstants.LOGGER;
 
 public class ConfirmationDialog {
 
     private static final IBinder TOKEN = new Binder();
+    private static final Logger LOGGER = new Logger("ConfirmationDialog");
 
-    public static void show(int requestUid, int requestPid, String requestPackageName, int requestCode) {
+    private final Context context;
+    private final Resources resources;
+    private final LayoutInflater layoutInflater;
+
+    public ConfirmationDialog(Application application, Resources resources) {
+        this.context = application/*new ContextWrapper(application) {
+
+            @Override
+            public Resources getResources() {
+                return ConfirmationDialog.this.resources;
+            }
+
+            @Override
+            public ClassLoader getClassLoader() {
+                return ConfirmationDialog.class.getClassLoader();
+            }
+        }*/;
+        this.resources = resources;
+        this.layoutInflater = LayoutInflater.from(application);
+
+        if (layoutInflater.getFactory2() == null) {
+            layoutInflater.setFactory2(new LayoutInflaterFactory() {
+                @Nullable
+                @Override
+                public View onCreateView(@Nullable View parent, @NonNull String name, @NonNull Context context, @NonNull AttributeSet attrs) {
+                    return super.onCreateView(parent, name, ConfirmationDialog.this.context, attrs);
+                }
+            });
+        }
+    }
+
+    public void show(int requestUid, int requestPid, String requestPackageName, int requestCode) {
         HandlerKt.getMainHandler().post(() -> showInternal(requestUid, requestPid, requestPackageName, requestCode));
     }
 
-    private static void setResult(int requestUid, int requestPid, int requestCode, boolean allowed, boolean onetime) {
+    private void setResult(int requestUid, int requestPid, int requestCode, boolean allowed, boolean onetime) {
         Bundle data = new Bundle();
         data.putBoolean(REQUEST_PERMISSION_REPLY_ALLOWED, allowed);
         data.putBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME, onetime);
@@ -82,27 +110,8 @@ public class ConfirmationDialog {
         }
     }
 
-    private static void showInternal(int requestUid, int requestPid, String requestPackageName, int requestCode) {
-        Context application = ActivityThread.currentActivityThread().getApplication();
-        if (application == null) {
-            return;
-        }
-        boolean isNight = (application.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
-
-        Context context = new ContextThemeWrapper(application, isNight ? android.R.style.Theme_DeviceDefault_Dialog_Alert : android.R.style.Theme_DeviceDefault_Light_Dialog_Alert);
-        LayoutInflater layoutInflater = LayoutInflater.from(context);
+    private void showInternal(int requestUid, int requestPid, String requestPackageName, int requestCode) {
         Resources.Theme theme = context.getTheme();
-        float density = context.getResources().getDisplayMetrics().density;
-        float l1 = density * 8;
-
-        int colorForeground = ResourcesKt.resolveColor(theme, android.R.attr.colorForeground);
-        int colorAccent = ResourcesKt.resolveColor(theme, android.R.attr.colorAccent);
-
-        ColorStateList buttonTextColor = new ColorStateList(
-                new int[][]{
-                        new int[]{-android.R.attr.state_enabled},
-                        new int[]{}
-                }, new int[]{colorForeground & 0xffffff | 0x61000000, colorAccent});
 
         SystemDialogRootView root = new SystemDialogRootView(context) {
 
@@ -117,7 +126,7 @@ public class ConfirmationDialog {
             }
         };
 
-        View view = layoutInflater.inflate(Xml.get(Res.layout.confirmation_dialog), root, false);
+        View view = layoutInflater.inflate(resources.getLayout(R.layout.confirmation_dialog), root, false);
         ConfirmationDialogBinding binding = ConfirmationDialogBinding.bind(view);
         root.addView(binding.getRoot());
 
@@ -125,25 +134,21 @@ public class ConfirmationDialog {
         int userId = UserHandleCompat.getUserId(requestUid);
         PackageManager pm = context.getPackageManager();
         try {
-            ApplicationInfo ai = Unsafe.<$android.content.pm.PackageManager>unsafeCast(pm)
-                    .getApplicationInfoAsUser(requestPackageName, $android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES, userId);
-            label = Utils.getAppLabel(ai, context);
+            ApplicationInfo ai = Objects.requireNonNull(Unsafe.<$android.content.pm.PackageManager>unsafeCast(pm)
+                    .getApplicationInfoAsUser(requestPackageName, $android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES, userId));
+            label = AppLabel.getAppLabel(ai, context);
         } catch (Throwable e) {
             LOGGER.e("getApplicationInfoAsUser");
         }
 
-        try {
-            binding.icon.setImageDrawable(VectorDrawable.createFromXml(context.getResources(), Xml.get(Res.drawable.ic_su_24)));
-        } catch (IOException | XmlPullParserException e) {
-            LOGGER.e(e, "setImageDrawable");
-        }
-        binding.icon.setImageTintList(ColorStateList.valueOf(colorAccent));
-        binding.title.setText(Html.fromHtml(
-                String.format(Strings.get(Res.string.permission_warning_template), label, Strings.get(Res.string.permission_description))));
-        binding.button1.setText(Strings.get(Res.string.grant_dialog_button_allow_always));
-        binding.button2.setText(Strings.get(Res.string.grant_dialog_button_allow_one_time));
-        binding.button3.setText(Strings.get(Res.string.grant_dialog_button_deny_and_dont_ask_again));
+        binding.icon.setImageDrawable(resources.getDrawable(R.drawable.ic_su_24, theme));
+        binding.title.setText(HtmlCompat.fromHtml(
+                String.format(resources.getString(R.string.permission_warning_template), label, resources.getString(R.string.permission_description))));
+        binding.button1.setText(resources.getString(R.string.grant_dialog_button_allow_always));
+        binding.button2.setText(resources.getString(R.string.grant_dialog_button_allow_one_time));
+        binding.button3.setText(resources.getString(R.string.grant_dialog_button_deny_and_dont_ask_again));
 
+        ColorStateList buttonTextColor = resources.getColorStateList(R.color.confirmation_dialog_button_text, theme);
         binding.button1.setTextColor(buttonTextColor);
         binding.button2.setTextColor(buttonTextColor);
         binding.button3.setTextColor(buttonTextColor);
@@ -165,10 +170,7 @@ public class ConfirmationDialog {
         TextViewKt.applyCountdown(binding.button2, 1, null, 0);
         TextViewKt.applyCountdown(binding.button3, 1, null, 0);
 
-        ShapeDrawable shapeDrawable = new ShapeDrawable();
-        shapeDrawable.setShape(new RoundRectShape(new float[]{l1, l1, l1, l1, l1, l1, l1, l1}, null, null));
-        shapeDrawable.getPaint().setColor(ResourcesKt.resolveColor(theme, android.R.attr.colorBackground));
-        binding.getRoot().setBackground(shapeDrawable);
+        binding.getRoot().setBackground(resources.getDrawable(R.drawable.confirmation_dialog_background, theme));
 
         WindowManager.LayoutParams attr = new WindowManager.LayoutParams();
         attr.width = ViewGroup.LayoutParams.MATCH_PARENT;

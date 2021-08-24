@@ -41,7 +41,6 @@ import androidx.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import rikka.sui.resource.Xml;
 import rikka.sui.shortcut.SuiShortcut;
 
 public class SettingsProcess {

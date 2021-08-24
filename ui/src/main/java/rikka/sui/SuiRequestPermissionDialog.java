@@ -17,11 +17,19 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-#pragma once
+package rikka.sui;
 
-#include <jni.h>
-#include "dex_file.h"
+import android.app.Application;
+import android.content.res.Resources;
 
-namespace Manager {
-    void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile);
+import rikka.sui.permission.ConfirmationDialog;
+
+public class SuiRequestPermissionDialog extends ConfirmationDialog {
+
+    public SuiRequestPermissionDialog(
+            Application application, Resources resources,
+            int requestUid, int requestPid, String requestPackageName, int requestCode) {
+        super(application, resources);
+        show(requestUid, requestPid, requestPackageName, requestCode);
+    }
 }

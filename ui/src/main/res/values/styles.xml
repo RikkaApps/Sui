@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="AppTheme" parent="Theme.Light"/>
+<resources>
 
+    <style name="AppTheme" parent="Theme.Light" />
 </resources>

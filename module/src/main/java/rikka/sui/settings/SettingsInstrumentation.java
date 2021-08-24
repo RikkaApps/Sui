@@ -22,7 +22,6 @@ package rikka.sui.settings;
 import static rikka.sui.settings.SettingsConstants.LOGGER;
 import static rikka.sui.shortcut.ShortcutConstants.SHORTCUT_EXTRA;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Instrumentation;
@@ -32,13 +31,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.ParcelFileDescriptor;
 import android.os.PersistableBundle;
 import android.os.TestLooperManager;
 import android.view.KeyEvent;
@@ -49,67 +46,30 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Objects;
 
-import dalvik.system.PathClassLoader;
-import rikka.sui.util.BridgeServiceClient;
+import rikka.sui.resource.SuiApk;
 
-@SuppressLint("DiscouragedPrivateApi")
-@SuppressWarnings("JavaReflectionMemberAccess")
 public class SettingsInstrumentation extends Instrumentation {
 
     private final Instrumentation original;
 
     @SuppressWarnings("FieldCanBeLocal")
-    private ClassLoader classLoader;
-    private Class<?> suiActivityClass;
-    private Constructor<?> suiActivityConstructor;
-    private Resources resources;
+    private final SuiApk suiApk;
+    private final ClassLoader classLoader;
+    private final Class<?> suiActivityClass;
+    private final Constructor<?> suiActivityConstructor;
+    private final Resources resources;
 
     public SettingsInstrumentation(Instrumentation original) {
         this.original = original;
 
-        String apkPath;
-        try {
-            ParcelFileDescriptor pfd = Objects.requireNonNull(BridgeServiceClient.openApk());
-            int fd = pfd.detachFd();
-            apkPath = "/proc/self/fd/" + fd;
-
-        } catch (Throwable e) {
-            LOGGER.e(e, "Cannot open apk");
-            return;
-        }
-
-        try {
-            classLoader = new PathClassLoader(apkPath, ClassLoader.getSystemClassLoader());
-            suiActivityClass = classLoader.loadClass("rikka.sui.SuiActivity");
-            suiActivityConstructor = suiActivityClass.getDeclaredConstructor(Resources.class);
-        } catch (Throwable e) {
-            LOGGER.e(e, "Cannot load class");
-            return;
-        }
-
-        try {
-            AssetManager am = AssetManager.class.newInstance();
-            Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
-            addAssetPath.setAccessible(true);
-            addAssetPath.invoke(am, apkPath);
-            resources = new Resources(am, null, null);
-        } catch (Throwable e) {
-            LOGGER.e(e, "Cannot create resource");
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            try {
-                Field classLoaderField = Resources.class.getDeclaredField("mClassLoader");
-                classLoaderField.setAccessible(true);
-                classLoaderField.set(resources, classLoader);
-            } catch (Throwable e) {
-                LOGGER.e(e, "Cannot set classloader for resource");
-            }
+        suiApk = new SuiApk();
+        suiApk.loadSuiActivity();
+        classLoader = suiApk.getClassLoader();
+        suiActivityClass = suiApk.getSuiActivityClass();
+        suiActivityConstructor = suiApk.getSuiActivityConstructor();
+        resources = suiApk.getResources();
     }
 
     public Resources getResources() {

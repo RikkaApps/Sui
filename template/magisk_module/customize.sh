@@ -81,9 +81,6 @@ ui_print "- Extracting Sui files"
 extract "$ZIPFILE" 'sui.dex' "$MODPATH"
 extract "$ZIPFILE" 'sui.apk' "$MODPATH"
 
-extract "$ZIPFILE" 'res/layout/confirmation_dialog.xml' "$MODPATH"
-extract "$ZIPFILE" 'res/drawable/ic_su_24.xml' "$MODPATH"
-
 set_perm "$MODPATH/sui.dex" 0 0 0600
 set_perm "$MODPATH/sui.apk" 0 0 0655
 set_perm_recursive "$MODPATH/res" 0 0 0700 0600

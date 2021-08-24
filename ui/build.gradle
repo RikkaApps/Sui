@@ -63,6 +63,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1"
 
     implementation project(':aidl')
+    implementation project(':api')
     compileOnly project(':hidden-api-stub')
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'
 

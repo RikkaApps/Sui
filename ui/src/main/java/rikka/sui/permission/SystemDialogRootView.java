@@ -17,7 +17,7 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.manager.dialog;
+package rikka.sui.permission;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,9 +29,11 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 
-import static rikka.sui.manager.ManagerConstants.LOGGER;
+import rikka.sui.util.Logger;
 
 public class SystemDialogRootView extends FrameLayout {
+
+    private static final Logger LOGGER = new Logger("SystemDialogRootView");
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -59,6 +61,7 @@ public class SystemDialogRootView extends FrameLayout {
     public final void show(WindowManager.LayoutParams lp) {
         try {
             windowManager.addView(this, lp);
+            requestFocus();
         } catch (Exception e) {
             LOGGER.w(e, "addView");
         }

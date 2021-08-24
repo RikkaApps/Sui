@@ -4,6 +4,10 @@
      public <init>(...);
 }
 
+-keepclasseswithmembers class rikka.sui.SuiRequestPermissionDialog {
+     public <init>(...);
+}
+
 -keepnames class * implements android.os.Parcelable
 
 -keepclassmembers class * implements android.os.Parcelable {
