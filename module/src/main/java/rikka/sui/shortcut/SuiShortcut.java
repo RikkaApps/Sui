@@ -33,23 +33,18 @@ import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
-import android.graphics.drawable.VectorDrawable;
 import android.os.Build;
 import android.provider.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import rikka.sui.ktx.ResourcesKt;
-import rikka.sui.resource.Res;
-import rikka.sui.resource.Xml;
 
 public class SuiShortcut {
 
@@ -134,7 +129,12 @@ public class SuiShortcut {
             }
             Drawable drawable = resources.getDrawable(id, themedContext.getTheme());
             drawable.setBounds(extraInsetsSize, extraInsetsSize, size - extraInsetsSize, size - extraInsetsSize);
-            drawable.setTint(ResourcesKt.resolveColor(themedContext.getTheme(), android.R.attr.colorAccent));
+
+            TypedArray a = themedContext.getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorAccent});
+            int color = a.getColor(0, 0);
+            a.recycle();
+
+            drawable.setTint(color);
             drawable.draw(canvas);
 
             icon = Icon.createWithAdaptiveBitmap(bitmap);

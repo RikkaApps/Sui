@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import kotlin.collections.MapsKt;
 import moe.shizuku.server.IShizukuApplication;
 import rikka.parcelablelist.ParcelableListSlice;
 import rikka.shizuku.ShizukuApiConstants;
@@ -62,6 +61,7 @@ import rikka.shizuku.server.api.SystemService;
 import rikka.sui.model.AppInfo;
 import rikka.sui.server.bridge.BridgeServiceClient;
 import rikka.sui.util.Logger;
+import rikka.sui.util.MapUtil;
 import rikka.sui.util.OsUtils;
 import rikka.sui.util.Unsafe;
 import rikka.sui.util.UserHandleCompat;
@@ -412,8 +412,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
                         dataDir = pi.applicationInfo.dataDir;
                     }
 
-                    boolean hasApk = MapsKt.getOrPut(existenceCache, pi.applicationInfo.sourceDir, () -> new File(pi.applicationInfo.sourceDir).exists());
-                    boolean hasData = MapsKt.getOrPut(existenceCache, dataDir, () -> new File(dataDir).exists());
+                    boolean hasApk = MapUtil.getOrPut(existenceCache, pi.applicationInfo.sourceDir, () -> new File(pi.applicationInfo.sourceDir).exists());
+                    boolean hasData = MapUtil.getOrPut(existenceCache, dataDir, () -> new File(dataDir).exists());
 
                     // Installed (or hidden): hasApk && hasData
                     // Uninstalled but keep data: !hasApk && hasData
@@ -423,7 +423,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
                         continue;
                     }
 
-                    boolean hasComponents = MapsKt.getOrPut(hasComponentsCache, pi.packageName, () -> {
+                    boolean hasComponents = MapUtil.getOrPut(hasComponentsCache, pi.packageName, () -> {
                         try {
                             int baseFlags = 0x00000200 /*MATCH_DISABLED_COMPONENTS*/ | 0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/;
                             PackageInfo pi2 = SystemService.getPackageInfoNoThrow(pi.packageName,

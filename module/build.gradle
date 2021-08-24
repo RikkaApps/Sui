@@ -5,7 +5,6 @@ import java.security.MessageDigest
 
 plugins {
     id('com.android.application')
-    id('kotlin-android')
     id('dev.rikka.tools.hidden-api-refine')
 }
 
