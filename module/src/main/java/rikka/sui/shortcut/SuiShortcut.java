@@ -49,6 +49,7 @@ import java.util.List;
 public class SuiShortcut {
 
     private static final String PACKAGE_NAME = "com.android.settings";
+    private static final int FLAGS = Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK;
 
     public static Intent getIntent(Context context, boolean requiresStandardLaunchMode) {
         String[] actions = new String[]{
@@ -76,9 +77,6 @@ public class SuiShortcut {
                         && (!requiresStandardLaunchMode || resolveInfo.activityInfo.launchMode == ActivityInfo.LAUNCH_MULTIPLE)) {
                     if (requiresStandardLaunchMode) {
                         LOGGER.i("Found action for Sui shortcut (standard launch mode): %s", action);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-                                | Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                | Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
                     } else {
                         LOGGER.w("Found action for Sui shortcut: %s", action);
                     }
@@ -100,8 +98,59 @@ public class SuiShortcut {
             }
         }
 
+        intent.setFlags(FLAGS);
         intent.putExtra(SHORTCUT_EXTRA, 1);
         return intent;
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    public static boolean updateExistingShortcuts(Context context, Resources resources) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return true;
+        }
+
+        LOGGER.d("updateExistingShortcuts");
+
+        boolean hasDynamic = false;
+        boolean shouldUpdate = false;
+        ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
+        List<ShortcutInfo> existingShortcuts = new ArrayList<>();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            shortcutManager.getShortcuts(ShortcutManager.FLAG_MATCH_PINNED | ShortcutManager.FLAG_MATCH_DYNAMIC);
+        } else {
+            existingShortcuts.addAll(shortcutManager.getDynamicShortcuts());
+            existingShortcuts.addAll(shortcutManager.getPinnedShortcuts());
+        }
+
+        for (ShortcutInfo shortcutInfo : existingShortcuts) {
+            String id = shortcutInfo.getId();
+            if (!id.startsWith("rikka.sui.")) {
+                continue;
+            }
+
+            if (shortcutInfo.isDynamic()) {
+                hasDynamic = true;
+            }
+
+            Intent intent = shortcutInfo.getIntent();
+            if (intent == null) {
+                continue;
+            }
+
+            if (!intent.hasExtra(SHORTCUT_EXTRA)) {
+                LOGGER.i("Update shortcut %s since it does not have extra", id);
+                shouldUpdate = true;
+            }
+        }
+
+        if (shouldUpdate) {
+            List<ShortcutInfo> shortcutsToUpdate = new ArrayList<>();
+            shortcutsToUpdate.add(createShortcut(context, resources));
+            shortcutManager.updateShortcuts(shortcutsToUpdate);
+        }
+
+        return hasDynamic;
     }
 
     @TargetApi(Build.VERSION_CODES.O)
@@ -113,9 +162,11 @@ public class SuiShortcut {
             configuration.uiMode &= ~Configuration.UI_MODE_NIGHT_MASK;
             configuration.uiMode |= Configuration.UI_MODE_NIGHT_NO;
             Context themedContext = context.createConfigurationContext(configuration);
-
             int size = Math.round(Resources.getSystem().getDisplayMetrics().density * 108);
-            int extraInsetsSize = Math.round(size * AdaptiveIconDrawable.getExtraInsetFraction());
+
+            TypedArray a = themedContext.getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorAccent});
+            int accentColor = a.getColor(0, 0);
+            a.recycle();
 
             Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
@@ -128,13 +179,10 @@ public class SuiShortcut {
                 throw new IllegalStateException("Cannot find drawable resource ic_shortcut_24");
             }
             Drawable drawable = resources.getDrawable(id, themedContext.getTheme());
+
+            int extraInsetsSize = Math.round(size * AdaptiveIconDrawable.getExtraInsetFraction());
             drawable.setBounds(extraInsetsSize, extraInsetsSize, size - extraInsetsSize, size - extraInsetsSize);
-
-            TypedArray a = themedContext.getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorAccent});
-            int color = a.getColor(0, 0);
-            a.recycle();
-
-            drawable.setTint(color);
+            drawable.setTint(accentColor);
             drawable.draw(canvas);
 
             icon = Icon.createWithAdaptiveBitmap(bitmap);
@@ -159,28 +207,6 @@ public class SuiShortcut {
         LOGGER.d("addDynamicShortcut");
 
         ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-        List<ShortcutInfo> existing = shortcutManager.getDynamicShortcuts();
-        boolean exists = false;
-
-        for (ShortcutInfo shortcutInfo : existing) {
-            if (SHORTCUT_ID.equals(shortcutInfo.getId())) {
-                exists = true;
-                break;
-            }
-        }
-
-        if (exists) {
-            LOGGER.i("Dynamic shortcut exists and up to date");
-            return;
-        }
-
-        int maxCount = shortcutManager.getMaxShortcutCountPerActivity();
-        LOGGER.d("Max dynamic shortcuts: %d", maxCount);
-
-        if (existing.size() >= maxCount) {
-            LOGGER.w("Cannot add more dynamic shortcuts");
-            return;
-        }
 
         ShortcutInfo shortcut = createShortcut(context, resources);
         List<ShortcutInfo> list = new ArrayList<>();
@@ -200,7 +226,7 @@ public class SuiShortcut {
         boolean hasPinned = false;
 
         for (ShortcutInfo shortcutInfo : shortcutManager.getPinnedShortcuts()) {
-            if (SHORTCUT_ID.equals(shortcutInfo.getId())) {
+            if (shortcutInfo.getId().startsWith("rikka.sui.")) {
                 hasPinned = true;
                 LOGGER.i("Pinned shortcut exists");
                 break;

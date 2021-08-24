@@ -22,6 +22,7 @@ package rikka.sui.settings;
 import static rikka.sui.settings.SettingsConstants.LOGGER;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.Application;
@@ -30,15 +31,18 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import rikka.sui.shortcut.SuiShortcut;
@@ -46,6 +50,8 @@ import rikka.sui.shortcut.SuiShortcut;
 public class SettingsProcess {
 
     private static boolean reflection = false;
+    private static Handler handler;
+    private static HandlerThread handlerThread;
 
     private static void requestPinnedShortcutInDeveloperOptions(Application application, Resources resources) {
         ResolveInfo ri = application.getPackageManager().resolveActivity(
@@ -116,6 +122,42 @@ public class SettingsProcess {
         LOGGER.d("registerActivityLifecycleCallbacks");
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
+    private static void shortcutStuff(Application application, Resources resources) {
+        UserManager userManager = application.getSystemService(UserManager.class);
+        if (!userManager.isUserUnlocked()) {
+            LOGGER.v("Not unlocked, wait 5s");
+            handler.postDelayed(() -> shortcutStuff(application, resources), 5000);
+            return;
+        }
+
+        boolean hasDynamic;
+        try {
+            hasDynamic = SuiShortcut.updateExistingShortcuts(application, resources);
+        } catch (Throwable e) {
+            LOGGER.e(e, "updateExistingShortcuts");
+            hasDynamic = false;
+        }
+
+        if (!hasDynamic) {
+            try {
+                SuiShortcut.addDynamicShortcut(application, resources);
+            } catch (Throwable e) {
+                LOGGER.e(e, "addDynamicShortcut");
+            }
+        } else {
+            LOGGER.i("Dynamic shortcut exists and up to date");
+        }
+
+        try {
+            requestPinnedShortcutInDeveloperOptions(application, resources);
+        } catch (Throwable e) {
+            LOGGER.e(e, "requestPinnedShortcutInDeveloperOptions");
+        }
+
+        handler = new Handler(Looper.getMainLooper());
+    }
+
     private static void postBindApplication(ActivityThread activityThread) {
         Instrumentation instrumentation = ActivityThreadUtil.getInstrumentation(activityThread);
         SettingsInstrumentation newInstrumentation = new SettingsInstrumentation(instrumentation);
@@ -130,17 +172,10 @@ public class SettingsProcess {
 
         Resources resources = newInstrumentation.getResources();
         if (resources != null) {
-            try {
-                SuiShortcut.addDynamicShortcut(application, resources);
-            } catch (Throwable e) {
-                LOGGER.e(e, "addDynamicShortcut");
-            }
-
-            try {
-                requestPinnedShortcutInDeveloperOptions(application, resources);
-            } catch (Throwable e) {
-                LOGGER.e(e, "requestPinnedShortcutInDeveloperOptions");
-            }
+            handlerThread = new HandlerThread("Sui");
+            handlerThread.start();
+            handler = new Handler(handlerThread.getLooper());
+            handler.post(() -> shortcutStuff(application, resources));
         }
     }
 
