@@ -78,9 +78,9 @@ public class SettingsInstrumentation extends Instrumentation {
 
     @Override
     public Activity newActivity(ClassLoader cl, String className, Intent intent) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        LOGGER.d("newActivity: %s", className);
+        LOGGER.v("newActivity: %s", className);
         if (suiActivityConstructor != null && intent.hasExtra(SHORTCUT_EXTRA)) {
-            LOGGER.d("creating SuiActivity");
+            LOGGER.v("creating SuiActivity");
             try {
                 return (Activity) suiActivityConstructor.newInstance(resources);
             } catch (InvocationTargetException e) {

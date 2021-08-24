@@ -25,6 +25,8 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 
+import java.util.Objects;
+
 import rikka.sui.R;
 import rikka.sui.app.AppActivity;
 import rikka.sui.management.ManagementFragment;
@@ -40,6 +42,7 @@ public class SuiActivity extends AppActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         setTitle("Sui");
+        Objects.requireNonNull(getSupportActionBar()).setSubtitle(BuildConfig.VERSION_NAME);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new ManagementFragment())

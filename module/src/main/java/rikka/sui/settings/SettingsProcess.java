@@ -204,7 +204,7 @@ public class SettingsProcess {
         HandlerUtil.setCallback(handler, msg -> {
             if (msg.what == bindApplicationCode
                     && ActivityThreadUtil.isAppBindData(msg.obj)) {
-                LOGGER.d("bindApplication");
+                LOGGER.v("bindApplication");
 
                 handler.post(() -> postBindApplication(activityThread));
             }
