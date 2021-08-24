@@ -17,12 +17,14 @@
  * Copyright (c) 2021 Sui Contributors
  */
 
-package rikka.sui.settings;
+package rikka.sui.shortcut;
 
 import rikka.sui.util.Logger;
 
-public class SettingsConstants {
+public class ShortcutConstants {
 
-    public static final Logger LOGGER = new Logger("SuiSettings");
+    public static final Logger LOGGER = new Logger("SuiShortcut");
 
+    public static final String SHORTCUT_ID = "rikka.sui.SUI";
+    public static final String SHORTCUT_EXTRA = "rikka.sui.SUI";
 }

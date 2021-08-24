@@ -25,7 +25,6 @@ public final class Res {
 
         public final static int ic_su_24 = 3;
         public final static int ic_close_24 = 4;
-        public final static int ic_shortcut_24 = 5;
     }
 
     public final static class layout {

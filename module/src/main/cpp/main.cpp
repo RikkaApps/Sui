@@ -79,9 +79,6 @@ static void PrepareFiles() {
     snprintf(path, PATH_MAX, "%s/res/drawable/ic_close_24.xml", riru_get_magisk_module_path());
     resources_files->emplace_back(new File(path));
 
-    snprintf(path, PATH_MAX, "%s/res/drawable/ic_shortcut_24.xml", riru_get_magisk_module_path());
-    resources_files->emplace_back(new File(path));
-
     ReadApplicationInfo(MANAGER_APPLICATION_ID, manager_uid, manager_process);
     ReadApplicationInfo(SETTINGS_APPLICATION_ID, settings_uid, settings_uid_process);
 }

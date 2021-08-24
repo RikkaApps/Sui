@@ -20,7 +20,7 @@
 package rikka.sui.settings;
 
 import static rikka.sui.settings.SettingsConstants.LOGGER;
-import static rikka.sui.settings.SettingsConstants.SHORTCUT_EXTRA;
+import static rikka.sui.shortcut.ShortcutConstants.SHORTCUT_EXTRA;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -110,6 +110,10 @@ public class SettingsInstrumentation extends Instrumentation {
             } catch (Throwable e) {
                 LOGGER.e(e, "Cannot set classloader for resource");
             }
+    }
+
+    public Resources getResources() {
+        return resources;
     }
 
     @Override

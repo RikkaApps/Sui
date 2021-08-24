@@ -101,7 +101,7 @@ afterEvaluate {
                 def cmd = exec {
                     commandLine aapt2, 'optimize', '--collapse-resource-names',
                             '--shorten-resource-paths',
-                            //'--resources-config-path', 'aapt2-resources.cfg',
+                            '--resources-config-path', 'aapt2-resources.cfg',
                             '-o', optimized, zip
                     ignoreExitValue false
                 }

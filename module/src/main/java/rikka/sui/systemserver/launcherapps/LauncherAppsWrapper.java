@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import rikka.sui.binder.HookedBinderProxy;
 import rikka.sui.binder.IBinderWrapper;
 import rikka.sui.server.ServerConstants;
-import rikka.sui.settings.SettingsConstants;
+import rikka.sui.shortcut.ShortcutConstants;
 import rikka.sui.systemserver.BridgeService;
 
 public class LauncherAppsWrapper extends IBinderWrapper {
@@ -53,7 +53,7 @@ public class LauncherAppsWrapper extends IBinderWrapper {
 
     protected static void startShortcut(LauncherAppsFuncs.StartShortcut func) throws RemoteException {
         if (!"com.android.settings".equals(func.packageName)
-                || !SettingsConstants.SHORTCUT_ID.equals(func.id)) {
+                || !ShortcutConstants.SHORTCUT_ID.equals(func.id)) {
             func.call();
             return;
         }
