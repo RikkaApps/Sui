@@ -90,6 +90,7 @@ public class SettingsProcess {
                 ResolveInfo resolveInfo = pm.resolveActivity(intent, 0);
                 if (resolveInfo != null
                         && resolveInfo.activityInfo != null
+                        && resolveInfo.activityInfo.exported
                         && (!requiresStandardLaunchMode || resolveInfo.activityInfo.launchMode == ActivityInfo.LAUNCH_MULTIPLE)) {
                     if (requiresStandardLaunchMode) {
                         LOGGER.i("Found action for Sui shortcut (standard launch mode): %s", action);
@@ -102,7 +103,7 @@ public class SettingsProcess {
                     break;
                 }
             } catch (Throwable e) {
-                LOGGER.w(e, "getApplication is failed, wait 1s");
+                LOGGER.w(e, "resolveActivity %s", intent);
             }
         }
 
@@ -161,7 +162,6 @@ public class SettingsProcess {
             LOGGER.e(e, "create icon");
             icon = Icon.createWithResource(context, android.R.drawable.ic_dialog_info);
         }
-
 
         ShortcutInfo shortcut = new ShortcutInfo.Builder(context, SHORTCUT_ID)
                 .setShortLabel("Sui")
