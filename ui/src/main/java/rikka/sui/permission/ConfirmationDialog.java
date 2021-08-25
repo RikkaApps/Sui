@@ -28,6 +28,7 @@ import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.os.Binder;
@@ -68,30 +69,9 @@ public class ConfirmationDialog {
     private final LayoutInflater layoutInflater;
 
     public ConfirmationDialog(Application application, Resources resources) {
-        this.context = application/*new ContextWrapper(application) {
-
-            @Override
-            public Resources getResources() {
-                return ConfirmationDialog.this.resources;
-            }
-
-            @Override
-            public ClassLoader getClassLoader() {
-                return ConfirmationDialog.class.getClassLoader();
-            }
-        }*/;
+        this.context = application;
         this.resources = resources;
         this.layoutInflater = LayoutInflater.from(application);
-
-        if (layoutInflater.getFactory2() == null) {
-            layoutInflater.setFactory2(new LayoutInflaterFactory() {
-                @Nullable
-                @Override
-                public View onCreateView(@Nullable View parent, @NonNull String name, @NonNull Context context, @NonNull AttributeSet attrs) {
-                    return super.onCreateView(parent, name, ConfirmationDialog.this.context, attrs);
-                }
-            });
-        }
     }
 
     public void show(int requestUid, int requestPid, String requestPackageName, int requestCode) {
@@ -112,6 +92,12 @@ public class ConfirmationDialog {
 
     private void showInternal(int requestUid, int requestPid, String requestPackageName, int requestCode) {
         Resources.Theme theme = context.getTheme();
+        boolean isNight = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
+        if (isNight) {
+            theme.applyStyle(android.R.style.Theme_DeviceDefault_Dialog, true);
+        } else {
+            theme.applyStyle(android.R.style.Theme_DeviceDefault_Light_Dialog, true);
+        }
 
         SystemDialogRootView root = new SystemDialogRootView(context) {
 
@@ -171,6 +157,7 @@ public class ConfirmationDialog {
         TextViewKt.applyCountdown(binding.button3, 1, null, 0);
 
         binding.getRoot().setBackground(resources.getDrawable(R.drawable.confirmation_dialog_background, theme));
+        binding.getRoot().setClipToOutline(true);
 
         WindowManager.LayoutParams attr = new WindowManager.LayoutParams();
         attr.width = ViewGroup.LayoutParams.MATCH_PARENT;
