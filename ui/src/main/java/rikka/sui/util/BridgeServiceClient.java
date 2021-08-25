@@ -21,7 +21,6 @@ package rikka.sui.util;
 
 import android.os.IBinder;
 import android.os.Parcel;
-import android.os.ParcelFileDescriptor;
 import android.os.ServiceManager;
 
 import androidx.annotation.Nullable;
@@ -35,7 +34,6 @@ import rikka.sui.model.AppInfo;
 public class BridgeServiceClient {
 
     private static final int BINDER_TRANSACTION_getApplications = 10001;
-    private static final int BINDER_TRANSACTION_openApk = 10003;
 
     private static IBinder binder;
     private static IShizukuService service;
@@ -128,28 +126,4 @@ public class BridgeServiceClient {
         return result;
     }
 
-    public static ParcelFileDescriptor openApk() {
-        ParcelFileDescriptor result;
-
-        Parcel data = Parcel.obtain();
-        Parcel reply = Parcel.obtain();
-        try {
-            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
-            try {
-                getService().asBinder().transact(BINDER_TRANSACTION_openApk, data, reply, 0);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-            reply.readException();
-            if (reply.readInt() != 0) {
-                result = ParcelFileDescriptor.CREATOR.createFromParcel(reply);
-            } else {
-                result = null;
-            }
-        } finally {
-            data.recycle();
-            reply.recycle();
-        }
-        return result;
-    }
 }

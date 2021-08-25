@@ -24,33 +24,19 @@ import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Parcel;
-import android.os.RemoteException;
-import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 
 import java.util.Arrays;
-import java.util.Map;
 
-import rikka.sui.systemserver.launcherapps.LauncherAppsWrapper;
 import rikka.sui.util.ParcelUtils;
 
 public final class SystemProcess {
 
     private static final BridgeService SERVICE = new BridgeService();
-    private static final Map<IBinder, LauncherAppsWrapper> LAUNCHER_APPS_WRAPPER_CACHE = new ArrayMap<>();
 
     private static boolean execActivityTransaction(@NonNull Binder binder, int code, Parcel data, Parcel reply, int flags) {
         return SERVICE.onTransact(code, data, reply, flags);
-    }
-
-    private static boolean execLauncherAppsTransaction(@NonNull Binder binder, int code, Parcel data, Parcel reply, int flags) throws RemoteException {
-        LauncherAppsWrapper wrapper = LAUNCHER_APPS_WRAPPER_CACHE.get(binder);
-        if (wrapper == null) {
-            wrapper = new LauncherAppsWrapper(binder);
-            LAUNCHER_APPS_WRAPPER_CACHE.put(binder, wrapper);
-        }
-        return wrapper.transact(code, data, reply, flags);
     }
 
     public static boolean execTransact(@NonNull Binder binder, int code, long dataObj, long replyObj, int flags) {
@@ -73,9 +59,7 @@ public final class SystemProcess {
         try {
             if (SERVICE.isServiceDescriptor(descriptor) && SERVICE.isServiceTransaction(code)) {
                 res = execActivityTransaction(binder, code, data, reply, flags);
-            }/* else if ("android.content.pm.ILauncherApps".equals(descriptor)) {
-                res = execLauncherAppsTransaction(binder, code, data, reply, flags);
-            }*/ else {
+            } else {
                 res = false;
             }
         } catch (Exception e) {
