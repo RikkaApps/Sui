@@ -6,6 +6,10 @@ Modern super user interface (SUI) implementation.
 
 ## Changelog
 
+### v12.1.1 (2021-08-25)
+
+- Don't compile with R8 full mode
+
 ### v12.1.0 (2021-08-25)
 
 - [Shizuku API 12](https://github.com/RikkaApps/Shizuku-API/releases/tag/12)
