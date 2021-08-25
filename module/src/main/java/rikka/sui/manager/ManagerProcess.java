@@ -63,7 +63,7 @@ public class ManagerProcess {
             LOGGER.i("showPermissionConfirmation: %d %d %s %d", requestUid, requestPid, requestPackageName, requestCode);
 
             if (suiApk == null) {
-                LOGGER.e("apk is null");
+                LOGGER.e("Cannot load apk");
                 return;
             }
 

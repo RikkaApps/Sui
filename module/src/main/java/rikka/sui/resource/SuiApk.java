@@ -29,6 +29,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -58,8 +59,8 @@ public class SuiApk {
             apk.loadSuiActivity();
             return apk;
         } catch (Throwable e) {
-            e.printStackTrace();
-            return  null;
+            Log.e("SuiApk", Log.getStackTraceString(e));
+            return null;
         }
     }
 
@@ -70,12 +71,20 @@ public class SuiApk {
             apk.loadSuiRequestPermissionDialog();
             return apk;
         } catch (Throwable e) {
-            e.printStackTrace();
-            return  null;
+            Log.e("SuiApk", Log.getStackTraceString(e));
+            return null;
         }
     }
 
-    private SuiApk() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, NoSuchFieldException {
+    private SuiApk() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, NoSuchFieldException, InterruptedException {
+        int retries = 10;
+        do {
+            if (BridgeServiceClient.getService() != null) break;
+            Log.w("SuiApk", "Cannot acquire server binder, wait 1s");
+            Thread.sleep(1000);
+            retries--;
+        } while (retries > 0);
+
         String apkPath;
         ParcelFileDescriptor pfd = Objects.requireNonNull(BridgeServiceClient.openApk());
         int fd = pfd.detachFd();
