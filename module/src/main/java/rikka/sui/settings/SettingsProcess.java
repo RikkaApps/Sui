@@ -35,7 +35,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -162,7 +161,7 @@ public class SettingsProcess {
     private static void postBindApplication(ActivityThread activityThread) {
         SuiApk suiApk = SuiApk.createForSettings();
         if (suiApk == null) {
-            LOGGER.e("apk is null");
+            LOGGER.e("Cannot load apk");
             return;
         }
 
@@ -211,9 +210,11 @@ public class SettingsProcess {
         HandlerUtil.setCallback(handler, msg -> {
             if (msg.what == bindApplicationCode
                     && ActivityThreadUtil.isAppBindData(msg.obj)) {
-                LOGGER.v("bindApplication");
-
-                handler.post(() -> postBindApplication(activityThread));
+                LOGGER.v("call original bindApplication");
+                handler.handleMessage(msg);
+                LOGGER.v("bindApplication finished");
+                postBindApplication(activityThread);
+                return true;
             }
             if (original != null) {
                 return original.handleMessage(msg);
