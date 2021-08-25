@@ -11,11 +11,13 @@
         <item name="toolbarStyle">@style/Widget.Material.Toolbar</item>
         <item name="appBarStyle">@style/Widget.AppBar.Surface.Raisable</item>
 
-        <item name="colorPrimary">@color/material_teal_500</item>
-        <item name="colorPrimaryVariant">@color/material_teal_600</item>
-        <item name="colorSecondary">@color/material_teal_700</item>
-        <item name="colorSecondaryVariant">@color/material_teal_700</item>
+        <item name="colorPrimary">@color/color_primary_light</item>
+        <item name="colorPrimaryVariant">@color/color_primary_variant_light</item>
+        <item name="colorSecondary">@color/color_secondary_light</item>
+        <item name="colorSecondaryVariant">@color/color_secondary_variant_light</item>
         <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorSurface">@color/color_surface_light</item>
+        <item name="android:colorBackground">?colorSurface</item>
 
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
@@ -36,11 +38,13 @@
         <item name="toolbarStyle">@style/Widget.Material.Toolbar</item>
         <item name="appBarStyle">@style/Widget.AppBar.Surface.Raisable</item>
 
-        <item name="colorPrimary">@color/material_blue_grey_200</item>
-        <item name="colorPrimaryVariant">@color/material_blue_grey_200</item>
-        <item name="colorSecondary">@color/material_blue_grey_200</item>
-        <item name="colorSecondaryVariant">@color/material_blue_grey_200</item>
-        <item name="colorOnSecondary">@android:color/black</item>
+        <item name="colorPrimary">@color/color_primary_dark</item>
+        <item name="colorPrimaryVariant">@color/color_primary_variant_dark</item>
+        <item name="colorSecondary">@color/color_secondary_dark</item>
+        <item name="colorSecondaryVariant">@color/color_secondary_variant_dark</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorSurface">@color/color_surface_dark</item>
+        <item name="android:colorBackground">?colorSurface</item>
 
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>

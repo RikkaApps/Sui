@@ -22,7 +22,9 @@ package rikka.sui.resource;
 import static rikka.sui.settings.SettingsConstants.LOGGER;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityThread;
 import android.app.Application;
+import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.os.Build;
@@ -36,7 +38,7 @@ import java.util.Objects;
 import dalvik.system.PathClassLoader;
 import rikka.sui.util.BridgeServiceClient;
 
-@SuppressLint("DiscouragedPrivateApi")
+@SuppressLint({"DiscouragedPrivateApi", "BlockedPrivateApi"})
 @SuppressWarnings("JavaReflectionMemberAccess")
 public class SuiApk {
 
@@ -72,7 +74,25 @@ public class SuiApk {
             Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
             addAssetPath.setAccessible(true);
             addAssetPath.invoke(am, apkPath);
-            resources = new Resources(am, null, null);
+
+            Application application = ActivityThread.currentActivityThread().getApplication();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Method addOverlayPath = AssetManager.class.getDeclaredMethod("addOverlayPath", String.class);
+                addOverlayPath.setAccessible(true);
+
+                ApplicationInfo ai = application.getApplicationInfo();
+                Field field = ApplicationInfo.class.getDeclaredField("overlayPaths");
+                String[] overlayPaths = (String[]) field.get(ai);
+
+                if (overlayPaths != null) {
+                    for (String overlayPath : overlayPaths) {
+                        addOverlayPath.invoke(am, overlayPath);
+                    }
+                }
+            }
+
+            resources = new Resources(am, application.getResources().getDisplayMetrics(), application.getResources().getConfiguration());
         } catch (Throwable e) {
             LOGGER.e(e, "Cannot create resource");
         }

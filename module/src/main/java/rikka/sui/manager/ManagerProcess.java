@@ -142,6 +142,8 @@ public class ManagerProcess {
             return;
         }
 
+        WorkerHandler.get().post(ManagerProcess::sendToService);
+
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("android.provider.Telephony.SECRET_CODE");
         //intentFilter.addAction("android.telephony.action.SECRET_CODE");
@@ -159,7 +161,6 @@ public class ManagerProcess {
 
     public static void main(String[] args) {
         LOGGER.d("main: %s", Arrays.toString(args));
-        WorkerHandler.get().post(ManagerProcess::sendToService);
         WorkerHandler.get().postDelayed(ManagerProcess::registerListener, 5000);
     }
 }

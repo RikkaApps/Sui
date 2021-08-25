@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="accent_color_light">?android:colorAccent</color>
-    <color name="accent_color_dark">?android:colorAccent</color>
+    <color name="color_primary_light">@color/material_teal_500</color>
+    <color name="color_primary_variant_light">@color/material_teal_600</color>
+    <color name="color_secondary_light">@color/material_teal_700</color>
+    <color name="color_secondary_variant_light">@color/material_teal_700</color>
+    <color name="color_surface_light">#f5f5f5</color>
+
+    <color name="color_primary_dark">@color/material_teal_100</color>
+    <color name="color_primary_variant_dark">@color/material_teal_200</color>
+    <color name="color_secondary_dark">@color/material_teal_300</color>
+    <color name="color_secondary_variant_dark">@color/material_teal_300</color>
+    <color name="color_surface_dark">#1b1b1b</color>
 </resources>

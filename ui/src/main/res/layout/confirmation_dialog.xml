@@ -22,8 +22,7 @@
             android:importantForAccessibility="no"
             android:tint="?android:colorAccent"
             android:tintMode="src_in"
-            tools:src="@drawable/ic_su_24"
-            tools:tint="@color/accent_color_light" />
+            tools:src="@drawable/ic_su_24" />
 
         <TextView
             android:id="@android:id/title"
