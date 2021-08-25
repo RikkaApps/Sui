@@ -32,6 +32,7 @@ import android.os.ParcelFileDescriptor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
@@ -43,72 +44,77 @@ import rikka.sui.util.BridgeServiceClient;
 public class SuiApk {
 
     @SuppressWarnings("FieldCanBeLocal")
-    private ClassLoader classLoader;
+    private final ClassLoader classLoader;
+    private final Resources resources;
     private Class<?> suiActivityClass;
     private Class<?> suiRequestPermissionDialogClass;
     private Constructor<?> suiActivityConstructor;
     private Constructor<?> suiRequestPermissionDialogConstructor;
-    private Resources resources;
 
-    public SuiApk() {
-        String apkPath;
+    public static SuiApk createForSettings() {
+        SuiApk apk;
         try {
-            ParcelFileDescriptor pfd = Objects.requireNonNull(BridgeServiceClient.openApk());
-            int fd = pfd.detachFd();
-            apkPath = "/proc/self/fd/" + fd;
-
+            apk = new SuiApk();
+            apk.loadSuiActivity();
+            return apk;
         } catch (Throwable e) {
-            LOGGER.e(e, "Cannot open apk");
-            return;
-        }
-
-        try {
-            classLoader = new PathClassLoader(apkPath, ClassLoader.getSystemClassLoader());
-        } catch (Throwable e) {
-            LOGGER.e(e, "Create PathClassLoader");
-            return;
-        }
-
-        try {
-            AssetManager am = AssetManager.class.newInstance();
-            Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
-            addAssetPath.setAccessible(true);
-            addAssetPath.invoke(am, apkPath);
-
-            Application application = ActivityThread.currentActivityThread().getApplication();
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                Method addOverlayPath = AssetManager.class.getDeclaredMethod("addOverlayPath", String.class);
-                addOverlayPath.setAccessible(true);
-
-                ApplicationInfo ai = application.getApplicationInfo();
-                Field field = ApplicationInfo.class.getDeclaredField("overlayPaths");
-                String[] overlayPaths = (String[]) field.get(ai);
-
-                if (overlayPaths != null) {
-                    for (String overlayPath : overlayPaths) {
-                        addOverlayPath.invoke(am, overlayPath);
-                    }
-                }
-            }
-
-            resources = new Resources(am, application.getResources().getDisplayMetrics(), application.getResources().getConfiguration());
-        } catch (Throwable e) {
-            LOGGER.e(e, "Cannot create resource");
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                Field classLoaderField = Resources.class.getDeclaredField("mClassLoader");
-                classLoaderField.setAccessible(true);
-                classLoaderField.set(resources, classLoader);
-            } catch (Throwable e) {
-                LOGGER.e(e, "Cannot set classloader for resource");
-            }
+            e.printStackTrace();
+            return  null;
         }
     }
 
-    public void loadSuiActivity() {
+    public static SuiApk createForSystemUI() {
+        SuiApk apk;
+        try {
+            apk = new SuiApk();
+            apk.loadSuiRequestPermissionDialog();
+            return apk;
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return  null;
+        }
+    }
+
+    private SuiApk() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, NoSuchFieldException {
+        String apkPath;
+        ParcelFileDescriptor pfd = Objects.requireNonNull(BridgeServiceClient.openApk());
+        int fd = pfd.detachFd();
+        apkPath = "/proc/self/fd/" + fd;
+
+        classLoader = new PathClassLoader(apkPath, ClassLoader.getSystemClassLoader());
+
+        AssetManager am = AssetManager.class.newInstance();
+        Method addAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
+        addAssetPath.setAccessible(true);
+        addAssetPath.invoke(am, apkPath);
+
+        Application application = ActivityThread.currentActivityThread().getApplication();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Method addOverlayPath = AssetManager.class.getDeclaredMethod("addOverlayPath", String.class);
+            addOverlayPath.setAccessible(true);
+
+            ApplicationInfo ai = application.getApplicationInfo();
+            Field field = ApplicationInfo.class.getDeclaredField("overlayPaths");
+            String[] overlayPaths = (String[]) field.get(ai);
+
+            if (overlayPaths != null) {
+                for (String overlayPath : overlayPaths) {
+                    addOverlayPath.invoke(am, overlayPath);
+                }
+            }
+        }
+
+        resources = new Resources(am, application.getResources().getDisplayMetrics(), application.getResources().getConfiguration());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Field classLoaderField = Resources.class.getDeclaredField("mClassLoader");
+            classLoaderField.setAccessible(true);
+            classLoaderField.set(resources, classLoader);
+        }
+    }
+
+    private void loadSuiActivity() {
         try {
             suiActivityClass = classLoader.loadClass("rikka.sui.SuiActivity");
             suiActivityConstructor = suiActivityClass.getDeclaredConstructor(Application.class, Resources.class);
@@ -117,7 +123,7 @@ public class SuiApk {
         }
     }
 
-    public void loadSuiRequestPermissionDialog() {
+    private void loadSuiRequestPermissionDialog() {
         try {
             suiRequestPermissionDialogClass = classLoader.loadClass("rikka.sui.SuiRequestPermissionDialog");
             suiRequestPermissionDialogConstructor = suiRequestPermissionDialogClass.getDeclaredConstructor(

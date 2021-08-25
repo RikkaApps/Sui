@@ -59,18 +59,15 @@ public class SettingsInstrumentation extends Instrumentation {
     private final Application application;
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final SuiApk suiApk;
     private final ClassLoader classLoader;
     private final Class<?> suiActivityClass;
     private final Constructor<?> suiActivityConstructor;
     private final Resources resources;
 
-    public SettingsInstrumentation(Instrumentation original) {
+    public SettingsInstrumentation(Instrumentation original, SuiApk suiApk) {
         this.original = original;
 
         application = ActivityThread.currentActivityThread().getApplication();
-        suiApk = new SuiApk();
-        suiApk.loadSuiActivity();
         classLoader = suiApk.getClassLoader();
         suiActivityClass = suiApk.getSuiActivityClass();
         suiActivityConstructor = suiApk.getSuiActivityConstructor();

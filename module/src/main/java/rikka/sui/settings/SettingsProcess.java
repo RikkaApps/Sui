@@ -45,6 +45,7 @@ import androidx.annotation.Nullable;
 
 import java.util.Arrays;
 
+import rikka.sui.resource.SuiApk;
 import rikka.sui.shortcut.SuiShortcut;
 
 public class SettingsProcess {
@@ -159,8 +160,14 @@ public class SettingsProcess {
     }
 
     private static void postBindApplication(ActivityThread activityThread) {
+        SuiApk suiApk = SuiApk.createForSettings();
+        if (suiApk == null) {
+            LOGGER.e("apk is null");
+            return;
+        }
+
         Instrumentation instrumentation = ActivityThreadUtil.getInstrumentation(activityThread);
-        SettingsInstrumentation newInstrumentation = new SettingsInstrumentation(instrumentation);
+        SettingsInstrumentation newInstrumentation = new SettingsInstrumentation(instrumentation, suiApk);
         ActivityThreadUtil.setInstrumentation(activityThread, newInstrumentation);
         LOGGER.d("setInstrumentation: %s -> %s", instrumentation, newInstrumentation);
 

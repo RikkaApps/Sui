@@ -62,6 +62,11 @@ public class ManagerProcess {
         public void showPermissionConfirmation(int requestUid, int requestPid, String requestPackageName, int requestCode) {
             LOGGER.i("showPermissionConfirmation: %d %d %s %d", requestUid, requestPid, requestPackageName, requestCode);
 
+            if (suiApk == null) {
+                LOGGER.e("apk is null");
+                return;
+            }
+
             try {
                 suiApk.getSuiRequestPermissionDialogConstructor().newInstance(
                         ActivityThread.currentActivityThread().getApplication(), suiApk.getResources(),
@@ -69,18 +74,6 @@ public class ManagerProcess {
                 );
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 LOGGER.e(e, "showPermissionConfirmation");
-            }
-        }
-
-        @Override
-        public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
-            if (code == ServerConstants.BINDER_TRANSACTION_showManagement) {
-                data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
-                LOGGER.i("showManagement");
-                showManagement();
-                return true;
-            } else {
-                return super.onTransact(code, data, reply, flags);
             }
         }
     };
@@ -116,9 +109,6 @@ public class ManagerProcess {
             return;
         }
 
-        suiApk = new SuiApk();
-        suiApk.loadSuiRequestPermissionDialog();
-
         try {
             service.attachApplication(APPLICATION, "com.android.systemui");
             LOGGER.i("attachApplication");
@@ -126,6 +116,8 @@ public class ManagerProcess {
             LOGGER.w(e, "attachApplication");
             WorkerHandler.get().postDelayed(ManagerProcess::sendToService, 1000);
         }
+
+        suiApk = SuiApk.createForSystemUI();
     }
 
     private static void registerListener() {

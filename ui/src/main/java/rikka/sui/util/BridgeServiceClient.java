@@ -35,7 +35,6 @@ import rikka.sui.model.AppInfo;
 public class BridgeServiceClient {
 
     private static final int BINDER_TRANSACTION_getApplications = 10001;
-    private static final int BINDER_TRANSACTION_showManagement = 10002;
     private static final int BINDER_TRANSACTION_openApk = 10003;
 
     private static IBinder binder;
@@ -127,20 +126,6 @@ public class BridgeServiceClient {
             data.recycle();
         }
         return result;
-    }
-
-    public static void showManagement() {
-        Parcel data = Parcel.obtain();
-        try {
-            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
-            try {
-                getService().asBinder().transact(BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-        } finally {
-            data.recycle();
-        }
     }
 
     public static ParcelFileDescriptor openApk() {

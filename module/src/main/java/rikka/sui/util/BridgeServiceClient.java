@@ -126,20 +126,6 @@ public class BridgeServiceClient {
         return result;
     }
 
-    public static void showManagement() {
-        Parcel data = Parcel.obtain();
-        try {
-            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
-            try {
-                getService().asBinder().transact(ServerConstants.BINDER_TRANSACTION_showManagement, data, null, IBinder.FLAG_ONEWAY);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-        } finally {
-            data.recycle();
-        }
-    }
-
     public static ParcelFileDescriptor openApk() {
         ParcelFileDescriptor result;
 
