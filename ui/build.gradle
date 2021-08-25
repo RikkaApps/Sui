@@ -94,15 +94,19 @@ afterEvaluate {
         def variantLowered = variant.name.toLowerCase()
 
         if (variant.getBuildType().isMinifyEnabled()) {
+            def processResourcesTask = tasks.getByName("process${variantCapped}Resources")
             def optimizeResourceTask = task("optimize${variantCapped}Resources").doLast {
                 def aapt2 = Paths.get(project.android.sdkDirectory.path, 'build-tools', project.android.buildToolsVersion, 'aapt2')
                 def zip = Paths.get(project.buildDir.path, 'intermediates',
                         'processed_res', variantLowered, 'out', "resources-${variantLowered}.ap_")
+                def map = Paths.get(project.buildDir.path, 'outputs',
+                        'mapping', variantLowered, 'resources.txt')
                 def optimized = new File("${zip}.opt")
                 def cmd = exec {
                     commandLine aapt2, 'optimize', '--collapse-resource-names',
                             '--shorten-resource-paths',
                             '--resources-config-path', 'aapt2-resources.cfg',
+                            '--resource-path-shortening-map', map,
                             '-o', optimized, zip
                     ignoreExitValue false
                 }
@@ -111,8 +115,10 @@ afterEvaluate {
                     optimized.renameTo("$zip")
                 }
             }
-
-            tasks.getByName("process${variantCapped}Resources").finalizedBy(optimizeResourceTask)
+            optimizeResourceTask.onlyIf {
+                !processResourcesTask.state.upToDate
+            }
+            processResourcesTask.finalizedBy(optimizeResourceTask)
         }
     }
 }
