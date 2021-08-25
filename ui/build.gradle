@@ -41,6 +41,7 @@ android {
         exclude '/META-INF/*.version'
         exclude '/META-INF/*.kotlin_module'
         exclude '/kotlin/**'
+        exclude '**.bin'
     }
     lintOptions {
         checkReleaseBuilds false
