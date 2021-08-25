@@ -155,6 +155,13 @@ public class SuiShortcut {
             List<String> shortcutsToRemove = new ArrayList<>();
             shortcutsToRemove.add("rikka.sui.SUI");
             shortcutManager.removeDynamicShortcuts(shortcutsToRemove);
+
+            int id = resources.getIdentifier("shortcut_is_out_dated", "string", "rikka.sui");
+            if (id != 0) {
+                shortcutManager.disableShortcuts(shortcutsToRemove, resources.getString(id));
+            } else {
+                shortcutManager.disableShortcuts(shortcutsToRemove);
+            }
         }
 
         if (shouldUpdate) {

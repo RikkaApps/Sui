@@ -16,4 +16,5 @@
     <string name="notification_channel_group_name">Show management</string>
     <string name="notification_show_management_title">You have entered \"Developer options\"</string>
     <string name="notification_show_management_text">Tap to show superuser management</string>
+    <string name="shortcut_is_out_dated">This shortcut is outdated, please remove this shortcut add it again.</string>
 </resources>

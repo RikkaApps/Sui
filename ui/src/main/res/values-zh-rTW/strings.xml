@@ -16,4 +16,5 @@
     <string name="notification_channel_group_name">顯示管理介面</string>
     <string name="notification_show_management_title">您已進入「開發人員設定」</string>
     <string name="notification_show_management_text">輕觸以顯示超級使用者管理介面</string>
+    <string name="shortcut_is_out_dated">快捷方式已過期，請移除此快捷方式後重新新增。</string>
 </resources>
