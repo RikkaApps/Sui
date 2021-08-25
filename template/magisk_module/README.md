@@ -6,6 +6,10 @@ Modern super user interface (SUI) implementation.
 
 ## Changelog
 
+### v12.1.2 (2021-08-26)
+
+- Bug fix
+
 ### v12.1.1 (2021-08-25)
 
 - Don't compile with R8 full mode
