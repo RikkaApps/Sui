@@ -105,12 +105,12 @@ public class AppActivity extends MaterialActivity {
                 if (insetsBottom >= Resources.getSystem().getDisplayMetrics().density * (float) 40) {
                     window.setNavigationBarColor(ResourcesKt.resolveColor(theme, android.R.attr.navigationBarColor) & 0x00ffffff | 0xdf000000);
                     if (Build.VERSION.SDK_INT >= 29) {
-                        window.setNavigationBarContrastEnforced(false);
+                        window.setNavigationBarContrastEnforced(true);
                     }
                 } else {
                     window.setNavigationBarColor(Color.TRANSPARENT);
                     if (Build.VERSION.SDK_INT >= 29) {
-                        window.setNavigationBarContrastEnforced(true);
+                        window.setNavigationBarContrastEnforced(false);
                     }
                 }
             });
