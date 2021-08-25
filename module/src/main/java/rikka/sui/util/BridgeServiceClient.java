@@ -100,32 +100,6 @@ public class BridgeServiceClient {
         return service;
     }
 
-    public static List<AppInfo> getApplications(int userId) {
-        Parcel data = Parcel.obtain();
-        Parcel reply = Parcel.obtain();
-        List<AppInfo> result;
-        try {
-            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
-            data.writeInt(userId);
-            try {
-                getService().asBinder().transact(ServerConstants.BINDER_TRANSACTION_getApplications, data, reply, 0);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-            reply.readException();
-            if ((0 != reply.readInt())) {
-                //noinspection unchecked
-                result = ParcelableListSlice.CREATOR.createFromParcel(reply).getList();
-            } else {
-                result = null;
-            }
-        } finally {
-            reply.recycle();
-            data.recycle();
-        }
-        return result;
-    }
-
     public static ParcelFileDescriptor openApk() {
         ParcelFileDescriptor result;
 
