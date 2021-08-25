@@ -21,6 +21,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode gitCommitCount
         versionName moduleVersion.substring(1)
+        resConfigs 'en', 'zh', 'zh-rCN', 'zh-rTW'
     }
     buildFeatures {
         viewBinding true
