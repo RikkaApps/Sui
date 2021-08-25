@@ -20,6 +20,7 @@
 package rikka.sui;
 
 import android.app.ActivityManager;
+import android.app.Application;
 import android.content.res.Resources;
 import android.os.Bundle;
 
@@ -27,14 +28,13 @@ import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
-import rikka.sui.R;
 import rikka.sui.app.AppActivity;
 import rikka.sui.management.ManagementFragment;
 
 public class SuiActivity extends AppActivity {
 
-    public SuiActivity(Resources resources) {
-        super(resources);
+    public SuiActivity(Application application, Resources resources) {
+        super(application, resources);
     }
 
     @Override

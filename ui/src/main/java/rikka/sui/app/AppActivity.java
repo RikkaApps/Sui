@@ -19,6 +19,8 @@
 
 package rikka.sui.app;
 
+import android.app.Application;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
@@ -40,14 +42,21 @@ import rikka.sui.R;
 
 public class AppActivity extends MaterialActivity {
 
+    private final Application application;
     private final Resources resources;
 
     private ViewGroup rootView;
     private AppBarLayout toolbarContainer;
 
-    public AppActivity(Resources resources) {
+    public AppActivity(Application application, Resources resources) {
+        this.application = application;
         this.resources = resources;
         DayNightDelegate.setApplicationContext(this);
+    }
+
+    @Override
+    public Context getApplicationContext() {
+        return application;
     }
 
     @Override

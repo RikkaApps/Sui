@@ -23,14 +23,17 @@ import static rikka.sui.settings.SettingsConstants.LOGGER;
 import static rikka.sui.shortcut.ShortcutConstants.SHORTCUT_EXTRA;
 
 import android.app.Activity;
+import android.app.ActivityThread;
 import android.app.Application;
 import android.app.Instrumentation;
 import android.app.UiAutomation;
+import android.content.ComponentCallbacks2;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
@@ -53,6 +56,7 @@ import rikka.sui.resource.SuiApk;
 public class SettingsInstrumentation extends Instrumentation {
 
     private final Instrumentation original;
+    private final Application application;
 
     @SuppressWarnings("FieldCanBeLocal")
     private final SuiApk suiApk;
@@ -64,12 +68,31 @@ public class SettingsInstrumentation extends Instrumentation {
     public SettingsInstrumentation(Instrumentation original) {
         this.original = original;
 
+        application = ActivityThread.currentActivityThread().getApplication();
         suiApk = new SuiApk();
         suiApk.loadSuiActivity();
         classLoader = suiApk.getClassLoader();
         suiActivityClass = suiApk.getSuiActivityClass();
         suiActivityConstructor = suiApk.getSuiActivityConstructor();
         resources = suiApk.getResources();
+
+        application.registerComponentCallbacks(new ComponentCallbacks2() {
+
+            @Override
+            public void onConfigurationChanged(@NonNull Configuration newConfig) {
+                resources.updateConfiguration(newConfig, resources.getDisplayMetrics());
+            }
+
+            @Override
+            public void onLowMemory() {
+
+            }
+
+            @Override
+            public void onTrimMemory(int level) {
+
+            }
+        });
     }
 
     public Resources getResources() {
@@ -82,7 +105,7 @@ public class SettingsInstrumentation extends Instrumentation {
         if (suiActivityConstructor != null && intent.hasExtra(SHORTCUT_EXTRA)) {
             LOGGER.v("creating SuiActivity");
             try {
-                return (Activity) suiActivityConstructor.newInstance(resources);
+                return (Activity) suiActivityConstructor.newInstance(application, resources);
             } catch (InvocationTargetException e) {
                 LOGGER.e(e, "Cannot create activity");
             }

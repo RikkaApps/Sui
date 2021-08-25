@@ -91,7 +91,7 @@ public class SuiApk {
     public void loadSuiActivity() {
         try {
             suiActivityClass = classLoader.loadClass("rikka.sui.SuiActivity");
-            suiActivityConstructor = suiActivityClass.getDeclaredConstructor(Resources.class);
+            suiActivityConstructor = suiActivityClass.getDeclaredConstructor(Application.class, Resources.class);
         } catch (Throwable e) {
             LOGGER.e(e, "Cannot load SuiActivity class");
         }
