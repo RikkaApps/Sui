@@ -112,6 +112,7 @@ public class SuiShortcut {
         LOGGER.d("updateExistingShortcuts");
 
         boolean hasDynamic = false;
+        boolean hasLegacy = false;
         boolean shouldUpdate = false;
         ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
         List<ShortcutInfo> existingShortcuts;
@@ -126,6 +127,11 @@ public class SuiShortcut {
 
         for (ShortcutInfo shortcutInfo : existingShortcuts) {
             String id = shortcutInfo.getId();
+            if ("rikka.sui.SUI".equals(id)) {
+                hasLegacy = true;
+                continue;
+            }
+
             if (!SHORTCUT_ID.equals(id)) {
                 continue;
             }
@@ -143,6 +149,12 @@ public class SuiShortcut {
                 LOGGER.i("Update shortcut %s since it does not have extra", id);
                 shouldUpdate = true;
             }
+        }
+
+        if (hasLegacy) {
+            List<String> shortcutsToRemove = new ArrayList<>();
+            shortcutsToRemove.add("rikka.sui.SUI");
+            shortcutManager.removeDynamicShortcuts(shortcutsToRemove);
         }
 
         if (shouldUpdate) {
