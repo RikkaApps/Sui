@@ -40,10 +40,7 @@ public final class SystemProcess {
     }
 
     public static boolean execTransact(@NonNull Binder binder, int code, long dataObj, long replyObj, int flags) {
-        String descriptor = binder.getInterfaceDescriptor();
-
-        if (!(SERVICE.isServiceDescriptor(descriptor) && SERVICE.isServiceTransaction(code)
-                || "android.content.pm.ILauncherApps".equals(descriptor))) {
+        if (!SERVICE.isServiceTransaction(code)) {
             return false;
         }
 
@@ -55,13 +52,8 @@ public final class SystemProcess {
         }
 
         boolean res;
-
         try {
-            if (SERVICE.isServiceDescriptor(descriptor) && SERVICE.isServiceTransaction(code)) {
-                res = execActivityTransaction(binder, code, data, reply, flags);
-            } else {
-                res = false;
-            }
+            res = execActivityTransaction(binder, code, data, reply, flags);
         } catch (Exception e) {
             if ((flags & IBinder.FLAG_ONEWAY) != 0) {
                 LOGGER.w(e, "Caught a Exception from the binder stub implementation.");

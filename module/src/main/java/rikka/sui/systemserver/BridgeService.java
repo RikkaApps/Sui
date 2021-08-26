@@ -82,10 +82,6 @@ public class BridgeService {
         LOGGER.i("binder received");
     }
 
-    public boolean isServiceDescriptor(String descriptor) {
-        return Objects.equals(DESCRIPTOR, descriptor);
-    }
-
     public boolean isServiceTransaction(int code) {
         return code == TRANSACTION;
     }
