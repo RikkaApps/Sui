@@ -6,6 +6,10 @@ Modern super user interface (SUI) implementation.
 
 ## Changelog
 
+### v12.1.3 (2021-08-26)
+
+- Fix not working on Sony devices (Not sure if only China version ROMs have this problem)
+
 ### v12.1.2 (2021-08-26)
 
 - Bug fix
