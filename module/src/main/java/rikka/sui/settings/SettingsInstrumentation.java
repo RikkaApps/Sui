@@ -99,12 +99,24 @@ public class SettingsInstrumentation extends Instrumentation {
     @Override
     public Activity newActivity(ClassLoader cl, String className, Intent intent) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         LOGGER.v("newActivity: %s", className);
-        if (suiActivityConstructor != null && intent.hasExtra(SHORTCUT_EXTRA)) {
-            LOGGER.v("creating SuiActivity");
-            try {
-                return (Activity) suiActivityConstructor.newInstance(application, resources);
-            } catch (InvocationTargetException e) {
-                LOGGER.e(e, "Cannot create activity");
+        if (suiActivityConstructor == null) {
+            return original.newActivity(cl, className, intent);
+        }
+
+        // Don't call Intent#getXXX directly since it will lead to the deserialization of
+        // the extras Bundle. At this time, classloader hasn't been set to app's.
+        // If the Bundle contains app's Parcelable, a BadParcelableException will happen.
+        // Intent#getExtras makes a copy of extras inside.
+        Bundle extras = intent.getExtras();
+        if (extras != null) {
+            extras.setClassLoader(cl);
+            if (extras.getInt(SHORTCUT_EXTRA, -1) != -1) {
+                LOGGER.v("creating SuiActivity");
+                try {
+                    return (Activity) suiActivityConstructor.newInstance(application, resources);
+                } catch (InvocationTargetException e) {
+                    LOGGER.e(e, "Cannot create activity");
+                }
             }
         }
         return original.newActivity(cl, className, intent);
