@@ -6,6 +6,10 @@ Modern super user interface (SUI) implementation.
 
 ## Changelog
 
+### v12.1.4 (2021-08-28)
+
+- Make sure original extras from newActivity is not deserialized (For example, this will fix the crash of MIUI Settings "All specs" page)
+
 ### v12.1.3 (2021-08-26)
 
 - Fix not working on Sony devices (Not sure if only China version ROMs have this problem)
