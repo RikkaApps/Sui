@@ -134,11 +134,6 @@ afterEvaluate {
                 rename { 'sui.apk' }
             }
             doLast {
-                copy {
-                    from zipTree("$buildDir/intermediates/processed_res/$variantLowered/out/resources-${variantLowered}.ap_").matching { include 'res/*/*.xml' }
-                    into magiskDir
-                }
-
                 fileTree("$magiskDir").visit { f ->
                     if (f.directory) return
                     if (f.file.name == '.gitattributes') return
