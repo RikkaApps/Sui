@@ -24,9 +24,9 @@ import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONET
 
 import android.app.Application;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManagerHidden;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -34,29 +34,24 @@ import android.graphics.PixelFormat;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import java.util.Objects;
 
+import dev.rikka.tools.refine.Refine;
 import rikka.html.text.HtmlCompat;
 import rikka.sui.R;
 import rikka.sui.databinding.ConfirmationDialogBinding;
 import rikka.sui.ktx.HandlerKt;
-import rikka.sui.ktx.LayoutInflaterKt;
 import rikka.sui.ktx.TextViewKt;
 import rikka.sui.ktx.WindowKt;
 import rikka.sui.util.AppLabel;
 import rikka.sui.util.BridgeServiceClient;
 import rikka.sui.util.Logger;
-import rikka.sui.util.Unsafe;
 import rikka.sui.util.UserHandleCompat;
 
 public class ConfirmationDialog {
@@ -120,8 +115,8 @@ public class ConfirmationDialog {
         int userId = UserHandleCompat.getUserId(requestUid);
         PackageManager pm = context.getPackageManager();
         try {
-            ApplicationInfo ai = Objects.requireNonNull(Unsafe.<$android.content.pm.PackageManager>unsafeCast(pm)
-                    .getApplicationInfoAsUser(requestPackageName, $android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES, userId));
+            ApplicationInfo ai = Objects.requireNonNull(Refine.<PackageManagerHidden>unsafeCast(pm))
+                    .getApplicationInfoAsUser(requestPackageName, PackageManagerHidden.MATCH_UNINSTALLED_PACKAGES, userId);
             label = AppLabel.getAppLabel(ai, context);
         } catch (Throwable e) {
             LOGGER.e("getApplicationInfoAsUser");

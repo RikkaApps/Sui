@@ -19,8 +19,11 @@
 
 package rikka.sui.server.userservice;
 
+import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_TOKEN;
+
 import android.app.ActivityThread;
 import android.content.Context;
+import android.content.ContextHidden;
 import android.ddm.DdmHandleAppName;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -28,12 +31,11 @@ import android.os.Looper;
 import android.os.Parcel;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.os.UserHandleHidden;
 import android.util.Log;
 
+import dev.rikka.tools.refine.Refine;
 import moe.shizuku.server.IShizukuService;
-import rikka.sui.util.Unsafe;
-
-import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_TOKEN;
 
 public class Starter {
 
@@ -79,9 +81,9 @@ public class Starter {
         DdmHandleAppName.setAppName(name != null ? name : pkg + ":user_service", 0);
 
         try {
-            UserHandle userHandle = Unsafe.unsafeCast($android.os.UserHandle.of(userId));
-            Context context = Unsafe.unsafeCast(Unsafe.<$android.content.Context>unsafeCast(systemContext)
-                    .createPackageContextAsUser(pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle));
+            UserHandle userHandle = Refine.unsafeCast(UserHandleHidden.of(userId));
+            Context context = Refine.<ContextHidden>unsafeCast(systemContext)
+                    .createPackageContextAsUser(pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle);
             ClassLoader classLoader = context.getClassLoader();
             Class<?> serviceClass = classLoader.loadClass(cls);
             service = (IBinder) serviceClass.newInstance();

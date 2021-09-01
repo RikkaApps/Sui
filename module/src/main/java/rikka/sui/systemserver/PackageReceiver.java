@@ -19,18 +19,20 @@
 
 package rikka.sui.systemserver;
 
+import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
+
 import android.app.ActivityThread;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContextHidden;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.UserHandleHidden;
 
-import rikka.sui.util.Unsafe;
-
-import static rikka.sui.systemserver.SystemServerConstants.LOGGER;
+import dev.rikka.tools.refine.Refine;
 
 public class PackageReceiver {
 
@@ -60,10 +62,10 @@ public class PackageReceiver {
         Handler handler = new Handler(Looper.getMainLooper());
 
         try {
-            Unsafe.<$android.content.Context>unsafeCast(ActivityThread.currentActivityThread().getSystemContext())
+            Refine.<ContextHidden>unsafeCast(ActivityThread.currentActivityThread().getSystemContext())
                     .registerReceiverAsUser(
                             RECEIVER,
-                            Unsafe.unsafeCast($android.os.UserHandle.ALL),
+                            Refine.unsafeCast(UserHandleHidden.ALL),
                             intentFilter,
                             null,
                             handler

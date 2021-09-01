@@ -5,12 +5,7 @@ import java.security.MessageDigest
 
 plugins {
     id('com.android.application')
-    id('dev.rikka.tools.hidden-api-refine')
-}
-
-hiddenApiRefine {
-    refinePrefix = ['$']
-    log = true
+    id('dev.rikka.tools.refine.gradle-plugin')
 }
 
 apply from: file(rootProject.file('module.gradle'))
@@ -64,6 +59,8 @@ android {
 }
 
 dependencies {
+    implementation("dev.rikka.tools.refine:runtime:2.0.0")
+
     implementation 'dev.rikka.ndk:riru:25.0.0'
     implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.1'
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'

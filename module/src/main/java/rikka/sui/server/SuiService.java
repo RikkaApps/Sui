@@ -30,6 +30,7 @@ import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONET
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageInfoHidden;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import dev.rikka.tools.refine.Refine;
 import moe.shizuku.server.IShizukuApplication;
 import rikka.parcelablelist.ParcelableListSlice;
 import rikka.shizuku.ShizukuApiConstants;
@@ -63,7 +65,6 @@ import rikka.sui.server.bridge.BridgeServiceClient;
 import rikka.sui.util.Logger;
 import rikka.sui.util.MapUtil;
 import rikka.sui.util.OsUtils;
-import rikka.sui.util.Unsafe;
 import rikka.sui.util.UserHandleCompat;
 
 public class SuiService extends Service<SuiUserServiceManager, SuiClientManager, SuiConfigManager> {
@@ -391,7 +392,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         for (int user : users) {
             for (PackageInfo pi : SystemService.getInstalledPackagesNoThrow(0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, user)) {
                 if (pi.applicationInfo == null
-                        || Unsafe.<$android.content.pm.PackageInfo>unsafeCast(pi).overlayTarget != null
+                        || Refine.<PackageInfoHidden>unsafeCast(pi).overlayTarget != null
                         || (pi.applicationInfo.flags & ApplicationInfo.FLAG_HAS_CODE) == 0)
                     continue;
 

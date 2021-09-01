@@ -4,12 +4,7 @@ import java.nio.file.Paths
 plugins {
     id('com.android.application')
     id('kotlin-android')
-    id('dev.rikka.tools.hidden-api-refine')
-}
-
-hiddenApiRefine {
-    refinePrefix = ['$']
-    log = true
+    id('dev.rikka.tools.refine.gradle-plugin')
 }
 
 apply from: file(rootProject.file('module.gradle'))
@@ -62,6 +57,8 @@ repositories {
 }
 
 dependencies {
+    implementation("dev.rikka.tools.refine:runtime:2.0.0")
+
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1"
 
