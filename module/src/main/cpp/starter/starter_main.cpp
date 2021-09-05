@@ -159,11 +159,10 @@ static int start_server(const char *dex_path, const char *files_path, const char
 int main(int argc, char **argv) {
     auto uid = getuid();
     if (uid != 0) {
-        LOGE("run Sui from uid=%d", uid);
         exit(EXIT_FAILURE);
     }
 
-    LOGI("starter begin");
+    LOGI("Sui starter begin");
     start_server(argv[1], argv[2], SERVER_CLASS_PATH, SERVER_NAME);
 
     exit(EXIT_SUCCESS);

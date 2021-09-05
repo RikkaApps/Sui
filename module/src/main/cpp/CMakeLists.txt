@@ -56,7 +56,7 @@ target_link_libraries(${MODULE_NAME} util cxx::cxx log riru::riru nativehelper::
 set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
 
 add_executable(libstarter.so
-        starter.cpp)
+        starter/starter_main.cpp)
 target_link_libraries(libstarter.so util cxx::cxx log riru::riru)
 set_target_properties(libstarter.so PROPERTIES LINK_FLAGS_RELEASE -s)
 

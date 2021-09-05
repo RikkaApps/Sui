@@ -1,5 +1,8 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 
-chmod 700 "$MODDIR"/starter
-exec "$MODDIR"/starter "$MODDIR"/sui.dex "$MODDIR"
+log -p d -t "Sui" "Magisk module path $MODDIR"
+
+chmod 700 "$MODDIR"/sui
+exec "$MODDIR"/sui "$MODDIR"/sui.dex "$MODDIR"
+

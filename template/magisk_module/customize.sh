@@ -72,8 +72,8 @@ fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
 
-mv "$MODPATH/libstarter.so" "$MODPATH/starter"
-set_perm "$MODPATH/starter" 0 0 0700
+mv "$MODPATH/libstarter.so" "$MODPATH/sui"
+set_perm "$MODPATH/sui" 0 0 0700
 
 # Extract server files
 ui_print "- Extracting Sui files"
