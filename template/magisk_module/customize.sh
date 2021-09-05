@@ -109,3 +109,15 @@ if [ -f $ROOT_PATH/post-install.sh ]; then
 else
   ui_print "- Cannot find /data/adb/sui/post-install.sh"
 fi
+
+# Remove unused files
+ui_print "- Removing old files"
+rm -rf /data/adb/sui/res
+rm -rf /data/adb/sui/res.new
+rm -f /data/adb/sui/com.android.settings
+rm -f /data/adb/sui/com.android.systemui
+rm -f /data/adb/sui/post-install.example.sh
+rm -f /data/adb/sui/starter
+rm -f /data/adb/sui/sui.dex
+rm -f /data/adb/sui/sui.dex.new
+rm -f /data/adb/sui/sui_wrapper
