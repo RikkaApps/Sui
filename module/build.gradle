@@ -22,7 +22,8 @@ android {
                 arguments "-DMODULE_NAME:STRING=$moduleLibraryName",
                         "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
                         "-DRIRU_MODULE_VERSION=$moduleVersionCode",
-                        "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\""
+                        "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\"",
+                        "-DANDROID_STL=none"
 
             }
         }
@@ -62,6 +63,7 @@ dependencies {
     implementation("dev.rikka.tools.refine:runtime:2.0.0")
 
     implementation 'dev.rikka.ndk:riru:25.0.0'
+    implementation 'dev.rikka.ndk.thirdparty:cxx:1.1.0'
     implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.1'
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'
 
