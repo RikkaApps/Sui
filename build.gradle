@@ -16,7 +16,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.0-alpha10'
+        classpath 'com.android.tools.build:gradle:7.1.0-alpha11'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         classpath 'dev.rikka.tools.refine:gradle-plugin:2.0.0'
     }
