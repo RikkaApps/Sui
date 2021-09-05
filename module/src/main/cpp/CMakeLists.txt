@@ -34,24 +34,30 @@ find_package(cxx REQUIRED CONFIG)
 find_package(riru REQUIRED CONFIG)
 find_package(nativehelper REQUIRED CONFIG)
 
+include_directories(".")
+include_directories("include")
+include_directories("util/include")
+
+add_library(util STATIC
+        util/misc.cpp
+        util/dex_file.cpp
+        util/android.cpp
+        util/plt.c)
+target_link_libraries(util cxx::cxx log nativehelper::nativehelper_header_only)
+
 add_library(${MODULE_NAME} SHARED
-        main.cpp
-        socket.cpp
-        misc.cpp
-        dex_file.cpp
-        system_server.cpp
-        binder_hook.cpp
-        bridge_service.cpp
-        android.cpp
-        plt.c
-        manager_process.cpp
-        settings_process.cpp)
-target_link_libraries(${MODULE_NAME}  cxx::cxx log riru::riru nativehelper::nativehelper_header_only)
+        core/main.cpp
+        core/system_server.cpp
+        core/binder_hook.cpp
+        core/bridge_service.cpp
+        core/manager_process.cpp
+        core/settings_process.cpp)
+target_link_libraries(${MODULE_NAME} util cxx::cxx log riru::riru nativehelper::nativehelper_header_only)
 set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
 
 add_executable(libstarter.so
-        starter.cpp misc.cpp android.cpp)
-target_link_libraries(libstarter.so  cxx::cxx log riru::riru)
+        starter.cpp)
+target_link_libraries(libstarter.so util cxx::cxx log riru::riru)
 set_target_properties(libstarter.so PROPERTIES LINK_FLAGS_RELEASE -s)
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

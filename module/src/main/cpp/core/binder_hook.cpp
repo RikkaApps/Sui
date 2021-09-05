@@ -25,8 +25,8 @@
 #include <riru.h>
 #include "binder_hook.h"
 #include "logging.h"
-#include "android.h"
-#include "plt.h"
+#include <android.h>
+#include <plt.h>
 
 static jmethodID original_execTransactMethodID;
 
@@ -62,26 +62,6 @@ static jint new_GetEnv(JavaVM *vm, void **env, jint version) {
     return res;
 }
 
-/*static JavaVM *debug_javaVm;
-static JNIEnv *debug_env;
-
-[[noreturn]] static void *DebugPrint(void *) {
-    while (true) {
-        sleep(10);
-        if (debug_javaVm->functions != new_JNIInvokeInterface) {
-            LOGW("JavaVM->functions is changed: current=%p, my=%p", debug_javaVm->functions, new_JNIInvokeInterface);
-        } else {
-            LOGV("JavaVM->functions=%p", debug_javaVm->functions);
-        }
-
-        if (debug_env->functions != new_JNINativeInterface) {
-            LOGW("JNIEnv->functions is changed: current=%p, my=%p", debug_env->functions, new_JNINativeInterface);
-        } else {
-            LOGV("JNIEnv->functions=%p", debug_env->functions);
-        }
-    }
-}*/
-
 static void InstallDirectly(JavaVM *javaVm, JNIEnv *env) {
     // JavaVM
     old_JNIInvokeInterface = javaVm->functions;
@@ -94,10 +74,6 @@ static void InstallDirectly(JavaVM *javaVm, JNIEnv *env) {
 
     // JNIEnv
     env->functions = new_JNINativeInterface;
-
-    /*pthread_t thread;
-    int res = pthread_create(&thread, nullptr, DebugPrint, nullptr);
-    if (res == 0)pthread_detach(thread);*/
 }
 
 static bool InstallOverrideTable() {

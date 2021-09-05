@@ -25,7 +25,7 @@
 #include <nativehelper/scoped_utf_chars.h>
 #include <climits>
 #include <vector>
-#include "dex_file.h"
+#include <dex_file.h>
 #include "logging.h"
 #include "system_server.h"
 #include "config.h"

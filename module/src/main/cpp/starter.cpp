@@ -28,8 +28,8 @@
 #include <sys/system_properties.h>
 #include <cerrno>
 #include <fcntl.h>
-#include "android.h"
-#include "misc.h"
+#include "util/include/android.h"
+#include "util/include/misc.h"
 #include "logging.h"
 
 #ifdef DEBUG
