@@ -56,6 +56,7 @@ import java.util.Map;
 import dev.rikka.tools.refine.Refine;
 import moe.shizuku.server.IShizukuApplication;
 import rikka.parcelablelist.ParcelableListSlice;
+import rikka.rish.RishConfig;
 import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.server.ClientRecord;
 import rikka.shizuku.server.Service;
@@ -78,6 +79,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     public static void main(String filesPath) {
         LOGGER.i("starting server...");
+
+        RishConfig.setLibraryPath(System.getProperty("sui.library.path"));
 
         SuiService.filesPath = filesPath;
 

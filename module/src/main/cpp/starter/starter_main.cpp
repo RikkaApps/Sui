@@ -91,7 +91,7 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     ARG(argv)
     ARG_PUSH(argv, "/system/bin/app_process")
     ARG_PUSH_FMT(argv, "-Djava.class.path=%s", dex_path)
-    ARG_PUSH_FMT(argv, "-Djava.library.path=%s", files_path)
+    ARG_PUSH_FMT(argv, "-Dsui.library.path=%s", files_path)
     ARG_PUSH_DEBUG_VM_PARAMS(argv)
     ARG_PUSH(argv, "/system/bin")
     ARG_PUSH_FMT(argv, "--nice-name=%s", process_name)
