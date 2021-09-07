@@ -11,22 +11,38 @@ buildscript {
 
     ext.kotlinVersion = '1.5.30'
     repositories {
-        mavenLocal()
         mavenCentral()
         google()
+
+        // In case newly published library not yet synced with maven central
+        maven {
+            url("https://s01.oss.sonatype.org/content/repositories/releases/")
+            content {
+                includeGroup("dev.rikka.tools.refine")
+            }
+        }
+        mavenLocal()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.1.0-alpha11'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'dev.rikka.tools.refine:gradle-plugin:2.0.0'
+        classpath 'dev.rikka.tools.refine:gradle-plugin:3.0.3'
     }
 }
 
 allprojects {
     repositories {
-        mavenLocal()
         mavenCentral()
         google()
+
+        // In case newly published library not yet synced with maven central
+        maven {
+            url("https://s01.oss.sonatype.org/content/repositories/releases/")
+            content {
+                includeGroupByRegex("dev.rikka.*")
+            }
+        }
+        mavenLocal()
     }
 }
 
