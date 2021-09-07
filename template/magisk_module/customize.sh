@@ -15,16 +15,16 @@ fi
 ui_print "- Extracting verify.sh"
 unzip -o "$ZIPFILE" 'verify.sh' -d "$TMPDIR" >&2
 if [ ! -f "$TMPDIR/verify.sh" ]; then
-  ui_print    "*********************************************************"
-  ui_print    "! Unable to extract verify.sh!"
-  ui_print    "! This zip may be corrupted, please try downloading again"
+  ui_print "*********************************************************"
+  ui_print "! Unable to extract verify.sh!"
+  ui_print "! This zip may be corrupted, please try downloading again"
   abort "*********************************************************"
 fi
 . $TMPDIR/verify.sh
 
 # Extract riru.sh
-extract "$ZIPFILE" 'riru.sh' "$MODPATH"
-. $MODPATH/riru.sh
+extract "$ZIPFILE" 'riru.sh' "$TMPDIR"
+. $TMPDIR/riru.sh
 
 check_riru_version
 enforce_install_from_magisk_app
