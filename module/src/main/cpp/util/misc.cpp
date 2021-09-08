@@ -105,7 +105,7 @@ int copyfile(const char *src_path, const char *dst_path) {
     return copyfileat(0, src_path, 0, dst_path);
 }
 
-static ssize_t read_eintr(int fd, void *out, size_t len) {
+ssize_t read_eintr(int fd, void *out, size_t len) {
     ssize_t ret;
     do {
         ret = read(fd, out, len);

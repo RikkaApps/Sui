@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.4.1)
 
+project("sui")
+
 if (NOT DEFINED MODULE_NAME)
     message(FATAL_ERROR "MODULE_NAME is not set")
 endif ()
@@ -42,7 +44,8 @@ add_library(util STATIC
         util/misc.cpp
         util/dex_file.cpp
         util/android.cpp
-        util/plt.c)
+        util/plt.c
+        util/selinux.cpp)
 target_link_libraries(util cxx::cxx log nativehelper::nativehelper_header_only)
 
 add_library(${MODULE_NAME} SHARED
@@ -55,15 +58,30 @@ add_library(${MODULE_NAME} SHARED
 target_link_libraries(${MODULE_NAME} util cxx::cxx log riru::riru nativehelper::nativehelper_header_only)
 set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
 
-add_executable(libstarter.so
-        starter/starter_main.cpp)
-target_link_libraries(libstarter.so util cxx::cxx log riru::riru)
-set_target_properties(libstarter.so PROPERTIES LINK_FLAGS_RELEASE -s)
+add_executable(libmain.so main/main.cpp)
+target_link_libraries(libmain.so util cxx::cxx log riru::riru nativehelper::nativehelper_header_only)
+set_target_properties(libmain.so PROPERTIES LINK_FLAGS_RELEASE -s)
+
+add_executable(libadbd_wrapper.so
+        adbd/adbd_wrapper_main.cpp)
+target_link_libraries(libadbd_wrapper.so cxx::cxx log)
+set_target_properties(libadbd_wrapper.so PROPERTIES LINK_FLAGS_RELEASE -s)
+
+add_library(sui_adbd_preload SHARED
+        adbd/adbd_preload.cpp)
+target_link_libraries(sui_adbd_preload cxx::cxx log)
+set_target_properties(sui_adbd_preload PROPERTIES LINK_FLAGS_RELEASE -s)
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(TARGET ${MODULE_NAME} POST_BUILD
             COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${MODULE_NAME}.so")
 
-    add_custom_command(TARGET libstarter.so POST_BUILD
-            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libstarter.so")
+    add_custom_command(TARGET libmain.so POST_BUILD
+            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmain.so")
+
+    add_custom_command(TARGET libadbd_wrapper.so POST_BUILD
+            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libadbd_wrapper.so")
+
+    add_custom_command(TARGET sui_adbd_preload POST_BUILD
+            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libsui_adbd_preload.so")
 endif ()

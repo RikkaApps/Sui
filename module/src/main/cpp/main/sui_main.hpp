@@ -28,8 +28,12 @@
 #include <sys/system_properties.h>
 #include <cerrno>
 #include <fcntl.h>
-#include "util/include/android.h"
-#include "util/include/misc.h"
+#include <sys/mount.h>
+#include <private/ScopedFd.h>
+#include <sys/mman.h>
+#include <cinttypes>
+#include <android.h>
+#include "misc.h"
 #include "logging.h"
 
 #ifdef DEBUG
@@ -108,62 +112,60 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
 }
 
 static int start_server(const char *dex_path, const char *files_path, const char *main_class, const char *process_name) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        daemon(false, false);
+    while (true) {
+        static pid_t zygote_pid;
 
-        while (true) {
-            static pid_t zygote_pid;
-
-            zygote_pid = -1;
-            foreach_proc([](pid_t pid) -> bool {
-                if (pid == getpid()) return false;
+        zygote_pid = -1;
+        foreach_proc([](pid_t pid) -> bool {
+            if (pid == getpid()) return false;
 
 #ifdef __LP64__
-                const char* zygote_name = "zygote64";
+            const char* zygote_name = "zygote64";
 #else
-                const char* zygote_name = "zygote";
+            const char *zygote_name = "zygote";
 #endif
-                char buf[64];
-                snprintf(buf, 64, "/proc/%d/cmdline", pid);
+            char buf[64];
+            snprintf(buf, 64, "/proc/%d/cmdline", pid);
 
-                int fd = open(buf, O_RDONLY);
-                if (fd > 0) {
-                    memset(buf, 0, 64);
-                    if (read(fd, buf, 64) > 0 && strcmp(zygote_name, buf) == 0) {
-                        zygote_pid = pid;
-                    }
-                    close(fd);
+            int fd = open(buf, O_RDONLY);
+            if (fd > 0) {
+                memset(buf, 0, 64);
+                if (read(fd, buf, 64) > 0 && strcmp(zygote_name, buf) == 0) {
+                    zygote_pid = pid;
                 }
-                return zygote_pid != -1;
-            });
-
-            if (zygote_pid != -1) {
-                LOGI("found zygote %d", zygote_pid);
-                break;
+                close(fd);
             }
+            return zygote_pid != -1;
+        });
 
-            LOGV("zygote not started, wait 1s...");
-            sleep(1);
+        if (zygote_pid != -1) {
+            LOGI("found zygote %d", zygote_pid);
+            break;
         }
 
-        run_server(dex_path, files_path, main_class, process_name);
-        return EXIT_SUCCESS;
-    } else if (pid == -1) {
-        PLOGE("fork");
-        exit(EXIT_FAILURE);
+        LOGV("zygote not started, wait 1s...");
+        sleep(1);
     }
+
+    run_server(dex_path, files_path, main_class, process_name);
     return EXIT_SUCCESS;
 }
 
-int main(int argc, char **argv) {
-    auto uid = getuid();
-    if (uid != 0) {
-        exit(EXIT_FAILURE);
+static int sui_main(int argc, char **argv) {
+    if (fork() != 0) {
+        return 0;
     }
+    daemon(false, false);
 
-    LOGI("Sui starter begin");
-    start_server(argv[1], argv[2], SERVER_CLASS_PATH, SERVER_NAME);
+    LOGI("Sui starter begin: %s", argv[1]);
+
+    auto root_path = argv[1];
+
+    char dex_path[PATH_MAX]{0};
+    strcpy(dex_path, root_path);
+    strcat(dex_path, "/sui.dex");
+
+    start_server(dex_path, root_path, SERVER_CLASS_PATH, SERVER_NAME);
 
     exit(EXIT_SUCCESS);
 }

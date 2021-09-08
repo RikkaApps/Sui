@@ -1,0 +1,3 @@
+# Allow adbd to transition to magisk:s0 context
+allow adbd adbd process setcurrent
+allow adbd magisk process dyntransition

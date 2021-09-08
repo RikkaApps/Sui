@@ -35,45 +35,59 @@ ui_print "- Extracting module files"
 extract "$ZIPFILE" 'module.prop' "$MODPATH"
 extract "$ZIPFILE" 'post-fs-data.sh' "$MODPATH"
 extract "$ZIPFILE" 'uninstall.sh' "$MODPATH"
+extract "$ZIPFILE" 'sepolicy.rule' "$MODPATH"
 
 mkdir "$MODPATH/riru"
 mkdir "$MODPATH/riru/lib"
 mkdir "$MODPATH/riru/lib64"
+mkdir "$MODPATH/bin"
+mkdir "$MODPATH/system"
+mkdir "$MODPATH/system/lib"
+mkdir "$MODPATH/system/lib64"
 
 if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
   ui_print "- Extracting x86 libraries"
   extract "$ZIPFILE" "lib/x86/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
+  extract "$ZIPFILE" "lib/x86/libsui_adbd_preload.so" "$MODPATH/system/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting x64 libraries"
     extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
-    extract "$ZIPFILE" "lib/x86_64/libstarter.so" "$MODPATH" true
+    extract "$ZIPFILE" "lib/x86_64/libmain.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/x86_64/libadbd_wrapper.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/x86_64/libsui_adbd_preload.so" "$MODPATH/system/lib64" true
     extract "$ZIPFILE" "lib/x86_64/librish.so" "$MODPATH" true
   else
-    extract "$ZIPFILE" "lib/x86/libstarter.so" "$MODPATH" true
+    extract "$ZIPFILE" "lib/x86/libmain.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/x86/libadbd_wrapper.so" "$MODPATH/bin" true
     extract "$ZIPFILE" "lib/x86/librish.so" "$MODPATH" true
-fi
+  fi
 fi
 
 if [ "$ARCH" = "arm" ] || [ "$ARCH" = "arm64" ]; then
   ui_print "- Extracting arm libraries"
   extract "$ZIPFILE" "lib/armeabi-v7a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
+  extract "$ZIPFILE" "lib/armeabi-v7a/libsui_adbd_preload.so" "$MODPATH/system/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting arm64 libraries"
     extract "$ZIPFILE" "lib/arm64-v8a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
-    extract "$ZIPFILE" "lib/arm64-v8a/libstarter.so" "$MODPATH" true
+    extract "$ZIPFILE" "lib/arm64-v8a/libmain.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/arm64-v8a/libadbd_wrapper.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/arm64-v8a/libsui_adbd_preload.so" "$MODPATH/system/lib64" true
     extract "$ZIPFILE" "lib/arm64-v8a/librish.so" "$MODPATH" true
   else
-    extract "$ZIPFILE" "lib/armeabi-v7a/libstarter.so" "$MODPATH" true
+    extract "$ZIPFILE" "lib/armeabi-v7a/libmain.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/armeabi-v7a/libadbd_wrapper.so" "$MODPATH/bin" true
     extract "$ZIPFILE" "lib/armeabi-v7a/librish.so" "$MODPATH" true
   fi
 fi
 
-set_perm_recursive "$MODPATH" 0 0 0755 0644
+mv "$MODPATH/bin/libmain.so" "$MODPATH/bin/sui"
+mv "$MODPATH/bin/libadbd_wrapper.so" "$MODPATH/bin/adbd_wrapper"
 
-mv "$MODPATH/libstarter.so" "$MODPATH/sui"
-set_perm "$MODPATH/sui" 0 0 0700
+set_perm_recursive "$MODPATH" 0 0 0755 0644
+set_perm "$MODPATH/bin/sui" 0 0 0700
 
 # Extract server files
 ui_print "- Extracting Sui files"
