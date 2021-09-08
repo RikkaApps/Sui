@@ -71,15 +71,15 @@ static bool setup_file(const char *source, const char *target, const attrs *attr
     return true;
 }
 
-static void setup_adb_root(const char *root_path) {
+static bool setup_adb_root(const char *root_path) {
     if (selinux_check_access("u:r:adbd:s0", "u:r:adbd:s0", "process", "setcurrent", nullptr) != 0) {
         LOGE("adbd adbd process setcurrent not allowed");
-        return;
+        return false;
     }
 
     if (selinux_check_access("u:r:adbd:s0", "u:r:magisk:s0", "process", "dyntransition", nullptr) != 0) {
         LOGE("adbd adbd process setcurrent not allowed");
-        return;
+        return false;
     }
 
     char my_file[PATH_MAX]{0}, my_backup[PATH_MAX]{0};
@@ -104,12 +104,12 @@ static void setup_adb_root(const char *root_path) {
 
             if (copyfile(file, my_backup) != 0) {
                 PLOGE("copyfile %s -> %s", file, my_backup);
-                return;
+                return false;
             }
 
             if (!getattrs(file, &file_attr)
                 || !getattrs(folder, &folder_attr)) {
-                return;
+                return false;
             }
         } else {
             PLOGE("access /apex/com.android.adbd/bin/adbd");
@@ -126,7 +126,7 @@ static void setup_adb_root(const char *root_path) {
         } else {
             PLOGE("access /system/bin/adbd");
             LOGW("No adbd");
-            return;
+            return false;
         }
     }
 
@@ -141,12 +141,12 @@ static void setup_adb_root(const char *root_path) {
 
         if (mount("tmpfs", folder, "tmpfs", 0, "mode=755") != 0) {
             PLOGE("mount tmpfs -> %s", folder);
-            return;
+            return false;
         }
         if (!setattrs(folder, &folder_attr)
             || !setup_file(my_file, file, &file_attr)) {
             umount(folder);
-            return;
+            return false;
         }
 
         if (file_attr.context) {
@@ -156,10 +156,11 @@ static void setup_adb_root(const char *root_path) {
 
         if (!setup_file(my_backup, backup, &file_attr)) {
             umount(folder);
-            return;
+            return false;
         }
 
         LOGI("Finished");
+        return true;
     } else {
         // TODO copy files to MODDIR/system/bin
     }
@@ -170,8 +171,9 @@ static int adb_root_main(int argc, char **argv) {
 
     if (init_selinux()) {
         auto root_path = argv[1];
-        setup_adb_root(root_path);
+        return setup_adb_root(root_path) ? 0 : 1;
     } else {
         LOGW("Cannot load libselinux");
+        return 1;
     }
 }
