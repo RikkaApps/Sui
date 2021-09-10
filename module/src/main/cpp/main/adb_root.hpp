@@ -7,10 +7,10 @@
 #include <misc.h>
 
 struct attrs {
-    uid_t uid;
-    gid_t gid;
-    mode_t mode;
-    char *context;
+    uid_t uid{};
+    gid_t gid{};
+    mode_t mode{};
+    char *context{nullptr};
 
     ~attrs() {
         if (context) {
@@ -19,25 +19,25 @@ struct attrs {
     }
 };
 
-static bool getattrs(const char *file, attrs *attrs) {
+inline int getattrs(const char *file, attrs *attrs) {
     struct stat statbuf{};
     if (stat(file, &statbuf) != 0) {
         PLOGE("stat %s", file);
-        return false;
+        return 1;
     }
 
     if (getfilecon_raw(file, &attrs->context) < 0) {
         PLOGE("getfilecon %s", file);
-        return false;
+        return 1;
     }
 
     attrs->uid = statbuf.st_uid;
     attrs->gid = statbuf.st_gid;
     attrs->mode = statbuf.st_mode;
-    return true;
+    return 0;
 }
 
-static bool setattrs(const char *file, const attrs *attrs) {
+inline int setattrs(const char *file, const attrs *attrs) {
     uid_t uid = attrs->uid;
     gid_t gid = attrs->gid;
     mode_t mode = attrs->mode;
@@ -45,40 +45,44 @@ static bool setattrs(const char *file, const attrs *attrs) {
 
     if (chmod(file, mode) != 0) {
         PLOGE("chmod %s", file);
-        return false;
+        return 1;
     }
     if (chown(file, uid, gid) != 0) {
         PLOGE("chmod %s", file);
-        return false;
+        return 1;
     }
     if (setfilecon_raw(file, secontext) != 0) {
         PLOGE("setfilecon %s", file);
-        return false;
+        return 1;
     }
-    return true;
+    return 0;
 }
 
-static bool setup_file(const char *source, const char *target, const attrs *attrs) {
-    if (copyfile(source, target) != 0) {
-        PLOGE("copyfile %s -> %s", source, target);
+inline bool setup_file(const char *source, const char *target, const attrs *attrs) {
+    if (setattrs(source, attrs) != 0) {
         return false;
     }
-
-    if (!setattrs(target, attrs)) {
+    if (int fd = open(target, O_RDWR | O_CREAT, attrs->mode); fd == -1) {
+        PLOGE("open %s", target);
+        return false;
+    } else {
+        close(fd);
+    }
+    if (mount(source, target, nullptr, MS_BIND, nullptr)) {
+        PLOGE("mount %s -> %s", source, target);
         return false;
     }
-
     return true;
 }
 
 static bool setup_adb_root(const char *root_path) {
     if (selinux_check_access("u:r:adbd:s0", "u:r:adbd:s0", "process", "setcurrent", nullptr) != 0) {
-        LOGE("adbd adbd process setcurrent not allowed");
+        PLOGE("adbd adbd process setcurrent not allowed");
         return false;
     }
 
     if (selinux_check_access("u:r:adbd:s0", "u:r:magisk:s0", "process", "dyntransition", nullptr) != 0) {
-        LOGE("adbd adbd process setcurrent not allowed");
+        PLOGE("adbd magisk process dyntransition not allowed");
         return false;
     }
 
@@ -107,8 +111,8 @@ static bool setup_adb_root(const char *root_path) {
                 return false;
             }
 
-            if (!getattrs(file, &file_attr)
-                || !getattrs(folder, &folder_attr)) {
+            if (getattrs(file, &file_attr) != 0
+                || getattrs(folder, &folder_attr) != 0) {
                 return false;
             }
         } else {
@@ -143,9 +147,9 @@ static bool setup_adb_root(const char *root_path) {
             PLOGE("mount tmpfs -> %s", folder);
             return false;
         }
-        if (!setattrs(folder, &folder_attr)
-            || !setup_file(my_file, file, &file_attr)) {
+        if (!setup_file(my_file, file, &file_attr)) {
             umount(folder);
+            LOGE("Failed to %s -> %s", my_file, file);
             return false;
         }
 
@@ -156,6 +160,7 @@ static bool setup_adb_root(const char *root_path) {
 
         if (!setup_file(my_backup, backup, &file_attr)) {
             umount(folder);
+            LOGE("Failed to %s -> %s", my_backup, backup);
             return false;
         }
 
@@ -166,7 +171,7 @@ static bool setup_adb_root(const char *root_path) {
     }
 }
 
-static int adb_root_main(int argc, char **argv) {
+inline int adb_root_main(int argc, char **argv) {
     LOGI("Setup adb root support: %s", argv[1]);
 
     if (init_selinux()) {

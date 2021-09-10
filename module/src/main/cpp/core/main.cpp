@@ -31,6 +31,8 @@
 #include "config.h"
 #include "manager_process.h"
 #include "settings_process.h"
+#include <sys/mount.h>
+#include <android.h>
 
 static uid_t manager_uid = -1, settings_uid = -1;
 static char manager_process[128], settings_uid_process[128];
@@ -70,6 +72,14 @@ static void DestroyFiles(JNIEnv *env) {
         dexFile->destroy(env);
         delete dexFile;
         dexFile = nullptr;
+    }
+}
+
+static void UmountApexAdbd() {
+    if (android::GetApiLevel() >= 30) {
+        if (umount2("/apex/com.android.adbd/bin", MNT_DETACH)) {
+            PLOGE("umount /apex/com.android.adbd/bin");
+        }
     }
 }
 
@@ -187,6 +197,13 @@ static void specializeAppProcessPost(
     appProcessPost(env, "specializeAppProcess", saved_package_name, saved_app_data_dir, saved_process_name, saved_uid);
 }
 
+static void forkSystemServerPre(
+        JNIEnv *env, jclass cls, uid_t *uid, gid_t *gid, jintArray *gids, jint *runtimeFlags,
+        jobjectArray *rlimits, jlong *permittedCapabilities, jlong *effectiveCapabilities) {
+
+    UmountApexAdbd();
+}
+
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
     if (res == 0) {
         LOGV("nativeForkSystemServerPost");
@@ -214,7 +231,7 @@ static auto module = RiruVersionedModuleInfo{
                 .onModuleLoaded = onModuleLoaded,
                 .forkAndSpecializePre = forkAndSpecializePre,
                 .forkAndSpecializePost = forkAndSpecializePost,
-                .forkSystemServerPre = nullptr,
+                .forkSystemServerPre = forkSystemServerPre,
                 .forkSystemServerPost = forkSystemServerPost,
                 .specializeAppProcessPre = specializeAppProcessPre,
                 .specializeAppProcessPost = specializeAppProcessPost

@@ -23,6 +23,9 @@
 #include <unistd.h>
 #include <sys/mount.h>
 #include <logging.h>
+#include <string_view>
+
+using namespace std::literals::string_view_literals;
 
 #ifdef __LP64__
 constexpr char adbd_ld_preload[] = "/system/lib64/libsui_adbd_preload.so";
@@ -50,8 +53,10 @@ int main(int argc, char **argv) {
     setenv("LD_PRELOAD", new_ld_preload, 1);
     LOGD("LD_PRELOAD=%s", new_ld_preload);
 
+    auto root_seclabel = "--root_seclabel"sv;
     for (int i = 1; i < argc; ++i) {
-        if (strncmp("--root_seclabel", argv[i], strlen("--root_seclabel")) == 0) {
+        std::string_view argv_i{argv[i]};
+        if (argv_i.length() > root_seclabel.length() && argv_i.substr(0, root_seclabel.length()) == root_seclabel) {
             argv[i] = strdup("--root_seclabel=u:r:magisk:s0");
             LOGD("root_seclabel=u:r:magisk:s0");
         }

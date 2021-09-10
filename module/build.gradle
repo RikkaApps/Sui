@@ -17,6 +17,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode gitCommitCount
         versionName moduleVersion.substring(1)
+        //ndkVersion rootProject.ext.ndkVersion
         externalNativeBuild {
             cmake {
                 arguments "-DMODULE_NAME:STRING=$moduleLibraryName",
