@@ -76,7 +76,11 @@ static void DestroyFiles(JNIEnv *env) {
 }
 
 static void UmountApexAdbd() {
+    static bool called = false;
+    if (called) return;
+
     if (android::GetApiLevel() >= 30) {
+        called = true;
         if (umount2("/apex/com.android.adbd/bin", MNT_DETACH)) {
             PLOGE("umount /apex/com.android.adbd/bin");
         }
@@ -91,6 +95,7 @@ static int saved_uid;
 static void appProcessPre(JNIEnv *env, const jint *uid, jstring *jAppDataDir, jstring *jNiceName) {
 
     PrepareFiles();
+    UmountApexAdbd();
 
     saved_uid = *uid;
 
@@ -197,13 +202,6 @@ static void specializeAppProcessPost(
     appProcessPost(env, "specializeAppProcess", saved_package_name, saved_app_data_dir, saved_process_name, saved_uid);
 }
 
-static void forkSystemServerPre(
-        JNIEnv *env, jclass cls, uid_t *uid, gid_t *gid, jintArray *gids, jint *runtimeFlags,
-        jobjectArray *rlimits, jlong *permittedCapabilities, jlong *effectiveCapabilities) {
-
-    UmountApexAdbd();
-}
-
 static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
     if (res == 0) {
         LOGV("nativeForkSystemServerPost");
@@ -231,7 +229,7 @@ static auto module = RiruVersionedModuleInfo{
                 .onModuleLoaded = onModuleLoaded,
                 .forkAndSpecializePre = forkAndSpecializePre,
                 .forkAndSpecializePost = forkAndSpecializePost,
-                .forkSystemServerPre = forkSystemServerPre,
+                .forkSystemServerPre = nullptr,
                 .forkSystemServerPost = forkSystemServerPost,
                 .specializeAppProcessPre = specializeAppProcessPre,
                 .specializeAppProcessPost = specializeAppProcessPost
