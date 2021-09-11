@@ -14,11 +14,14 @@ else
 fi
 
 # Setup adb root support
+log -p i -t "Sui" "Setup adb root support"
 rm "$MODDIR/bin/adb_root"
 ln -s "$MODDIR/bin/sui" "$MODDIR/bin/adb_root"
 chmod 700 "$MODDIR/bin/adb_root"
 "$MODDIR/bin/adb_root" "$MAGISK_PATH"
+adb_root_exit=$?
+log -p i -t "Sui" "Exited with $adb_root_exit"
 
 # Run Sui server
 chmod 700 "$MODDIR"/bin/sui
-exec "$MODDIR"/bin/sui "$MODDIR"
+exec "$MODDIR"/bin/sui "$MODDIR" "$adb_root_exit"

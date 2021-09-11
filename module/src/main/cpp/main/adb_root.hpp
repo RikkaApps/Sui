@@ -8,6 +8,11 @@
 #include <elf.h>
 #include <link.h>
 
+#define ERR_SELINUX 10
+#define ERR_NO_ADBD 11
+#define ERR_ADBD_IS_STATIC 12
+#define ERR_OTHER 13
+
 struct attrs {
     uid_t uid{};
     gid_t gid{};
@@ -127,7 +132,7 @@ inline bool is_dynamically_linked(const char *path) {
     return is_dynamically_linked;
 }
 
-static bool setup_adb_root(const char *root_path) {
+static int setup_adb_root(const char *root_path) {
     // Path of adbd_wrapper in module folder
     char my_file[PATH_MAX]{0};
 
@@ -140,12 +145,12 @@ static bool setup_adb_root(const char *root_path) {
 
     if (selinux_check_access("u:r:adbd:s0", "u:r:adbd:s0", "process", "setcurrent", nullptr) != 0) {
         PLOGE("adbd adbd process setcurrent not allowed");
-        return false;
+        return ERR_SELINUX;
     }
 
     if (selinux_check_access("u:r:adbd:s0", "u:r:magisk:s0", "process", "dyntransition", nullptr) != 0) {
         PLOGE("adbd magisk process dyntransition not allowed");
-        return false;
+        return ERR_SELINUX;
     }
 
     LOGI("Prepare adbd files");
@@ -169,12 +174,12 @@ static bool setup_adb_root(const char *root_path) {
 
             if (copyfile(file, my_backup) != 0) {
                 PLOGE("copyfile %s -> %s", file, my_backup);
-                return false;
+                return ERR_OTHER;
             }
 
             if (getattrs(file, &file_attr) != 0
                 || getattrs(folder, &folder_attr) != 0) {
-                return false;
+                return ERR_OTHER;
             }
         }
     }
@@ -183,7 +188,7 @@ static bool setup_adb_root(const char *root_path) {
         if (access("/system/bin/adbd", F_OK) != 0) {
             PLOGE("access /system/bin/adbd");
             LOGW("No adbd");
-            return false;
+            return ERR_NO_ADBD;
         }
 
         LOGI("Use adbd from /system");
@@ -192,7 +197,7 @@ static bool setup_adb_root(const char *root_path) {
 
         if (getattrs(file, &file_attr) != 0
             || getattrs(folder, &folder_attr) != 0) {
-            return false;
+            return ERR_OTHER;
         }
     }
 
@@ -204,7 +209,7 @@ static bool setup_adb_root(const char *root_path) {
 
     if (!is_dynamically_linked(file)) {
         LOGE("%s is not dynamically linked", file);
-        return false;
+        return ERR_ADBD_IS_STATIC;
     } else {
         LOGI("%s is dynamically linked", file);
     }
@@ -214,14 +219,14 @@ static bool setup_adb_root(const char *root_path) {
 
         if (mount("tmpfs", folder, "tmpfs", 0, "mode=755") != 0) {
             PLOGE("mount tmpfs -> %s", folder);
-            return false;
+            return ERR_OTHER;
         }
 
         // $MODDIR/bin/adbd_wrapper -> /apex/com.android.adbd/bin/adbd
         if (setup_file(my_file, file, &file_attr) != 0) {
             umount(folder);
             LOGE("Failed to %s -> %s", my_file, file);
-            return false;
+            return ERR_OTHER;
         }
 
         if (file_attr.context) {
@@ -233,11 +238,11 @@ static bool setup_adb_root(const char *root_path) {
         if (setup_file(my_backup, backup, &file_attr) != 0) {
             umount(folder);
             LOGE("Failed to %s -> %s", my_backup, backup);
-            return false;
+            return ERR_OTHER;
         }
 
         LOGI("Finished");
-        return true;
+        return EXIT_SUCCESS;
     } else {
         LOGI("Copy files to MODDIR/system");
 
@@ -247,7 +252,7 @@ static bool setup_adb_root(const char *root_path) {
         strcat(module_system_bin, "/system/bin");
         if (mkdir(module_system_bin, folder_attr.mode) == -1 && errno != EEXIST) {
             PLOGE("mkdir %s", module_system_bin);
-            return false;
+            return ERR_OTHER;
         }
 
         //  $MODDIR/system/bin/adbd_wrapper -> $MODDIR/system/bin/adbd
@@ -255,11 +260,11 @@ static bool setup_adb_root(const char *root_path) {
         strcat(my_backup, "/adbd");
         if (copyfile(my_file, my_backup) != 0) {
             PLOGE("copyfile %s -> %s", my_file, my_backup);
-            return false;
+            return ERR_OTHER;
         }
         if (setattrs(my_backup, &file_attr) != 0) {
             unlink(my_backup);
-            return false;
+            return ERR_OTHER;
         }
 
         // /system/bin/adbd -> $MODDIR/system/bin/adbd_real
@@ -267,7 +272,7 @@ static bool setup_adb_root(const char *root_path) {
         strcat(my_backup, "/adbd_real");
         if (copyfile(file, my_backup) != 0) {
             PLOGE("copyfile %s -> %s", file, my_backup);
-            return false;
+            return ERR_OTHER;
         }
         if (file_attr.context) {
             freecon(file_attr.context);
@@ -275,11 +280,11 @@ static bool setup_adb_root(const char *root_path) {
         file_attr.context = strdup("u:object_r:magisk_file:s0");
         if (setattrs(my_backup, &file_attr) != 0) {
             unlink(my_backup);
-            return false;
+            return ERR_OTHER;
         }
 
         LOGI("Finished");
-        return true;
+        return EXIT_SUCCESS;
     }
 }
 
@@ -288,7 +293,7 @@ inline int adb_root_main(int argc, char **argv) {
 
     if (init_selinux()) {
         auto root_path = argv[1];
-        return setup_adb_root(root_path) ? 0 : 1;
+        return setup_adb_root(root_path);
     } else {
         LOGW("Cannot load libselinux");
         return 1;
