@@ -10,24 +10,44 @@ fi
 log -p i -t "Sui" "Magisk version $MAGISK_VER_CODE"
 log -p i -t "Sui" "Magisk module path $MAGISK_PATH"
 
-# Run magiskpolicy manually if Magisk does not load sepolicy.rule
-if [ ! -e "$(magisk --path)/.magisk/mirror/sepolicy.rules/riru-sui/sepolicy.rule" ]; then
-  log -p e -t "Sui" "Magisk does not load sepolicy.rule..."
-  log -p e -t "Sui" "Exec magiskpolicy --live --apply $MAGISK_PATH/sepolicy.rule..."
-  magiskpolicy --live --apply "$MAGISK_PATH"/sepolicy.rule
-  log -p i -t "Sui" "Apply finished"
-else
-  log -p i -t "Sui" "Magisk should have loaded sepolicy.rule correctly"
+enable_once="/data/adb/sui/enable_adb_root_once"
+enable_forever="/data/adb/sui/enable_adb_root"
+adb_root_exit=0
+
+if [ -f $enable_once ]; then
+  log -p i -t "Sui" "adb root support is enabled for this time of boot"
+  rm $enable_once
+  enable_adb_root=true
 fi
 
-# Setup adb root support
-log -p i -t "Sui" "Setup adb root support"
-rm "$MODDIR/bin/adb_root"
-ln -s "$MODDIR/bin/sui" "$MODDIR/bin/adb_root"
-chmod 700 "$MODDIR/bin/adb_root"
-"$MODDIR/bin/adb_root" "$MAGISK_PATH"
-adb_root_exit=$?
-log -p i -t "Sui" "Exited with $adb_root_exit"
+if [ -f $enable_forever ]; then
+  log -p i -t "Sui" "adb root support is enabled forever"
+  enable_adb_root=true
+fi
+
+if [ "$enable_adb_root" = true ]; then
+  log -p i -t "Sui" "Setup adb root support"
+
+  # Run magiskpolicy manually if Magisk does not load sepolicy.rule
+  if [ ! -e "$(magisk --path)/.magisk/mirror/sepolicy.rules/riru-sui/sepolicy.rule" ]; then
+    log -p e -t "Sui" "Magisk does not load sepolicy.rule..."
+    log -p e -t "Sui" "Exec magiskpolicy --live --apply $MAGISK_PATH/sepolicy.rule..."
+    magiskpolicy --live --apply "$MAGISK_PATH"/sepolicy.rule
+    log -p i -t "Sui" "Apply finished"
+  else
+    log -p i -t "Sui" "Magisk should have loaded sepolicy.rule correctly"
+  fi
+
+  # Setup adb root support
+  rm "$MODDIR/bin/adb_root"
+  ln -s "$MODDIR/bin/sui" "$MODDIR/bin/adb_root"
+  chmod 700 "$MODDIR/bin/adb_root"
+  "$MODDIR/bin/adb_root" "$MAGISK_PATH"
+  adb_root_exit=$?
+  log -p i -t "Sui" "Exited with $adb_root_exit"
+else
+  log -p i -t "Sui" "adb root support is disabled"
+fi
 
 # Run Sui server
 chmod 700 "$MODDIR"/bin/sui
