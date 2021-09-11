@@ -1,7 +1,14 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
-MAGISK_PATH="$(magisk --path)/.magisk/modules/riru-sui"
-log -p d -t "Sui" "Magisk module path $MAGISK_PATH"
+MAGISK_VER_CODE=$(magisk -V)
+if [ "$MAGISK_VER_CODE" -ge 21000 ]; then
+  MAGISK_PATH="$(magisk --path)/.magisk/modules/riru-sui"
+else
+  MAGISK_PATH=/sbin/.magisk/modules/riru-sui
+fi
+
+log -p i -t "Sui" "Magisk version $MAGISK_VER_CODE"
+log -p i -t "Sui" "Magisk module path $MAGISK_PATH"
 
 # Run magiskpolicy manually if Magisk does not load sepolicy.rule
 if [ ! -e "$(magisk --path)/.magisk/mirror/sepolicy.rules/riru-sui/sepolicy.rule" ]; then
