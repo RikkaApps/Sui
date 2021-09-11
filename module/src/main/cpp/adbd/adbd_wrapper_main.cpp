@@ -27,16 +27,27 @@
 
 using namespace std::literals::string_view_literals;
 
-#ifdef __LP64__
-constexpr char adbd_ld_preload[] = "/system/lib64/libsui_adbd_preload.so";
-#else
-constexpr char adbd_ld_preload[] = "/system/lib/libsui_adbd_preload.so";
-#endif
-
 int main(int argc, char **argv) {
-    static char adbd_real[PATH_MAX]{0};
-    strcpy(adbd_real, argv[0]);
-    strcat(adbd_real, "_real");
+    const char *adbd_ld_preload;
+    const char *adbd_real;
+
+    auto apex = "/apex/"sv;
+    std::string_view argv0{argv[0]};
+    if (argv0.length() > apex.length() && argv0.substr(0, apex.length()) == apex) {
+        adbd_real = "/apex/com.android.adbd/bin/adbd_real";
+#ifdef __LP64__
+        adbd_ld_preload = "/apex/com.android.adbd/lib64/libsui_adbd_preload.so";
+#else
+        adbd_ld_preload = "/apex/com.android.adbd/lib/libsui_adbd_preload.so";
+#endif
+    } else {
+        adbd_real = "/system/bin/adbd_real";
+#ifdef __LP64__
+        adbd_ld_preload = "/system/lib64/libsui_adbd_preload.so";
+#else
+        adbd_ld_preload = "/system/lib/libsui_adbd_preload.so";
+#endif
+    }
 
     LOGI("adbd_main");
     LOGD("adbd_real=%s", adbd_real);

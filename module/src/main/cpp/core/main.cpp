@@ -81,8 +81,13 @@ static void UmountApexAdbd() {
 
     if (android::GetApiLevel() >= 30) {
         called = true;
-        if (umount2("/apex/com.android.adbd/bin", MNT_DETACH)) {
-            PLOGE("umount /apex/com.android.adbd/bin");
+
+        umount2("/apex/com.android.adbd/bin", MNT_DETACH);
+        if (android::Has32Bit() && !android::Has64Bit()) {
+            umount2("/apex/com.android.adbd/lib", MNT_DETACH);
+        }
+        if (android::Has64Bit()) {
+            umount2("/apex/com.android.adbd/lib64", MNT_DETACH);
         }
     }
 }

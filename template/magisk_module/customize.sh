@@ -48,18 +48,18 @@ mkdir "$MODPATH/system/lib64"
 if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
   ui_print "- Extracting x86 libraries"
   extract "$ZIPFILE" "lib/x86/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
-  extract "$ZIPFILE" "lib/x86/libsui_adbd_preload.so" "$MODPATH/system/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting x64 libraries"
     extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
     extract "$ZIPFILE" "lib/x86_64/libmain.so" "$MODPATH/bin" true
     extract "$ZIPFILE" "lib/x86_64/libadbd_wrapper.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/x86_64/libsui_adbd_preload.so" "$MODPATH/system/lib64" true
+    extract "$ZIPFILE" "lib/x86_64/libadbd_preload.so" "$MODPATH/lib" true
     extract "$ZIPFILE" "lib/x86_64/librish.so" "$MODPATH" true
   else
     extract "$ZIPFILE" "lib/x86/libmain.so" "$MODPATH/bin" true
     extract "$ZIPFILE" "lib/x86/libadbd_wrapper.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/x86/libadbd_preload.so" "$MODPATH/lib" true
     extract "$ZIPFILE" "lib/x86/librish.so" "$MODPATH" true
   fi
 fi
@@ -67,18 +67,18 @@ fi
 if [ "$ARCH" = "arm" ] || [ "$ARCH" = "arm64" ]; then
   ui_print "- Extracting arm libraries"
   extract "$ZIPFILE" "lib/armeabi-v7a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
-  extract "$ZIPFILE" "lib/armeabi-v7a/libsui_adbd_preload.so" "$MODPATH/system/lib" true
 
   if [ "$IS64BIT" = true ]; then
     ui_print "- Extracting arm64 libraries"
     extract "$ZIPFILE" "lib/arm64-v8a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
     extract "$ZIPFILE" "lib/arm64-v8a/libmain.so" "$MODPATH/bin" true
     extract "$ZIPFILE" "lib/arm64-v8a/libadbd_wrapper.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/arm64-v8a/libsui_adbd_preload.so" "$MODPATH/system/lib64" true
+    extract "$ZIPFILE" "lib/arm64-v8a/libadbd_preload.so" "$MODPATH/lib" true
     extract "$ZIPFILE" "lib/arm64-v8a/librish.so" "$MODPATH" true
   else
     extract "$ZIPFILE" "lib/armeabi-v7a/libmain.so" "$MODPATH/bin" true
     extract "$ZIPFILE" "lib/armeabi-v7a/libadbd_wrapper.so" "$MODPATH/bin" true
+    extract "$ZIPFILE" "lib/armeabi-v7a/libadbd_preload.so" "$MODPATH/lib" true
     extract "$ZIPFILE" "lib/armeabi-v7a/librish.so" "$MODPATH" true
   fi
 fi

@@ -67,10 +67,10 @@ add_executable(libadbd_wrapper.so
 target_link_libraries(libadbd_wrapper.so cxx::cxx log)
 set_target_properties(libadbd_wrapper.so PROPERTIES LINK_FLAGS_RELEASE -s)
 
-add_library(sui_adbd_preload SHARED
+add_library(adbd_preload SHARED
         adbd/adbd_preload.cpp)
-target_link_libraries(sui_adbd_preload cxx::cxx log)
-set_target_properties(sui_adbd_preload PROPERTIES LINK_FLAGS_RELEASE -s)
+target_link_libraries(adbd_preload cxx::cxx log)
+set_target_properties(adbd_preload PROPERTIES LINK_FLAGS_RELEASE -s)
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(TARGET ${MODULE_NAME} POST_BUILD
@@ -82,6 +82,6 @@ if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(TARGET libadbd_wrapper.so POST_BUILD
             COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libadbd_wrapper.so")
 
-    add_custom_command(TARGET sui_adbd_preload POST_BUILD
-            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libsui_adbd_preload.so")
+    add_custom_command(TARGET adbd_preload POST_BUILD
+            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libadbd_preload.so")
 endif ()

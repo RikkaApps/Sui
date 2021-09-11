@@ -23,6 +23,8 @@ namespace android {
 
     static int apiLevel = 0;
     static int previewApiLevel = 0;
+    static int8_t has32Bit = -1;
+    static int8_t has64Bit = -1;
 
     int GetApiLevel() {
         if (apiLevel > 0) return apiLevel;
@@ -42,5 +44,21 @@ namespace android {
             previewApiLevel = atoi(buf);
 
         return previewApiLevel;
+    }
+
+    bool Has32Bit() {
+        if (has32Bit != -1) return has32Bit == 1;
+
+        char buf[PROP_VALUE_MAX + 1];
+        has32Bit = __system_property_get("ro.product.cpu.abilist32", buf) > 0 ? 1 : 0;
+        return has32Bit;
+    }
+
+    bool Has64Bit() {
+        if (has64Bit != -1) return has64Bit == 1;
+
+        char buf[PROP_VALUE_MAX + 1];
+        has64Bit = __system_property_get("ro.product.cpu.abilist64", buf) > 0 ? 1 : 0;
+        return has64Bit;
     }
 }

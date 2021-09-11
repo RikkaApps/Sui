@@ -7,6 +7,10 @@
 #include <misc.h>
 #include <elf.h>
 #include <link.h>
+#include <private/ScopedReaddir.h>
+#include <string_view>
+
+using namespace std::literals::string_view_literals;
 
 #define ERR_SELINUX 10
 #define ERR_NO_ADBD 11
@@ -66,10 +70,10 @@ inline int setattrs(const char *file, const attrs *attrs) {
 }
 
 inline int setup_file(const char *source, const char *target, const attrs *attrs) {
-    if (setattrs(source, attrs) != 0) {
+    if (attrs && setattrs(source, attrs) != 0) {
         return 1;
     }
-    if (int fd = open(target, O_RDWR | O_CREAT, attrs->mode); fd == -1) {
+    if (int fd = open(target, O_RDWR | O_CREAT, 0700); fd == -1) {
         PLOGE("open %s", target);
         return 1;
     } else {
@@ -132,29 +136,37 @@ inline bool is_dynamically_linked(const char *path) {
     return is_dynamically_linked;
 }
 
-inline int setup_adb_root_apex(const char *root_path, const char *adbd_wrapper) {
-    const char *file, *backup, *folder;
-    attrs file_attr{}, folder_attr{};
+inline int setup_adb_root_apex(const char *root_path, const char *adbd_wrapper, const char *adbd_preload) {
+    char versioned_adbd[PATH_MAX]{0};
+    char path[PATH_MAX]{0};
+    char source[PATH_MAX]{0};
+    char target[PATH_MAX]{0};
+    const char *adbd, *adbd_real, *bin_folder, *lib_folder;
+    attrs file_attr{}, folder_attr{}, lib_attr{};
 
-    file = "/apex/com.android.adbd/bin/adbd";
-    backup = "/apex/com.android.adbd/bin/adbd_real";
-    folder = "/apex/com.android.adbd/bin";
-
-    if (!is_dynamically_linked(file)) {
-        LOGE("%s is not dynamically linked", file);
+    adbd = "/apex/com.android.adbd/bin/adbd";
+    adbd_real = "/apex/com.android.adbd/bin/adbd_real";
+    bin_folder = "/apex/com.android.adbd/bin";
+#ifdef __LP64__
+    lib_folder = "/apex/com.android.adbd/lib64";
+#else
+    lib_folder = "/apex/com.android.adbd/lib";
+#endif
+    if (!is_dynamically_linked(adbd)) {
+        LOGE("%s is not dynamically linked (or 32 bit elf on 64 bit machine)", adbd);
         return ERR_ADBD_IS_STATIC;
     } else {
-        LOGI("%s is dynamically linked", file);
+        LOGI("%s is dynamically linked", adbd);
     }
 
-    if (getattrs(file, &file_attr) != 0
-        || getattrs(folder, &folder_attr) != 0) {
+    if (getattrs(adbd, &file_attr) != 0
+        || getattrs(bin_folder, &folder_attr) != 0) {
         return ERR_OTHER;
     } else {
         LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
-             file, file_attr.uid, file_attr.gid, file_attr.mode, file_attr.context);
+             adbd, file_attr.uid, file_attr.gid, file_attr.mode, file_attr.context);
         LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
-             folder, folder_attr.uid, folder_attr.gid, folder_attr.mode, folder_attr.context);
+             bin_folder, folder_attr.uid, folder_attr.gid, folder_attr.mode, folder_attr.context);
     }
 
     // Path of real of adbd in module folder
@@ -162,42 +174,161 @@ inline int setup_adb_root_apex(const char *root_path, const char *adbd_wrapper) 
     strcpy(my_backup, root_path);
     strcat(my_backup, "/bin/adbd_real");
 
-    if (copyfile(file, my_backup) != 0) {
-        PLOGE("copyfile %s -> %s", file, my_backup);
+    if (copyfile(adbd, my_backup) != 0) {
+        PLOGE("copyfile %s -> %s", adbd, my_backup);
         return ERR_OTHER;
     }
 
-    LOGI("Mount /apex/com.android.adbd/bin tmpfs");
-
-    if (mount("tmpfs", folder, "tmpfs", 0, "mode=755") != 0) {
-        PLOGE("mount tmpfs -> %s", folder);
+    // Find /apex/com.android.adbd@version
+    ScopedReaddir dir("/apex");
+    if (dir.IsBad()) {
+        PLOGE("opendir %s", "/apex");
         return ERR_OTHER;
     }
 
-    // $MODDIR/bin/adbd_wrapper -> /apex/com.android.adbd/bin/adbd
-    if (setup_file(adbd_wrapper, file, &file_attr) != 0) {
-        umount(folder);
-        LOGE("Failed to %s -> %s", adbd_wrapper, file);
+    auto apex = "/apex/"sv;
+    strncpy(versioned_adbd, apex.data(), apex.length());
+
+    bool found = false;
+    uint64_t version = 0;
+    auto adbd_prefix = "com.android.adbd@"sv;
+    while (dirent *entry = dir.ReadEntry()) {
+        std::string_view d_name{entry->d_name};
+
+        if (d_name.length() <= adbd_prefix.length() ||
+            d_name.substr(0, adbd_prefix.length()) != adbd_prefix)
+            continue;
+
+        const char *version_string = entry->d_name + adbd_prefix.length();
+        int new_version = atoll(version_string);
+        if (new_version >= version) {
+            strncpy(versioned_adbd + apex.length(), d_name.data(), d_name.length());
+            LOGI("Found versioned apex %s", versioned_adbd);
+            found = true;
+        }
+    }
+
+    if (!found) {
+        LOGE("Cannot find versioned apex");
         return ERR_OTHER;
     }
 
-    if (file_attr.context) {
-        freecon(file_attr.context);
-    }
-    file_attr.context = strdup("u:object_r:magisk_file:s0");
+    strcpy(path, versioned_adbd);
+    strcat(path, "/lib");
+#ifdef __LP64__
+    strcat(path, "64");
+#endif
 
-    // $MODDIR/bin/adbd_real -> /apex/com.android.adbd/bin/adbd_real
-    if (setup_file(my_backup, backup, &file_attr) != 0) {
-        umount(folder);
-        LOGE("Failed to %s -> %s", my_backup, backup);
+    ScopedReaddir lib(path);
+    if (lib.IsBad()) {
+        PLOGE("opendir %s", path);
         return ERR_OTHER;
+    }
+
+    bool bin_mounted = false, lib_mounted = false;
+
+    LOGI("Mount %s tmpfs", bin_folder);
+
+    {
+        if (mount("tmpfs", bin_folder, "tmpfs", 0, "mode=755") != 0) {
+            PLOGE("mount tmpfs -> %s", bin_folder);
+            goto failed;
+        }
+
+        bin_mounted = true;
+
+        if (setattrs(bin_folder, &folder_attr) != 0) {
+            goto failed;
+        }
+
+        // $MODDIR/bin/adbd_wrapper -> /apex/com.android.adbd/bin/adbd
+        if (setup_file(adbd_wrapper, adbd, &file_attr) != 0) {
+            LOGE("Failed to %s -> %s", adbd_wrapper, adbd);
+            goto failed;
+        }
+
+        if (file_attr.context) {
+            freecon(file_attr.context);
+        }
+        file_attr.context = strdup("u:object_r:magisk_file:s0");
+
+        // $MODDIR/bin/adbd_real -> /apex/com.android.adbd/bin/adbd_real
+        if (setup_file(my_backup, adbd_real, &file_attr) != 0) {
+            LOGE("Failed to %s -> %s", my_backup, adbd_real);
+            goto failed;
+        }
+    }
+
+    LOGI("Mount %s tmpfs", lib_folder);
+
+    {
+        if (mount("tmpfs", lib_folder, "tmpfs", 0, "mode=755") != 0) {
+            PLOGE("mount tmpfs -> %s", lib_folder);
+            goto failed;
+        }
+
+        lib_mounted = true;
+
+        if (lib.IsBad()) {
+            goto failed;
+        }
+
+        while (dirent *entry = lib.ReadEntry()) {
+            if (entry->d_name[0] == '.') continue;
+
+            strcpy(source, versioned_adbd);
+#ifdef __LP64__
+            strcat(source, "/lib64/");
+#else
+            strcat(source, "/lib/");
+#endif
+            strcat(source, entry->d_name);
+
+            if (getattrs(source, &lib_attr) != 0) {
+                goto failed;
+            }
+
+            strcpy(target, lib_folder);
+            strcat(target, "/");
+            strcat(target, entry->d_name);
+
+            if (setup_file(source, target, nullptr) != 0) {
+                LOGE("Failed to %s -> %s", source, target);
+                goto failed;
+            }
+        }
+
+        strcpy(target, lib_folder);
+        strcat(target, "/libsui_adbd_preload.so");
+
+        if (setup_file(adbd_preload, target, &lib_attr) != 0) {
+            LOGE("Failed to %s -> %s", adbd_preload, target);
+            goto failed;
+        }
     }
 
     LOGI("Finished");
     return EXIT_SUCCESS;
+
+    failed:
+    if (bin_mounted) {
+        if (umount2(bin_folder, MNT_DETACH) != 0) {
+            PLOGE("umount2 %s", bin_folder);
+        } else {
+            LOGW("Unmount %s", bin_folder);
+        }
+    }
+    if (lib_mounted) {
+        if (umount2(lib_folder, MNT_DETACH) != 0) {
+            PLOGE("umount2 %s", lib_folder);
+        } else {
+            LOGW("Unmount %s", lib_folder);
+        }
+    }
+    return ERR_OTHER;
 }
 
-inline int setup_adb_root_non_apex(const char *root_path, const char *adbd_wrapper) {
+inline int setup_adb_root_non_apex(const char *root_path, const char *adbd_wrapper, const char *adbd_preload) {
     const char *file, *folder;
     attrs file_attr{}, folder_attr{};
 
@@ -223,41 +354,65 @@ inline int setup_adb_root_non_apex(const char *root_path, const char *adbd_wrapp
 
     LOGI("Copy files to MODDIR/system");
 
+    char module_folder[PATH_MAX]{0};
+    char target[PATH_MAX]{0};
+
     // mkdir $MODDIR/system/bin
-    char module_system_bin[PATH_MAX]{0};
-    strcpy(module_system_bin, root_path);
-    strcat(module_system_bin, "/system/bin");
-    if (mkdir(module_system_bin, folder_attr.mode) == -1 && errno != EEXIST) {
-        PLOGE("mkdir %s", module_system_bin);
+    strcpy(module_folder, root_path);
+    strcat(module_folder, "/system/bin");
+    if (mkdir(module_folder, folder_attr.mode) == -1 && errno != EEXIST) {
+        PLOGE("mkdir %s", module_folder);
         return ERR_OTHER;
     }
 
     // $MODDIR/system/bin/adbd_wrapper -> $MODDIR/system/bin/adbd
-    char path[PATH_MAX]{0};
-    strcpy(path, module_system_bin);
-    strcat(path, "/adbd");
-    if (copyfile(adbd_wrapper, path) != 0) {
-        PLOGE("copyfile %s -> %s", adbd_wrapper, path);
+    strcpy(target, module_folder);
+    strcat(target, "/adbd");
+    if (copyfile(adbd_wrapper, target) != 0) {
+        PLOGE("copyfile %s -> %s", adbd_wrapper, target);
         return ERR_OTHER;
     }
-    if (setattrs(path, &file_attr) != 0) {
-        unlink(path);
+    if (setattrs(target, &file_attr) != 0) {
+        unlink(target);
         return ERR_OTHER;
     }
 
     // /system/bin/adbd -> $MODDIR/system/bin/adbd_real
-    strcpy(path, module_system_bin);
-    strcat(path, "/adbd_real");
-    if (copyfile(file, path) != 0) {
-        PLOGE("copyfile %s -> %s", file, path);
+    strcpy(target, module_folder);
+    strcat(target, "/adbd_real");
+    if (copyfile(file, target) != 0) {
+        PLOGE("copyfile %s -> %s", file, target);
         return ERR_OTHER;
     }
     if (file_attr.context) {
         freecon(file_attr.context);
     }
     file_attr.context = strdup("u:object_r:magisk_file:s0");
-    if (setattrs(path, &file_attr) != 0) {
-        unlink(path);
+    if (setattrs(target, &file_attr) != 0) {
+        unlink(target);
+        return ERR_OTHER;
+    }
+
+    // mkdir $MODDIR/system/lib(64)
+    strcpy(module_folder, root_path);
+    strcat(module_folder, "/system/lib");
+#ifdef __LP64__
+    strcat(module_folder, "64");
+#endif
+    if (mkdir(module_folder, folder_attr.mode) == -1 && errno != EEXIST) {
+        PLOGE("mkdir %s", module_folder);
+        return ERR_OTHER;
+    }
+
+    // $MODDIR/lib/libadbd_preload.so -> $MODDIR/system/lib(64)/libsui_adbd_preload.so
+    strcpy(target, module_folder);
+    strcat(target, "/libsui_adbd_preload.so");
+    if (copyfile(adbd_preload, target) != 0) {
+        PLOGE("copyfile %s -> %s", adbd_preload, target);
+        return ERR_OTHER;
+    }
+    if (setattrs(target, &file_attr) != 0) {
+        unlink(target);
         return ERR_OTHER;
     }
 
@@ -276,10 +431,13 @@ static int setup_adb_root(const char *root_path) {
         return ERR_SELINUX;
     }
 
-    // Path of adbd_wrapper in module folder
-    char my_file[PATH_MAX]{0};
-    strcpy(my_file, root_path);
-    strcat(my_file, "/bin/adbd_wrapper");
+    char adbd_wrapper[PATH_MAX]{0};
+    strcpy(adbd_wrapper, root_path);
+    strcat(adbd_wrapper, "/bin/adbd_wrapper");
+
+    char adbd_preload[PATH_MAX]{0};
+    strcpy(adbd_preload, root_path);
+    strcat(adbd_preload, "/lib/libadbd_preload.so");
 
     if (android::GetApiLevel() >= 30) {
         if (access("/apex/com.android.adbd/bin/adbd", F_OK) != 0) {
@@ -287,7 +445,7 @@ static int setup_adb_root(const char *root_path) {
             LOGW("Apex not exists on API 30+ device");
         } else {
             LOGI("Use adbd from /apex");
-            return setup_adb_root_apex(root_path, my_file);
+            return setup_adb_root_apex(root_path, adbd_wrapper, adbd_preload);
         }
     }
 
@@ -298,7 +456,7 @@ static int setup_adb_root(const char *root_path) {
     }
 
     LOGI("Use adbd from /system");
-    return setup_adb_root_non_apex(root_path, my_file);
+    return setup_adb_root_non_apex(root_path, adbd_wrapper, adbd_preload);
 }
 
 inline int adb_root_main(int argc, char **argv) {
