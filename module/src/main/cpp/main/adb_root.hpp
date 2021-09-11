@@ -132,17 +132,140 @@ inline bool is_dynamically_linked(const char *path) {
     return is_dynamically_linked;
 }
 
-static int setup_adb_root(const char *root_path) {
-    // Path of adbd_wrapper in module folder
-    char my_file[PATH_MAX]{0};
+inline int setup_adb_root_apex(const char *root_path, const char *adbd_wrapper) {
+    const char *file, *backup, *folder;
+    attrs file_attr{}, folder_attr{};
+
+    file = "/apex/com.android.adbd/bin/adbd";
+    backup = "/apex/com.android.adbd/bin/adbd_real";
+    folder = "/apex/com.android.adbd/bin";
+
+    if (!is_dynamically_linked(file)) {
+        LOGE("%s is not dynamically linked", file);
+        return ERR_ADBD_IS_STATIC;
+    } else {
+        LOGI("%s is dynamically linked", file);
+    }
+
+    if (getattrs(file, &file_attr) != 0
+        || getattrs(folder, &folder_attr) != 0) {
+        return ERR_OTHER;
+    } else {
+        LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
+             file, file_attr.uid, file_attr.gid, file_attr.mode, file_attr.context);
+        LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
+             folder, folder_attr.uid, folder_attr.gid, folder_attr.mode, folder_attr.context);
+    }
 
     // Path of real of adbd in module folder
     char my_backup[PATH_MAX]{0};
+    strcpy(my_backup, root_path);
+    strcat(my_backup, "/bin/adbd_real");
 
-    const char *file = nullptr, *backup = nullptr, *folder = nullptr;
+    if (copyfile(file, my_backup) != 0) {
+        PLOGE("copyfile %s -> %s", file, my_backup);
+        return ERR_OTHER;
+    }
+
+    LOGI("Mount /apex/com.android.adbd/bin tmpfs");
+
+    if (mount("tmpfs", folder, "tmpfs", 0, "mode=755") != 0) {
+        PLOGE("mount tmpfs -> %s", folder);
+        return ERR_OTHER;
+    }
+
+    // $MODDIR/bin/adbd_wrapper -> /apex/com.android.adbd/bin/adbd
+    if (setup_file(adbd_wrapper, file, &file_attr) != 0) {
+        umount(folder);
+        LOGE("Failed to %s -> %s", adbd_wrapper, file);
+        return ERR_OTHER;
+    }
+
+    if (file_attr.context) {
+        freecon(file_attr.context);
+    }
+    file_attr.context = strdup("u:object_r:magisk_file:s0");
+
+    // $MODDIR/bin/adbd_real -> /apex/com.android.adbd/bin/adbd_real
+    if (setup_file(my_backup, backup, &file_attr) != 0) {
+        umount(folder);
+        LOGE("Failed to %s -> %s", my_backup, backup);
+        return ERR_OTHER;
+    }
+
+    LOGI("Finished");
+    return EXIT_SUCCESS;
+}
+
+inline int setup_adb_root_non_apex(const char *root_path, const char *adbd_wrapper) {
+    const char *file, *folder;
     attrs file_attr{}, folder_attr{};
-    bool isApex = false;
 
+    file = "/system/bin/adbd";
+    folder = "/system/bin";
+
+    if (!is_dynamically_linked(file)) {
+        LOGE("%s is not dynamically linked", file);
+        return ERR_ADBD_IS_STATIC;
+    } else {
+        LOGI("%s is dynamically linked", file);
+    }
+
+    if (getattrs(file, &file_attr) != 0
+        || getattrs(folder, &folder_attr) != 0) {
+        return ERR_OTHER;
+    } else {
+        LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
+             file, file_attr.uid, file_attr.gid, file_attr.mode, file_attr.context);
+        LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
+             folder, folder_attr.uid, folder_attr.gid, folder_attr.mode, folder_attr.context);
+    }
+
+    LOGI("Copy files to MODDIR/system");
+
+    // mkdir $MODDIR/system/bin
+    char module_system_bin[PATH_MAX]{0};
+    strcpy(module_system_bin, root_path);
+    strcat(module_system_bin, "/system/bin");
+    if (mkdir(module_system_bin, folder_attr.mode) == -1 && errno != EEXIST) {
+        PLOGE("mkdir %s", module_system_bin);
+        return ERR_OTHER;
+    }
+
+    // $MODDIR/system/bin/adbd_wrapper -> $MODDIR/system/bin/adbd
+    char path[PATH_MAX]{0};
+    strcpy(path, module_system_bin);
+    strcat(path, "/adbd");
+    if (copyfile(adbd_wrapper, path) != 0) {
+        PLOGE("copyfile %s -> %s", adbd_wrapper, path);
+        return ERR_OTHER;
+    }
+    if (setattrs(path, &file_attr) != 0) {
+        unlink(path);
+        return ERR_OTHER;
+    }
+
+    // /system/bin/adbd -> $MODDIR/system/bin/adbd_real
+    strcpy(path, module_system_bin);
+    strcat(path, "/adbd_real");
+    if (copyfile(file, path) != 0) {
+        PLOGE("copyfile %s -> %s", file, path);
+        return ERR_OTHER;
+    }
+    if (file_attr.context) {
+        freecon(file_attr.context);
+    }
+    file_attr.context = strdup("u:object_r:magisk_file:s0");
+    if (setattrs(path, &file_attr) != 0) {
+        unlink(path);
+        return ERR_OTHER;
+    }
+
+    LOGI("Finished");
+    return EXIT_SUCCESS;
+}
+
+static int setup_adb_root(const char *root_path) {
     if (selinux_check_access("u:r:adbd:s0", "u:r:adbd:s0", "process", "setcurrent", nullptr) != 0) {
         PLOGE("adbd adbd process setcurrent not allowed");
         return ERR_SELINUX;
@@ -153,139 +276,29 @@ static int setup_adb_root(const char *root_path) {
         return ERR_SELINUX;
     }
 
-    LOGI("Prepare adbd files");
-
+    // Path of adbd_wrapper in module folder
+    char my_file[PATH_MAX]{0};
     strcpy(my_file, root_path);
     strcat(my_file, "/bin/adbd_wrapper");
 
     if (android::GetApiLevel() >= 30) {
         if (access("/apex/com.android.adbd/bin/adbd", F_OK) != 0) {
             PLOGE("access /apex/com.android.adbd/bin/adbd");
-            LOGW("Apex not exists on API 31+ device");
+            LOGW("Apex not exists on API 30+ device");
         } else {
             LOGI("Use adbd from /apex");
-            isApex = true;
-            file = "/apex/com.android.adbd/bin/adbd";
-            backup = "/apex/com.android.adbd/bin/adbd_real";
-            folder = "/apex/com.android.adbd/bin";
-
-            strcpy(my_backup, root_path);
-            strcat(my_backup, "/bin/adbd_real");
-
-            if (copyfile(file, my_backup) != 0) {
-                PLOGE("copyfile %s -> %s", file, my_backup);
-                return ERR_OTHER;
-            }
-
-            if (getattrs(file, &file_attr) != 0
-                || getattrs(folder, &folder_attr) != 0) {
-                return ERR_OTHER;
-            }
+            return setup_adb_root_apex(root_path, my_file);
         }
     }
 
-    if (!isApex) {
-        if (access("/system/bin/adbd", F_OK) != 0) {
-            PLOGE("access /system/bin/adbd");
-            LOGW("No adbd");
-            return ERR_NO_ADBD;
-        }
-
-        LOGI("Use adbd from /system");
-        file = "/system/bin/adbd";
-        folder = "/system/bin";
-
-        if (getattrs(file, &file_attr) != 0
-            || getattrs(folder, &folder_attr) != 0) {
-            return ERR_OTHER;
-        }
+    if (access("/system/bin/adbd", F_OK) != 0) {
+        PLOGE("access /system/bin/adbd");
+        LOGW("No adbd");
+        return ERR_NO_ADBD;
     }
 
-    LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
-         file, file_attr.uid, file_attr.gid, file_attr.mode, file_attr.context);
-
-    LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
-         folder, folder_attr.uid, folder_attr.gid, folder_attr.mode, folder_attr.context);
-
-    if (!is_dynamically_linked(file)) {
-        LOGE("%s is not dynamically linked", file);
-        return ERR_ADBD_IS_STATIC;
-    } else {
-        LOGI("%s is dynamically linked", file);
-    }
-
-    if (isApex) {
-        LOGI("Mount /apex/com.android.adbd/bin tmpfs");
-
-        if (mount("tmpfs", folder, "tmpfs", 0, "mode=755") != 0) {
-            PLOGE("mount tmpfs -> %s", folder);
-            return ERR_OTHER;
-        }
-
-        // $MODDIR/bin/adbd_wrapper -> /apex/com.android.adbd/bin/adbd
-        if (setup_file(my_file, file, &file_attr) != 0) {
-            umount(folder);
-            LOGE("Failed to %s -> %s", my_file, file);
-            return ERR_OTHER;
-        }
-
-        if (file_attr.context) {
-            freecon(file_attr.context);
-        }
-        file_attr.context = strdup("u:object_r:magisk_file:s0");
-
-        // $MODDIR/bin/adbd_real -> /apex/com.android.adbd/bin/adbd_real
-        if (setup_file(my_backup, backup, &file_attr) != 0) {
-            umount(folder);
-            LOGE("Failed to %s -> %s", my_backup, backup);
-            return ERR_OTHER;
-        }
-
-        LOGI("Finished");
-        return EXIT_SUCCESS;
-    } else {
-        LOGI("Copy files to MODDIR/system");
-
-        // mkdir $MODDIR/system/bin
-        char module_system_bin[PATH_MAX]{0};
-        strcpy(module_system_bin, root_path);
-        strcat(module_system_bin, "/system/bin");
-        if (mkdir(module_system_bin, folder_attr.mode) == -1 && errno != EEXIST) {
-            PLOGE("mkdir %s", module_system_bin);
-            return ERR_OTHER;
-        }
-
-        //  $MODDIR/system/bin/adbd_wrapper -> $MODDIR/system/bin/adbd
-        strcpy(my_backup, module_system_bin);
-        strcat(my_backup, "/adbd");
-        if (copyfile(my_file, my_backup) != 0) {
-            PLOGE("copyfile %s -> %s", my_file, my_backup);
-            return ERR_OTHER;
-        }
-        if (setattrs(my_backup, &file_attr) != 0) {
-            unlink(my_backup);
-            return ERR_OTHER;
-        }
-
-        // /system/bin/adbd -> $MODDIR/system/bin/adbd_real
-        strcpy(my_backup, module_system_bin);
-        strcat(my_backup, "/adbd_real");
-        if (copyfile(file, my_backup) != 0) {
-            PLOGE("copyfile %s -> %s", file, my_backup);
-            return ERR_OTHER;
-        }
-        if (file_attr.context) {
-            freecon(file_attr.context);
-        }
-        file_attr.context = strdup("u:object_r:magisk_file:s0");
-        if (setattrs(my_backup, &file_attr) != 0) {
-            unlink(my_backup);
-            return ERR_OTHER;
-        }
-
-        LOGI("Finished");
-        return EXIT_SUCCESS;
-    }
+    LOGI("Use adbd from /system");
+    return setup_adb_root_non_apex(root_path, my_file);
 }
 
 inline int adb_root_main(int argc, char **argv) {
