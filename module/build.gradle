@@ -132,7 +132,7 @@ afterEvaluate {
             from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
                 into 'lib'
             }
-            from("${rootProject.findProject('ui').buildDir}/outputs/apk/$variantLowered") {
+            from("${rootProject.findProject('ui').buildDir}/intermediates/apk/$variantLowered") {
                 exclude 'output-metadata.json'
                 rename { 'sui.apk' }
             }
