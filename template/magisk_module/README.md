@@ -6,6 +6,11 @@ Modern super user interface (SUI) implementation.
 
 ## Changelog
 
+### v12.2.0 (2021-09-11)
+
+- Add adb root support (disabled by default, see description at []GitHub release](https://github.com/RikkaApps/Sui/releases))
+- Fix using UserService will crash sui service on some devices
+
 ### v12.1.4 (2021-08-28)
 
 - Make sure original extras from newActivity is not deserialized (For example, this will fix the crash of MIUI Settings "All specs" page)
