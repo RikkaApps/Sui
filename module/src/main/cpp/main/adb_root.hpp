@@ -5,6 +5,8 @@
 #include <selinux.h>
 #include <logging.h>
 #include <misc.h>
+#include <elf.h>
+#include <link.h>
 
 struct attrs {
     uid_t uid{};
@@ -58,24 +60,84 @@ inline int setattrs(const char *file, const attrs *attrs) {
     return 0;
 }
 
-inline bool setup_file(const char *source, const char *target, const attrs *attrs) {
+inline int setup_file(const char *source, const char *target, const attrs *attrs) {
     if (setattrs(source, attrs) != 0) {
-        return false;
+        return 1;
     }
     if (int fd = open(target, O_RDWR | O_CREAT, attrs->mode); fd == -1) {
         PLOGE("open %s", target);
-        return false;
+        return 1;
     } else {
         close(fd);
     }
     if (mount(source, target, nullptr, MS_BIND, nullptr)) {
         PLOGE("mount %s -> %s", source, target);
+        return 1;
+    }
+    return 0;
+}
+
+inline bool is_dynamically_linked(const char *path) {
+    struct stat st;
+    ScopedFd fd(open(path, O_RDONLY));
+
+    if (fd.get() == -1) {
+        PLOGE("open %s", path);
         return false;
     }
-    return true;
+    if (fstat(fd.get(), &st) < 0) {
+        PLOGE("fstat");
+        return false;
+    }
+
+    auto data = static_cast<uint8_t *>(mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd.get(), 0));
+    if (data == MAP_FAILED) {
+        PLOGE("mmap");
+        return false;
+    }
+
+    auto ehdr = (ElfW(Ehdr) *) data;
+#ifdef __LP64__
+    if (ehdr->e_ident[EI_CLASS] != ELFCLASS64) {
+        LOGE("Not elf64");
+        munmap(data, st.st_size);
+        return false;
+    }
+#else
+    if (ehdr->e_ident[EI_CLASS] != ELFCLASS32) {
+        LOGE("Not elf32");
+        munmap(data, st.st_size);
+        return false;
+    }
+#endif
+
+    bool is_dynamically_linked = false;
+
+    auto phdr = (ElfW(Phdr) *) (data + ehdr->e_phoff);
+    int phnum = ehdr->e_phnum;
+
+    for (int i = 0; i < phnum; ++i) {
+        if (phdr[i].p_type == PT_DYNAMIC) {
+            is_dynamically_linked = true;
+            break;
+        }
+    }
+
+    munmap(data, st.st_size);
+    return is_dynamically_linked;
 }
 
 static bool setup_adb_root(const char *root_path) {
+    // Path of adbd_wrapper in module folder
+    char my_file[PATH_MAX]{0};
+
+    // Path of real of adbd in module folder
+    char my_backup[PATH_MAX]{0};
+
+    const char *file = nullptr, *backup = nullptr, *folder = nullptr;
+    attrs file_attr{}, folder_attr{};
+    bool isApex = false;
+
     if (selinux_check_access("u:r:adbd:s0", "u:r:adbd:s0", "process", "setcurrent", nullptr) != 0) {
         PLOGE("adbd adbd process setcurrent not allowed");
         return false;
@@ -86,25 +148,24 @@ static bool setup_adb_root(const char *root_path) {
         return false;
     }
 
-    char my_file[PATH_MAX]{0}, my_backup[PATH_MAX]{0};
-    strcpy(my_file, root_path);
-    strcat(my_file, "/bin/adbd_wrapper");
-    strcpy(my_backup, root_path);
-    strcat(my_backup, "/bin/adbd_real");
-
     LOGI("Prepare adbd files");
 
-    const char *file = nullptr, *backup = nullptr, *folder = nullptr;
-    attrs file_attr{}, folder_attr{};
+    strcpy(my_file, root_path);
+    strcat(my_file, "/bin/adbd_wrapper");
 
-    bool isApex = false;
     if (android::GetApiLevel() >= 30) {
-        if (access("/apex/com.android.adbd/bin/adbd", F_OK) == 0) {
+        if (access("/apex/com.android.adbd/bin/adbd", F_OK) != 0) {
+            PLOGE("access /apex/com.android.adbd/bin/adbd");
+            LOGW("Apex not exists on API 31+ device");
+        } else {
             LOGI("Use adbd from /apex");
             isApex = true;
             file = "/apex/com.android.adbd/bin/adbd";
             backup = "/apex/com.android.adbd/bin/adbd_real";
             folder = "/apex/com.android.adbd/bin";
+
+            strcpy(my_backup, root_path);
+            strcat(my_backup, "/bin/adbd_real");
 
             if (copyfile(file, my_backup) != 0) {
                 PLOGE("copyfile %s -> %s", file, my_backup);
@@ -115,21 +176,22 @@ static bool setup_adb_root(const char *root_path) {
                 || getattrs(folder, &folder_attr) != 0) {
                 return false;
             }
-        } else {
-            PLOGE("access /apex/com.android.adbd/bin/adbd");
-            LOGW("Apex not exists on API 31+ device");
         }
     }
 
-    if (!file) {
-        if (access("/system/bin/adbd", F_OK) == 0) {
-            LOGI("Use adbd from /system");
-            file = "/system/bin/adbd";
-            backup = "/system/bin/adbd_real";
-            folder = "/system/bin";
-        } else {
+    if (!isApex) {
+        if (access("/system/bin/adbd", F_OK) != 0) {
             PLOGE("access /system/bin/adbd");
             LOGW("No adbd");
+            return false;
+        }
+
+        LOGI("Use adbd from /system");
+        file = "/system/bin/adbd";
+        folder = "/system/bin";
+
+        if (getattrs(file, &file_attr) != 0
+            || getattrs(folder, &folder_attr) != 0) {
             return false;
         }
     }
@@ -140,6 +202,13 @@ static bool setup_adb_root(const char *root_path) {
     LOGV("%s: uid=%d, gid=%d, mode=%3o, context=%s",
          folder, folder_attr.uid, folder_attr.gid, folder_attr.mode, folder_attr.context);
 
+    if (!is_dynamically_linked(file)) {
+        LOGE("%s is not dynamically linked", file);
+        return false;
+    } else {
+        LOGI("%s is dynamically linked", file);
+    }
+
     if (isApex) {
         LOGI("Mount /apex/com.android.adbd/bin tmpfs");
 
@@ -147,7 +216,9 @@ static bool setup_adb_root(const char *root_path) {
             PLOGE("mount tmpfs -> %s", folder);
             return false;
         }
-        if (!setup_file(my_file, file, &file_attr)) {
+
+        // $MODDIR/bin/adbd_wrapper -> /apex/com.android.adbd/bin/adbd
+        if (setup_file(my_file, file, &file_attr) != 0) {
             umount(folder);
             LOGE("Failed to %s -> %s", my_file, file);
             return false;
@@ -158,7 +229,8 @@ static bool setup_adb_root(const char *root_path) {
         }
         file_attr.context = strdup("u:object_r:magisk_file:s0");
 
-        if (!setup_file(my_backup, backup, &file_attr)) {
+        // $MODDIR/bin/adbd_real -> /apex/com.android.adbd/bin/adbd_real
+        if (setup_file(my_backup, backup, &file_attr) != 0) {
             umount(folder);
             LOGE("Failed to %s -> %s", my_backup, backup);
             return false;
@@ -167,7 +239,47 @@ static bool setup_adb_root(const char *root_path) {
         LOGI("Finished");
         return true;
     } else {
-        // TODO copy files to MODDIR/system/bin
+        LOGI("Copy files to MODDIR/system");
+
+        // mkdir $MODDIR/system/bin
+        char module_system_bin[PATH_MAX]{0};
+        strcpy(module_system_bin, root_path);
+        strcat(module_system_bin, "/system/bin");
+        if (mkdir(module_system_bin, folder_attr.mode) == -1 && errno != EEXIST) {
+            PLOGE("mkdir %s", module_system_bin);
+            return false;
+        }
+
+        //  $MODDIR/system/bin/adbd_wrapper -> $MODDIR/system/bin/adbd
+        strcpy(my_backup, module_system_bin);
+        strcat(my_backup, "/adbd");
+        if (copyfile(my_file, my_backup) != 0) {
+            PLOGE("copyfile %s -> %s", my_file, my_backup);
+            return false;
+        }
+        if (setattrs(my_backup, &file_attr) != 0) {
+            unlink(my_backup);
+            return false;
+        }
+
+        // /system/bin/adbd -> $MODDIR/system/bin/adbd_real
+        strcpy(my_backup, module_system_bin);
+        strcat(my_backup, "/adbd_real");
+        if (copyfile(file, my_backup) != 0) {
+            PLOGE("copyfile %s -> %s", file, my_backup);
+            return false;
+        }
+        if (file_attr.context) {
+            freecon(file_attr.context);
+        }
+        file_attr.context = strdup("u:object_r:magisk_file:s0");
+        if (setattrs(my_backup, &file_attr) != 0) {
+            unlink(my_backup);
+            return false;
+        }
+
+        LOGI("Finished");
+        return true;
     }
 }
 

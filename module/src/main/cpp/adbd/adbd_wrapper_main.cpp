@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
         std::string_view argv_i{argv[i]};
         if (argv_i.length() > root_seclabel.length() && argv_i.substr(0, root_seclabel.length()) == root_seclabel) {
             argv[i] = strdup("--root_seclabel=u:r:magisk:s0");
-            LOGD("root_seclabel=u:r:magisk:s0");
+            LOGD("root_seclabel -> u:r:magisk:s0");
         }
     }
 
