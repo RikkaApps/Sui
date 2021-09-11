@@ -81,6 +81,13 @@ dependencies {
 def outDir = file("$rootDir/out")
 
 afterEvaluate {
+    def isIDE = properties.containsKey('android.injected.invoked.from.ide')
+    if (isIDE) {
+        println("Invoked from IDE")
+    } else {
+        println("Invoked from command line")
+    }
+
     android.applicationVariants.all { variant ->
         def variantCapped = variant.name.capitalize()
         def variantLowered = variant.name.toLowerCase()
@@ -132,7 +139,7 @@ afterEvaluate {
             from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
                 into 'lib'
             }
-            from("${rootProject.findProject('ui').buildDir}/intermediates/apk/$variantLowered") {
+            from("${rootProject.findProject('ui').buildDir}/${isIDE ? "intermediates" : "outputs"}/apk/$variantLowered") {
                 exclude 'output-metadata.json'
                 rename { 'sui.apk' }
             }
