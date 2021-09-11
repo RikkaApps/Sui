@@ -152,6 +152,7 @@ inline int setup_adb_root_apex(const char *root_path, const char *adbd_wrapper, 
 #else
     lib_folder = "/apex/com.android.adbd/lib";
 #endif
+
     if (!is_dynamically_linked(adbd)) {
         LOGE("%s is not dynamically linked (or 32 bit elf on 64 bit machine)", adbd);
         return ERR_ADBD_IS_STATIC;
@@ -439,10 +440,10 @@ static int setup_adb_root(const char *root_path) {
     strcpy(adbd_preload, root_path);
     strcat(adbd_preload, "/lib/libadbd_preload.so");
 
-    if (android::GetApiLevel() >= 30) {
+    if (android::GetApiLevel() >= 31) {
         if (access("/apex/com.android.adbd/bin/adbd", F_OK) != 0) {
             PLOGE("access /apex/com.android.adbd/bin/adbd");
-            LOGW("Apex not exists on API 30+ device");
+            LOGW("Apex not exists on API 31+ device");
         } else {
             LOGI("Use adbd from /apex");
             return setup_adb_root_apex(root_path, adbd_wrapper, adbd_preload);

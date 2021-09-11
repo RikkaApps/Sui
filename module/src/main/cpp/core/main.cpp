@@ -79,7 +79,7 @@ static void UmountApexAdbd() {
     static bool called = false;
     if (called) return;
 
-    if (android::GetApiLevel() >= 30) {
+    if (android::GetApiLevel() >= 31) {
         called = true;
 
         umount2("/apex/com.android.adbd/bin", MNT_DETACH);
