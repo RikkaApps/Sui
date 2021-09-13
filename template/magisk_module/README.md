@@ -8,7 +8,7 @@ Modern super user interface (SUI) implementation.
 
 ### v12.2.0 (2021-09-11)
 
-- Add adb root support (disabled by default, see description at []GitHub release](https://github.com/RikkaApps/Sui/releases))
+- Add adb root support (disabled by default, see description at [GitHub release](https://github.com/RikkaApps/Sui/releases))
 - Fix using UserService will crash sui service on some devices
 
 ### v12.1.4 (2021-08-28)
