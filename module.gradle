@@ -13,7 +13,7 @@ ext {
 
     moduleName = "Sui"
     moduleAuthor = "Rikka"
-    moduleDescription = "Modern superuser interface implementation, shares the same API design from Shizuku. This modules requires Riru $moduleMinRiruVersionName or above."
+    moduleDescription = "Modern superuser interface implementation, shares the same API design from Shizuku. This module requires Riru $moduleMinRiruVersionName or above."
     moduleVersionMinor = 2
     moduleVersionPatch = 1
     moduleVersion = "v${api_version_major}.${moduleVersionMinor}.${moduleVersionPatch}"
