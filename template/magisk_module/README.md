@@ -6,6 +6,11 @@ Modern super user interface (SUI) implementation.
 
 ## Changelog
 
+### v12.2.1 (2021-09-20)
+
+- Fix "adb install" under "adb root"
+- Fix "adb root" support is not enabled for Android 11
+
 ### v12.2.0 (2021-09-11)
 
 - Add adb root support (disabled by default, see description at [GitHub release](https://github.com/RikkaApps/Sui/releases))
