@@ -63,7 +63,7 @@ android {
 dependencies {
     implementation 'dev.rikka.tools.refine:runtime:3.0.3'
 
-    implementation 'dev.rikka.ndk:riru:25.0.0'
+    implementation 'dev.rikka.ndk:riru:26.0.0'
     implementation 'dev.rikka.ndk.thirdparty:cxx:1.1.0'
     implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.1'
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'
@@ -139,7 +139,7 @@ afterEvaluate {
             from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
                 into 'lib'
             }
-            from("${rootProject.findProject('ui').buildDir}/${isIDE ? "intermediates" : "outputs"}/apk/$variantLowered") {
+            from("${rootProject.findProject('ui').buildDir}/outputs/apk/$variantLowered") {
                 exclude 'output-metadata.json'
                 rename { 'sui.apk' }
             }
