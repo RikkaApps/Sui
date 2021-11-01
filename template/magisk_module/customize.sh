@@ -1,17 +1,6 @@
 SKIPUNZIP=1
 
-ROOT_PATH="/data/adb/sui"
-mkdir $ROOT_PATH
-set_perm "$ROOT_PATH" 0 0 0600
-
-# Check architecture
-if [ "$ARCH" != "arm" ] && [ "$ARCH" != "arm64" ] && [ "$ARCH" != "x86" ] && [ "$ARCH" != "x64" ]; then
-  abort "! Unsupported platform: $ARCH"
-else
-  ui_print "- Device platform: $ARCH"
-fi
-
-# extract verify.sh
+# Extract verify.sh
 ui_print "- Extracting verify.sh"
 unzip -o "$ZIPFILE" 'verify.sh' -d "$TMPDIR" >&2
 if [ ! -f "$TMPDIR/verify.sh" ]; then
@@ -22,12 +11,23 @@ if [ ! -f "$TMPDIR/verify.sh" ]; then
 fi
 . $TMPDIR/verify.sh
 
-# Extract riru.sh
-extract "$ZIPFILE" 'riru.sh' "$TMPDIR"
-. $TMPDIR/riru.sh
+# Extract util_functions.sh
+ui_print "- Extracting util_functions.sh"
+extract "$ZIPFILE" 'util_functions.sh' "$TMPDIR"
+. $TMPDIR/util_functions.sh
 
-check_riru_version
+#########################################################
+
+FLAVOR=@FLAVOR@
+ROOT_PATH="/data/adb/sui"
+
 enforce_install_from_magisk_app
+check_magisk_version
+check_android_version
+check_arch
+
+mkdir $ROOT_PATH
+set_perm "$ROOT_PATH" 0 0 0600
 
 # Extract libs
 ui_print "- Extracting module files"
@@ -37,60 +37,38 @@ extract "$ZIPFILE" 'post-fs-data.sh' "$MODPATH"
 extract "$ZIPFILE" 'uninstall.sh' "$MODPATH"
 extract "$ZIPFILE" 'sepolicy.rule' "$MODPATH"
 
-mkdir "$MODPATH/riru"
-mkdir "$MODPATH/riru/lib"
-mkdir "$MODPATH/riru/lib64"
+if [ "$FLAVOR" == "zygisk" ]; then
+  :
+elif [ "$FLAVOR" == "riru" ]; then
+  extract "$ZIPFILE" 'riru.sh' "$TMPDIR"
+  . $TMPDIR/riru.sh
+
+  check_riru_version
+
+  mkdir "$MODPATH/riru"
+  mkdir "$MODPATH/riru/lib"
+
+  if [ "$IS64BIT" = true ]; then
+    mkdir "$MODPATH/riru/lib64"
+  fi
+
+  extract "$ZIPFILE" "lib/$ARCH_NAME/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/$ARCH_DIR" true
+
+  if [ "$IS64BIT" = true ]; then
+    extract "$ZIPFILE" "lib/$ARCH_NAME_SECONDARY/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/$ARCH_DIR_SECONDARY" true
+  fi
+fi
+
 mkdir "$MODPATH/bin"
-mkdir "$MODPATH/system"
-mkdir "$MODPATH/system/lib"
-mkdir "$MODPATH/system/lib64"
-
-if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x64" ]; then
-  ui_print "- Extracting x86 libraries"
-  extract "$ZIPFILE" "lib/x86/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
-
-  if [ "$IS64BIT" = true ]; then
-    ui_print "- Extracting x64 libraries"
-    extract "$ZIPFILE" "lib/x86_64/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
-    extract "$ZIPFILE" "lib/x86_64/libmain.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/x86_64/libadbd_wrapper.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/x86_64/libadbd_preload.so" "$MODPATH/lib" true
-    extract "$ZIPFILE" "lib/x86_64/librish.so" "$MODPATH" true
-  else
-    extract "$ZIPFILE" "lib/x86/libmain.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/x86/libadbd_wrapper.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/x86/libadbd_preload.so" "$MODPATH/lib" true
-    extract "$ZIPFILE" "lib/x86/librish.so" "$MODPATH" true
-  fi
-fi
-
-if [ "$ARCH" = "arm" ] || [ "$ARCH" = "arm64" ]; then
-  ui_print "- Extracting arm libraries"
-  extract "$ZIPFILE" "lib/armeabi-v7a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib" true
-
-  if [ "$IS64BIT" = true ]; then
-    ui_print "- Extracting arm64 libraries"
-    extract "$ZIPFILE" "lib/arm64-v8a/lib$RIRU_MODULE_LIB_NAME.so" "$MODPATH/riru/lib64" true
-    extract "$ZIPFILE" "lib/arm64-v8a/libmain.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/arm64-v8a/libadbd_wrapper.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/arm64-v8a/libadbd_preload.so" "$MODPATH/lib" true
-    extract "$ZIPFILE" "lib/arm64-v8a/librish.so" "$MODPATH" true
-  else
-    extract "$ZIPFILE" "lib/armeabi-v7a/libmain.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/armeabi-v7a/libadbd_wrapper.so" "$MODPATH/bin" true
-    extract "$ZIPFILE" "lib/armeabi-v7a/libadbd_preload.so" "$MODPATH/lib" true
-    extract "$ZIPFILE" "lib/armeabi-v7a/librish.so" "$MODPATH" true
-  fi
-fi
+extract "$ZIPFILE" "lib/$ARCH_NAME/libmain.so" "$MODPATH/bin" true
+extract "$ZIPFILE" "lib/$ARCH_NAME/librish.so" "$MODPATH" true
+extract "$ZIPFILE" "lib/$ARCH_NAME/libadbd_wrapper.so" "$MODPATH/bin" true
+extract "$ZIPFILE" "lib/$ARCH_NAME/libadbd_preload.so" "$MODPATH/lib" true
 
 mv "$MODPATH/bin/libmain.so" "$MODPATH/bin/sui"
 mv "$MODPATH/bin/libadbd_wrapper.so" "$MODPATH/bin/adbd_wrapper"
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
-set_perm "$MODPATH/bin/sui" 0 0 0700
-
-# Extract server files
-ui_print "- Extracting Sui files"
 
 extract "$ZIPFILE" 'sui.dex' "$MODPATH"
 extract "$ZIPFILE" 'sui.apk' "$MODPATH"
@@ -128,7 +106,7 @@ fi
 ui_print "- Removing old files"
 rm -rf /data/adb/sui/res
 rm -rf /data/adb/sui/res.new
-rm -f /data/adb/sui/com.android.settings
+rm -f /data/adb/sui/z
 rm -f /data/adb/sui/com.android.systemui
 rm -f /data/adb/sui/post-install.example.sh
 rm -f /data/adb/sui/starter

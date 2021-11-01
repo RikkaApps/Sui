@@ -18,16 +18,6 @@ android {
         versionCode gitCommitCount
         versionName moduleVersion.substring(1)
         //ndkVersion rootProject.ext.ndkVersion
-        externalNativeBuild {
-            cmake {
-                arguments "-DMODULE_NAME:STRING=$moduleLibraryName",
-                        "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
-                        "-DRIRU_MODULE_VERSION=$moduleVersionCode",
-                        "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\"",
-                        "-DANDROID_STL=none"
-
-            }
-        }
     }
     buildFeatures {
         viewBinding true
@@ -48,6 +38,33 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "version"
+    productFlavors {
+        riru {
+            dimension "version"
+            externalNativeBuild {
+                cmake {
+                    arguments "-DMODULE_NAME:STRING=$moduleLibraryName",
+                            "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
+                            "-DRIRU_MODULE_VERSION=$moduleVersionCode",
+                            "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\"",
+                            "-DFLAVOR=riru",
+                            "-DANDROID_STL=none"
+
+                }
+            }
+        }
+        zygisk {
+            dimension "version"
+            externalNativeBuild {
+                cmake {
+                    arguments "-DFLAVOR=zygisk",
+                            "-DANDROID_STL=none"
+
+                }
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -64,7 +81,7 @@ dependencies {
     implementation 'dev.rikka.tools.refine:runtime:3.0.3'
 
     implementation 'dev.rikka.ndk:riru:26.0.0'
-    implementation 'dev.rikka.ndk.thirdparty:cxx:1.1.0'
+    implementation 'dev.rikka.ndk.thirdparty:cxx:1.2.0'
     implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.1'
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'
 
@@ -91,11 +108,15 @@ afterEvaluate {
     android.applicationVariants.all { variant ->
         def variantCapped = variant.name.capitalize()
         def variantLowered = variant.name.toLowerCase()
+        def buildTypeCapped = variant.getBuildType().getName().capitalize()
+        def buildTypeLowered = variant.getBuildType().getName().toLowerCase()
+        def flavorCapped = variantCapped.replaceFirst(buildTypeCapped, "")
+        def flavorLowered = variantLowered.replaceFirst(buildTypeLowered, "")
 
-        def zipName = "sui-${moduleVersion}-${variantLowered}.zip"
-        def magiskDir = file("$outDir/magisk_module_${variantLowered}")
+        def zipName = "sui-${flavorLowered}-${moduleVersion}-${buildTypeLowered}.zip"
+        def magiskDir = file("$outDir/${flavorLowered}_${buildTypeLowered}")
 
-        tasks.getByName("pre${variantCapped}Build").dependsOn(":ui:assemble${variantCapped}")
+        tasks.getByName("pre${variantCapped}Build").dependsOn(":ui:assemble${buildTypeCapped}")
 
         task("prepareMagiskFiles${variantCapped}", type: Sync) {
             dependsOn("assemble$variantCapped")
@@ -104,7 +125,7 @@ afterEvaluate {
 
             into magiskDir
             from(templatePath) {
-                exclude 'riru.sh', 'module.prop'
+                exclude 'riru.sh', 'customize.sh', 'module.prop'
             }
             from(templatePath) {
                 include 'riru.sh'
@@ -118,14 +139,24 @@ afterEvaluate {
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))
             }
             from(templatePath) {
+                include 'customize.sh'
+                filter(ReplaceTokens.class, tokens: [
+                        "FLAVOR": flavorLowered,
+                ])
+                filter(FixCrLfFilter.class,
+                        eol: FixCrLfFilter.CrLf.newInstance("lf"))
+            }
+            from(templatePath) {
                 include 'module.prop'
                 expand([
-                        id         : magiskModuleId,
-                        name       : moduleName,
+                        id         : flavorLowered + "-" + magiskModuleId,
+                        name       : flavorCapped + " - " + moduleName,
                         version    : moduleVersion,
                         versionCode: moduleVersionCode.toString(),
                         author     : moduleAuthor,
-                        description: moduleDescription,
+                        description: moduleDescription + " " + ((variantLowered == "zygisk") ?
+                                "This module requires Magisk 24.0+ and Zygisk enabled." :
+                                "This module requires Riru $moduleMinRiruVersionName or above."),
                 ])
                 filter(FixCrLfFilter.class,
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))
@@ -139,7 +170,7 @@ afterEvaluate {
             from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
                 into 'lib'
             }
-            from("${rootProject.findProject('ui').buildDir}/outputs/apk/$variantLowered") {
+            from("${rootProject.findProject('ui').buildDir}/outputs/apk/$buildTypeLowered") {
                 exclude 'output-metadata.json'
                 rename { 'sui.apk' }
             }
