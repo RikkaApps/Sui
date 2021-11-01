@@ -60,28 +60,29 @@ jobs:
           echo 'org.gradle.parallel=true' >> gradle.properties
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
-          ./gradlew zipDebug zipRelease
+          ./gradlew zipRiruDebug zipRiruRelease
       - name: Prepare artifact
         if: success()
         id: prepareArtifact
         run: |
-          releaseName=`ls out/sui-*-release.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=releaseName::$releaseName"
-          debugName=`ls out/sui-*-debug.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=debugName::$debugName"
-          unzip out/sui-*-release.zip -d sui-release
-          unzip out/sui-*-debug.zip -d sui-debug
-      - name: Upload release
+          riruReleaseName=`ls out/sui-riru-*-release.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=riruReleaseName::riruReleaseName"
+          riruDebugName=`ls out/sui-riru-*-debug.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=riruDebugName::riruDebugName"
+          unzip out/sui-riru-*-release.zip -d sui-riru-release
+          unzip out/sui-riru-*-debug.zip -d sui-riru-debug
+      - name: Upload Riru release
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.prepareArtifact.outputs.releaseName }}
-          path: './sui-release/*'
-      - name: Upload debug
-        #      if: ${{ github.event_name == 'pull_request' && success() }}
+          name: ${{ steps.prepareArtifact.outputs.riruReleaseName }}
+          path: './sui-riru-release/*'
+      - name: Upload Riru debug
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.prepareArtifact.outputs.debugName }}
-          path: './sui-debug/*'
+          name: ${{ steps.prepareArtifact.outputs.riruDebugName }}
+          path: './sui-riru-debug/*'
       - name: Upload mappings
         uses: actions/upload-artifact@v2
         with:
           name: mappings
-          path: "module/build/outputs/mapping/release"
+          path: |
+            "module/build/outputs/mapping/release"
+            "ui/build/outputs/mapping/release"
