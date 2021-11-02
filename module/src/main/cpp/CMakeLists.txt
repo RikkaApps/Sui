@@ -2,16 +2,7 @@ cmake_minimum_required(VERSION 3.4.1)
 
 project("sui")
 
-if (NOT DEFINED MODULE_NAME)
-    message(FATAL_ERROR "MODULE_NAME is not set")
-endif ()
-
-add_definitions(-DRIRU_MODULE)
-add_definitions(-DRIRU_MODULE_API_VERSION=${RIRU_MODULE_API_VERSION})
-add_definitions(-DRIRU_MODULE_VERSION=${RIRU_MODULE_VERSION})
-add_definitions(-DRIRU_MODULE_VERSION_NAME=${RIRU_MODULE_VERSION_NAME})
-
-message("Build type: ${CMAKE_BUILD_TYPE}")
+message("Build type: ${CMAKE_BUILD_TYPE} ${FLAVOR}")
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -48,15 +39,27 @@ add_library(util STATIC
         util/selinux.cpp)
 target_link_libraries(util cxx::cxx log nativehelper::nativehelper_header_only)
 
-add_library(${MODULE_NAME} SHARED
-        core/main.cpp
+if (FLAVOR STREQUAL "riru")
+    set(CORE_MAIN_SOURCE "main_riru.cpp")
+    add_definitions(-DRIRU_MODULE)
+    add_definitions(-DRIRU_MODULE_API_VERSION=${RIRU_MODULE_API_VERSION})
+    add_definitions(-DRIRU_MODULE_VERSION=${RIRU_MODULE_VERSION})
+    add_definitions(-DRIRU_MODULE_VERSION_NAME=${RIRU_MODULE_VERSION_NAME})
+elseif (FLAVOR STREQUAL "zygisk")
+    set(CORE_MAIN_SOURCE "main_zygisk.cpp")
+else ()
+    message(FATAL_ERROR "Unknown flavor ${FLAVOR}")
+endif ()
+
+add_library(sui SHARED
+        core/${CORE_MAIN_SOURCE}
         core/system_server.cpp
         core/binder_hook.cpp
         core/bridge_service.cpp
         core/manager_process.cpp
         core/settings_process.cpp)
-target_link_libraries(${MODULE_NAME} util cxx::cxx log riru::riru nativehelper::nativehelper_header_only)
-set_target_properties(${MODULE_NAME} PROPERTIES LINK_FLAGS_RELEASE -s)
+target_link_libraries(sui util cxx::cxx log riru::riru nativehelper::nativehelper_header_only)
+set_target_properties(sui PROPERTIES LINK_FLAGS_RELEASE -s)
 
 add_executable(libmain.so main/main.cpp)
 target_link_libraries(libmain.so util cxx::cxx log riru::riru nativehelper::nativehelper_header_only)
@@ -73,8 +76,8 @@ target_link_libraries(adbd_preload cxx::cxx log)
 set_target_properties(adbd_preload PROPERTIES LINK_FLAGS_RELEASE -s)
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_custom_command(TARGET ${MODULE_NAME} POST_BUILD
-            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${MODULE_NAME}.so")
+    add_custom_command(TARGET sui POST_BUILD
+            COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libsui.so")
 
     add_custom_command(TARGET libmain.so POST_BUILD
             COMMAND ${CMAKE_STRIP} --strip-all --remove-section=.comment "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmain.so")

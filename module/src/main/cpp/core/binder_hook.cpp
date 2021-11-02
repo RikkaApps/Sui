@@ -22,7 +22,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <dlfcn.h>
-#include <riru.h>
 #include "binder_hook.h"
 #include "logging.h"
 #include <android.h>

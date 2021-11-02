@@ -44,8 +44,7 @@ android {
             dimension "version"
             externalNativeBuild {
                 cmake {
-                    arguments "-DMODULE_NAME:STRING=$moduleLibraryName",
-                            "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
+                    arguments "-DRIRU_MODULE_API_VERSION=$moduleRiruApiVersion",
                             "-DRIRU_MODULE_VERSION=$moduleVersionCode",
                             "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\"",
                             "-DFLAVOR=riru",
