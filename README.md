@@ -63,25 +63,27 @@ Clone with `git clone --recurse-submodules`.
 
 Gradle tasks:
 
-* `:riru:assembleDebug/Release`
+`Flavor` could be `Riru` and `Zygisk`, `BuildType` could be `Debug` and `Release`.
+
+* `:module:assemble<Flavor><BuildType>`
 
    Generate Magisk module zip to `out`.
 
-* `:riru:pushDebug/Release`
+* `:module:push<Flavor><BuildType>`
 
    Push the zip with adb to `/data/local/tmp`.
 
-* `:riru:flashDebug/Release`
+* `:module:flash<Flavor><BuildType>`
 
    Install the zip with `adb shell su -c magisk --install-module`.
 
-* `:riru:flashAndRebootDebug/Release`
+* `:module:flashAndReboot<Flavor><BuildType>`
 
    Install the zip and reboot the device.
 
 ## Internals
 
-Sui requires [Magisk](https://github.com/topjohnwu/Magisk) and [Riru](https://github.com/RikkaApps). Magisk allows us to run processes as uid 0 and a "do anything" SELinux context. Riru allows us to inject into system server process and app processes.
+Sui requires [Magisk](https://github.com/topjohnwu/Magisk) (and [Riru](https://github.com/RikkaApps) for non-Zygisk version). Magisk allows us to run processes as uid 0 and a "do anything" SELinux context. Riru or Zygisk allows us to inject into system server process and app processes.
 
 In short, there are four parts:
 
