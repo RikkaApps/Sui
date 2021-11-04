@@ -23,5 +23,5 @@
 #include "dex_file.h"
 
 namespace SystemServer {
-    void main(JNIEnv *env, DexFile *dexFile);
+    void main(JNIEnv *env, Dex *dexFile);
 }

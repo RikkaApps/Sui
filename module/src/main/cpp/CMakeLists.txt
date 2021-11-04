@@ -36,7 +36,8 @@ add_library(util STATIC
         util/dex_file.cpp
         util/android.cpp
         util/plt.c
-        util/selinux.cpp)
+        util/selinux.cpp
+        util/memory.cpp)
 target_link_libraries(util cxx::cxx log nativehelper::nativehelper_header_only)
 
 if (FLAVOR STREQUAL "riru")
@@ -47,12 +48,14 @@ if (FLAVOR STREQUAL "riru")
     add_definitions(-DRIRU_MODULE_VERSION_NAME=${RIRU_MODULE_VERSION_NAME})
 elseif (FLAVOR STREQUAL "zygisk")
     set(CORE_MAIN_SOURCE "main_zygisk.cpp")
+    add_definitions(-DZYGISK_MODULE_ID=${ZYGISK_MODULE_ID})
 else ()
     message(FATAL_ERROR "Unknown flavor ${FLAVOR}")
 endif ()
 
 add_library(sui SHARED
         core/${CORE_MAIN_SOURCE}
+        core/main.cpp
         core/system_server.cpp
         core/binder_hook.cpp
         core/bridge_service.cpp

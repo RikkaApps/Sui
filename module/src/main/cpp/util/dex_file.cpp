@@ -21,17 +21,31 @@
 #include <zconf.h>
 #include <malloc.h>
 #include <jni.h>
+#include <android.h>
+#include <sys/mman.h>
+#include <libgen.h>
 #include "dex_file.h"
 #include "misc.h"
 #include "logging.h"
 
-File::File(const char *path) {
+Buffer::Buffer(int fd, size_t size) {
+    uint8_t *addr;
+    if ((addr = (uint8_t *) mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
+        bytes_ = addr;
+        size_ = size;
+        is_mmap = true;
+    } else {
+        PLOGE("mmap");
+    }
+}
+
+Buffer::Buffer(const char *path) {
     if (!path) return;
 
-    LOGD("attempt to read %s", path);
+    LOGD("Attempt to read %s", path);
 
-    bytes = nullptr;
-    size = 0;
+    bytes_ = nullptr;
+    size_ = 0;
 
     auto fd = open(path, O_RDONLY);
     if (fd == -1) {
@@ -39,46 +53,88 @@ File::File(const char *path) {
         close(fd);
         return;
     }
-    size = lseek(fd, 0, SEEK_END);
-    if (size == -1) {
+    size_ = lseek(fd, 0, SEEK_END);
+    if (size_ == -1) {
         PLOGE("lseek %s", path);
         close(fd);
         return;
     }
     lseek(fd, 0, SEEK_SET);
 
-    bytes = static_cast<uint8_t *>(malloc(size));
-    if (read_full(fd, bytes, size) == -1) {
-        size = 0;
-        free(bytes);
-        bytes = nullptr;
+    bytes_ = static_cast<uint8_t *>(malloc(size_));
+    if (read_full(fd, bytes_, size_) == -1) {
+        size_ = 0;
+        free(bytes_);
+        bytes_ = nullptr;
     }
     close(fd);
 }
 
-File::~File() {
-    if (bytes) free(bytes);
+Buffer::~Buffer() {
+    LOGD("~Buffer %p", bytes_);
+    if (!bytes_) return;
+    if (is_mmap)
+        munmap(bytes_, size_);
+    else
+        free(bytes_);
 }
 
-uint8_t *File::getBytes() const {
-    return bytes;
+uint8_t *Buffer::data() const {
+    return bytes_;
 }
 
-size_t File::getSize() const {
-    return size;
+size_t Buffer::size() const {
+    return size_;
 }
 
-void DexFile::destroy(JNIEnv *env) {
+int Buffer::writeToFile(const char *path, mode_t mode) {
+    if (!bytes_) return -1;
+
+    auto dir = dirname(path);
+    mkdirs(dir, mode);
+
+    int fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
+    if (fd == -1) {
+        PLOGE("open %s", path);
+        return -1;
+    }
+
+    if (write_full(fd, bytes_, size_) == -1) {
+        close(fd);
+        PLOGE("write");
+        return -1;
+    }
+    return fd;
+}
+
+void Dex::destroy(JNIEnv *env) {
     if (dexClassLoaderClass) env->DeleteGlobalRef(dexClassLoaderClass);
     if (dexClassLoader) env->DeleteGlobalRef(dexClassLoader);
 }
 
-DexFile::DexFile(const char *path) : File(path) {
-
+Dex::Dex(const char *path) : buffer_(Buffer(path)) {
 }
 
-void DexFile::createInMemoryDexClassLoader(JNIEnv *env) {
-    if (!bytes) return;
+Dex::Dex(int fd, size_t size): buffer_(fd, size) {
+}
+
+Dex::~Dex() {
+    LOGD("~Dex");
+    if (pre26DexPath_) free(pre26DexPath_);
+    if (pre26OptDir_) free(pre26OptDir_);
+}
+
+void Dex::createClassLoader(JNIEnv *env) {
+    if (false/*android::GetApiLevel() >= 26*/) {
+        createInMemoryDexClassLoader(env);
+    } else {
+        copyDexToFile(pre26DexPath_);
+        createDexClassLoader(env, pre26DexPath_, pre26OptDir_);
+    }
+}
+
+void Dex::createInMemoryDexClassLoader(JNIEnv *env) {
+    if (!buffer_.data()) return;
 
     jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
     jmethodID getSystemClassLoaderMethod = env->GetStaticMethodID(
@@ -91,7 +147,7 @@ void DexFile::createInMemoryDexClassLoader(JNIEnv *env) {
 
     jmethodID initDexClassLoaderMethod = env->GetMethodID(
             dexClassLoaderClass, "<init>", "(Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;)V");
-    jobject buffer = env->NewDirectByteBuffer(bytes, size);
+    jobject buffer = env->NewDirectByteBuffer(buffer_.data(), buffer_.size());
     dexClassLoader = env->NewObject(dexClassLoaderClass, initDexClassLoaderMethod, buffer, systemClassLoader);
     if (!dexClassLoader) goto clean;
     dexClassLoader = env->NewGlobalRef(dexClassLoader);
@@ -102,28 +158,8 @@ void DexFile::createInMemoryDexClassLoader(JNIEnv *env) {
     env->DeleteLocalRef(classLoaderClass);
 }
 
-void DexFile::createDexClassLoader(JNIEnv *env, const char *dexDir, const char *dexName, const char *optDir) {
-    if (!bytes) return;
-
-    mkdirs(dexDir, 0700);
-    mkdirs(optDir, 0700);
-
-    char dexPath[PATH_MAX];
-    sprintf(dexPath, "%s/%s", dexDir, dexName);
-
-    int fd = open(dexPath, O_CREAT | O_WRONLY | O_TRUNC, 0700);
-    if (fd == -1) {
-        PLOGE("open %s", dexPath);
-        return;
-    }
-    if (write_full(fd, bytes, size) == -1) {
-        close(fd);
-        PLOGE("write");
-        return;
-    }
-    close(fd);
-
-    jstring jDexPath = env->NewStringUTF(dexPath);
+void Dex::createDexClassLoader(JNIEnv *env, const char *path, const char *optDir) {
+    jstring jDexPath = env->NewStringUTF(path);
     jstring jOptDir = optDir ? env->NewStringUTF(optDir) : nullptr;
 
     jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
@@ -148,11 +184,32 @@ void DexFile::createDexClassLoader(JNIEnv *env, const char *dexDir, const char *
     env->DeleteLocalRef(jDexPath);
 }
 
-jclass DexFile::findClass(JNIEnv *env, const char *name) {
+void Dex::copyDexToFile(const char *dexPath) {
+    if (!buffer_.data()) return;
+
+    int fd = buffer_.writeToFile(dexPath, 0700);
+    if (fd == -1) {
+        return;
+    }
+    close(fd);
+}
+
+jclass Dex::findClass(JNIEnv *env, const char *name) {
     if (!dexClassLoader) return nullptr;
 
     jstring jName = env->NewStringUTF(name);
     auto cls = (jclass) env->CallObjectMethod(dexClassLoader, findClassMethod, jName);
     if (env->ExceptionCheck()) env->ExceptionClear();
     return cls;
+}
+
+void Dex::setPre26Paths(const char *dexPath, const char *optDir) {
+    if (pre26DexPath_) free(pre26DexPath_);
+    if (pre26OptDir_) free(pre26OptDir_);
+    pre26DexPath_ = dexPath ? strdup(dexPath) : nullptr;
+    pre26OptDir_ = optDir ? strdup(optDir) : nullptr;
+}
+
+bool Dex::valid() {
+    return buffer_.data();
 }

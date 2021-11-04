@@ -9,7 +9,8 @@ ext {
     moduleMinRiruVersionName = "v25.0.0"
     moduleRiruApiVersion = 25
 
-    magiskModuleId = "sui"
+    riruModuleId = "riru-sui"
+    zygiskModuleId = "zygisk-sui"
 
     moduleName = "Sui"
     moduleAuthor = "Rikka"

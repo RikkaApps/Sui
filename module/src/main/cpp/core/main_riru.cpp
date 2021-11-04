@@ -31,6 +31,7 @@
 #include "config.h"
 #include "manager_process.h"
 #include "settings_process.h"
+#include "main.h"
 #include <sys/mount.h>
 #include <android.h>
 
@@ -40,9 +41,9 @@ static char manager_process[128], settings_uid_process[128];
 static void ReadApplicationInfo(const char *package, uid_t &uid, char *process) {
     char buf[PATH_MAX];
     snprintf(buf, PATH_MAX, "%s/%s", riru_get_magisk_module_path(), package);
-    auto file = File(buf);
-    auto bytes = file.getBytes();
-    auto size = file.getSize();
+    auto file = Buffer(buf);
+    auto bytes = file.data();
+    auto size = file.size();
     for (int i = 0; i < size; ++i) {
         if (bytes[i] == '\n') {
             memset(process, 0, 128);
@@ -54,14 +55,14 @@ static void ReadApplicationInfo(const char *package, uid_t &uid, char *process) 
     }
 }
 
-static DexFile *dexFile = nullptr;
+static Dex *dexFile = nullptr;
 
 static void PrepareFiles() {
-    if (dexFile && dexFile->getBytes()) return;
+    if (dexFile && dexFile->valid()) return;
 
     char path[PATH_MAX]{0};
     snprintf(path, PATH_MAX, "%s/%s", riru_get_magisk_module_path(), DEX_NAME);
-    dexFile = new DexFile(path);
+    dexFile = new Dex(path);
 
     ReadApplicationInfo(MANAGER_APPLICATION_ID, manager_uid, manager_process);
     ReadApplicationInfo(SETTINGS_APPLICATION_ID, settings_uid, settings_uid_process);
@@ -72,23 +73,6 @@ static void DestroyFiles(JNIEnv *env) {
         dexFile->destroy(env);
         delete dexFile;
         dexFile = nullptr;
-    }
-}
-
-static void UmountApexAdbd() {
-    static bool called = false;
-    if (called) return;
-
-    if (android::GetApiLevel() >= __ANDROID_API_R__) {
-        called = true;
-
-        umount2("/apex/com.android.adbd/bin", MNT_DETACH);
-        if (android::Has32Bit() && !android::Has64Bit()) {
-            umount2("/apex/com.android.adbd/lib", MNT_DETACH);
-        }
-        if (android::Has64Bit()) {
-            umount2("/apex/com.android.adbd/lib64", MNT_DETACH);
-        }
     }
 }
 

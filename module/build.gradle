@@ -58,6 +58,7 @@ android {
             externalNativeBuild {
                 cmake {
                     arguments "-DFLAVOR=zygisk",
+                            "-DZYGISK_MODULE_ID:STRING=\"$zygiskModuleId\"",
                             "-DANDROID_STL=none"
 
                 }
@@ -148,12 +149,12 @@ afterEvaluate {
             from(templatePath) {
                 include 'module.prop'
                 expand([
-                        id         : flavorLowered + "-" + magiskModuleId,
+                        id         : (flavorLowered == "zygisk") ? zygiskModuleId : riruModuleId,
                         name       : flavorCapped + " - " + moduleName,
                         version    : moduleVersion,
                         versionCode: moduleVersionCode.toString(),
                         author     : moduleAuthor,
-                        description: moduleDescription + " " + ((variantLowered == "zygisk") ?
+                        description: moduleDescription + " " + ((flavorLowered == "zygisk") ?
                                 "This module requires Magisk 24.0+ and Zygisk enabled." :
                                 "This module requires Riru $moduleMinRiruVersionName or above."),
                 ])

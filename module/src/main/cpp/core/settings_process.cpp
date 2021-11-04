@@ -51,15 +51,14 @@ namespace Settings {
     static jmethodID my_execTransactMethodID;
     static jint bindApplicationTransactionCode = -1;
 
-    static bool installDex(JNIEnv *env, const char *appDataDir, DexFile *dexFile) {
-        if (android::GetApiLevel() >= 26) {
-            dexFile->createInMemoryDexClassLoader(env);
-        } else {
-            char dexDir[PATH_MAX], oatDir[PATH_MAX];
-            snprintf(dexDir, PATH_MAX, "%s/sui", appDataDir);
+    static bool installDex(JNIEnv *env, const char *appDataDir, Dex *dexFile) {
+        if (true/*android::GetApiLevel() < 26*/) {
+            char dexPath[PATH_MAX], oatDir[PATH_MAX];
+            snprintf(dexPath, PATH_MAX, "%s/sui/%s", appDataDir, DEX_NAME);
             snprintf(oatDir, PATH_MAX, "%s/sui/oat", appDataDir);
-            dexFile->createDexClassLoader(env, dexDir, DEX_NAME, oatDir);
+            dexFile->setPre26Paths(dexPath, oatDir);
         }
+        dexFile->createClassLoader(env);
 
         mainClass = dexFile->findClass(env, SETTINGS_PROCESS_CLASSNAME);
         if (!mainClass) {
@@ -122,14 +121,12 @@ namespace Settings {
         return false;
     }
 
-    void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile) {
+    void main(JNIEnv *env, const char *appDataDir, Dex *dexFile) {
         if (android::GetApiLevel() <= 26) {
             return;
         }
 
-        LOGD("dex size=%" PRIdPTR, dexFile->getSize());
-
-        if (!dexFile->getBytes()) {
+        if (!dexFile->valid()) {
             LOGE("no dex");
             return;
         }

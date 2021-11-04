@@ -19,38 +19,64 @@
 
 #pragma once
 
-class File {
+class Buffer {
 
 protected:
-    uint8_t *bytes = nullptr;
-    size_t size = 0;
+    uint8_t *bytes_ = nullptr;
+    size_t size_ = 0;
+private:
+    bool is_mmap = 0;
 
 public:
-    File(const char *path);
+    Buffer() = default;
 
-    ~File();
+    Buffer(const char *path);
 
-    uint8_t *getBytes() const;
+    Buffer(int fd, size_t size);
 
-    size_t getSize() const;
+    ~Buffer();
+
+    uint8_t *data() const;
+
+    size_t size() const;
+
+    int writeToFile(const char *path, mode_t mode);
 };
 
-class DexFile : public File {
+class Dex {
 
 private:
+    Buffer buffer_;
+    char *pre26DexPath_ = nullptr;
+    char *pre26OptDir_ = nullptr;
+
     jclass dexClassLoaderClass = nullptr;
     jmethodID findClassMethod = nullptr;
     jobject dexClassLoader = nullptr;
 
 public:
+    Dex(int fd, size_t size);
 
-    DexFile(const char *path);
+    Dex(const char *path);
+
+    ~Dex();
 
     void destroy(JNIEnv *env);
 
-    void createInMemoryDexClassLoader(JNIEnv *env);
-
-    void createDexClassLoader(JNIEnv *env, const char *dexDir, const char *dexName, const char *optDir);
+    void createClassLoader(JNIEnv *env);
 
     jclass findClass(JNIEnv *env, const char *name);
+
+    void setPre26Paths(const char *dexPath, const char *optDir);
+
+    bool valid();
+
+private:
+
+    void createInMemoryDexClassLoader(JNIEnv *env);
+
+    void createDexClassLoader(JNIEnv *env, const char *path, const char *optDir);
+
+    void copyDexToFile(const char *dexPath);
+
 };

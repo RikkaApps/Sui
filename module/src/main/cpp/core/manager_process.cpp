@@ -49,15 +49,14 @@ namespace Manager {
 
     static jclass mainClass = nullptr;
 
-    static bool installDex(JNIEnv *env, const char *appDataDir, DexFile *dexFile) {
-        if (android::GetApiLevel() >= 26) {
-            dexFile->createInMemoryDexClassLoader(env);
-        } else {
-            char dexDir[PATH_MAX], oatDir[PATH_MAX];
-            snprintf(dexDir, PATH_MAX, "%s/sui", appDataDir);
+    static bool installDex(JNIEnv *env, const char *appDataDir, Dex *dexFile) {
+        if (true/*android::GetApiLevel() < 26*/) {
+            char dexPath[PATH_MAX], oatDir[PATH_MAX];
+            snprintf(dexPath, PATH_MAX, "%s/sui/%s", appDataDir, DEX_NAME);
             snprintf(oatDir, PATH_MAX, "%s/sui/oat", appDataDir);
-            dexFile->createDexClassLoader(env, dexDir, DEX_NAME, oatDir);
+            dexFile->setPre26Paths(dexPath, oatDir);
         }
+        dexFile->createClassLoader(env);
 
         mainClass = dexFile->findClass(env, MANAGER_PROCESS_CLASSNAME);
         if (!mainClass) {
@@ -74,10 +73,7 @@ namespace Manager {
             return false;
         }
 
-        auto args = env->NewObjectArray(1, env->FindClass("java/lang/String"), nullptr);
-        char buf[64];
-        sprintf(buf, "--version-code=%d", RIRU_MODULE_VERSION);
-        env->SetObjectArrayElement(args, 0, env->NewStringUTF(buf));
+        auto args = env->NewObjectArray(0, env->FindClass("java/lang/String"), nullptr);
 
         env->CallStaticVoidMethod(mainClass, mainMethod, args);
         if (env->ExceptionCheck()) {
@@ -90,10 +86,8 @@ namespace Manager {
         return true;
     }
 
-    void main(JNIEnv *env, const char *appDataDir, DexFile *dexFile) {
-        LOGD("dex size=%" PRIdPTR, dexFile->getSize());
-
-        if (!dexFile->getBytes()) {
+    void main(JNIEnv *env, const char *appDataDir, Dex *dexFile) {
+        if (!dexFile->valid()) {
             LOGE("no dex");
             return;
         }

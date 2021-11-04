@@ -51,12 +51,11 @@ namespace SystemServer {
 
     static jint startShortcutTransactionCode = -1;
 
-    static bool installDex(JNIEnv *env, DexFile *dexFile) {
-        if (android::GetApiLevel() >= 26) {
-            dexFile->createInMemoryDexClassLoader(env);
-        } else {
-            dexFile->createDexClassLoader(env, FALLBACK_DEX_DIR, DEX_NAME, FALLBACK_DEX_DIR "/oat");
+    static bool installDex(JNIEnv *env, Dex *dexFile) {
+        if (true/*android::GetApiLevel() < 26*/) {
+            dexFile->setPre26Paths("/data/system/sui/"  DEX_NAME, "/data/system/sui/oat");
         }
+        dexFile->createClassLoader(env);
 
         mainClass = dexFile->findClass(env, SYSTEM_PROCESS_CLASSNAME);
         if (!mainClass) {
@@ -122,10 +121,8 @@ namespace SystemServer {
         return false;
     }
 
-    void main(JNIEnv *env, DexFile *dexFile) {
-        LOGD("dex size=%" PRIdPTR, dexFile->getSize());
-
-        if (!dexFile->getBytes()) {
+    void main(JNIEnv *env, Dex *dexFile) {
+        if (!dexFile->valid()) {
             LOGE("no dex");
             return;
         }

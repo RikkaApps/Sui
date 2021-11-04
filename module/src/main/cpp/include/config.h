@@ -19,7 +19,6 @@
 
 #pragma once
 
-#define FALLBACK_DEX_DIR "/data/system/sui"
 #define MANAGER_APPLICATION_ID "com.android.systemui"
 #define SETTINGS_APPLICATION_ID "com.android.settings"
 
