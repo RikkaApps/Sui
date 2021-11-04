@@ -60,15 +60,19 @@ jobs:
           echo 'org.gradle.parallel=true' >> gradle.properties
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
-          ./gradlew zipRiruDebug zipRiruRelease
+          ./gradlew zipRiruDebug zipRiruRelease zipZygiskDebug zipZygiskRelease
       - name: Prepare artifact
         if: success()
         id: prepareArtifact
         run: |
           riruReleaseName=`ls out/sui-riru-*-release.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=riruReleaseName::riruReleaseName"
           riruDebugName=`ls out/sui-riru-*-debug.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=riruDebugName::riruDebugName"
+          zygiskReleaseName=`ls out/sui-zygisk-*-release.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=zygiskReleaseName::zygiskReleaseName"
+          zygiskDebugName=`ls out/sui-zygisk-*-debug.zip | awk -F '(/|.zip)' '{print $2}'` && echo "::set-output name=zygiskDebugName::zygiskDebugName"
           unzip out/sui-riru-*-release.zip -d sui-riru-release
           unzip out/sui-riru-*-debug.zip -d sui-riru-debug
+          unzip out/sui-zygisk-*-release.zip -d sui-zygisk-release
+          unzip out/sui-zygisk-*-debug.zip -d sui-zygisk-debug
       - name: Upload Riru release
         uses: actions/upload-artifact@v2
         with:
@@ -79,6 +83,16 @@ jobs:
         with:
           name: ${{ steps.prepareArtifact.outputs.riruDebugName }}
           path: './sui-riru-debug/*'
+      - name: Upload Zygisk release
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.prepareArtifact.outputs.zygiskReleaseName }}
+          path: './sui-zygisk-release/*'
+      - name: Upload Zygisk debug
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.prepareArtifact.outputs.zygiskDebugName }}
+          path: './sui-zygisk-debug/*'
       - name: Upload mappings
         uses: actions/upload-artifact@v2
         with:
