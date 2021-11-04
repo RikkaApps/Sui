@@ -161,13 +161,13 @@ afterEvaluate {
                 filter(FixCrLfFilter.class,
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))
             }
-            from((variantLowered == "release") ?
-                    "$buildDir/intermediates/dex/$variantLowered/minify${variantCapped}WithR8" :
-                    "$buildDir/intermediates/dex/$variantLowered/mergeDex$variantCapped") {
+            from((buildTypeLowered == "release") ?
+                    "$buildDir/intermediates/dex/${variant.name}/minify${variantCapped}WithR8" :
+                    "$buildDir/intermediates/dex/${variant.name}/mergeDex$variantCapped") {
                 include 'classes.dex'
                 rename { 'sui.dex' }
             }
-            from("$buildDir/intermediates/stripped_native_libs/$variantLowered/out/lib") {
+            from("$buildDir/intermediates/stripped_native_libs/${variant.name}/out/lib") {
                 into 'lib'
             }
             from("${rootProject.findProject('ui').buildDir}/outputs/apk/$buildTypeLowered") {
