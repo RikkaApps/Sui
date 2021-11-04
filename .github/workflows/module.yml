@@ -28,7 +28,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             !~/.gradle/caches/build-cache-*
-          key: gradle-deps-core-${{ hashFiles('**/build.gradle') }}
+          key: gradle-deps-module-${{ hashFiles('**/build.gradle') }}
           restore-keys: |
             gradle-deps
       - name: Cache Gradle Build
@@ -36,15 +36,15 @@ jobs:
         with:
           path: |
             ~/.gradle/caches/build-cache-*
-          key: gradle-builds-core-${{ github.sha }}
+          key: gradle-builds-module-${{ github.sha }}
           restore-keys: |
             gradle-builds
       - name: Cache Ccache
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: ccache-cache-${{ github.sha }}
-          restore-keys: ccache-cache-
+          key: ${{ runner.os }}-ccache-cache-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-ccache-cache-
       - name: Install ccache
         run: |
           sudo apt-get install -y ccache
