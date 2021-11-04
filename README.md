@@ -63,7 +63,7 @@ Clone with `git clone --recurse-submodules`.
 
 Gradle tasks:
 
-`Flavor` could be `Riru` and `Zygisk`, `BuildType` could be `Debug` and `Release`.
+`Flavor` could be `Riru` and `Zygisk`, and `BuildType` could be `Debug` and `Release`.
 
 * `:module:assemble<Flavor><BuildType>`
 

@@ -33,7 +33,7 @@ Buffer::Buffer(int fd, size_t size) {
     if ((addr = (uint8_t *) mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
         bytes_ = addr;
         size_ = size;
-        is_mmap = true;
+        is_mmap_ = true;
     } else {
         PLOGE("mmap");
     }
@@ -73,7 +73,7 @@ Buffer::Buffer(const char *path) {
 Buffer::~Buffer() {
     LOGD("~Buffer %p", bytes_);
     if (!bytes_) return;
-    if (is_mmap)
+    if (is_mmap_)
         munmap(bytes_, size_);
     else
         free(bytes_);
@@ -112,7 +112,7 @@ void Dex::destroy(JNIEnv *env) {
     if (dexClassLoader) env->DeleteGlobalRef(dexClassLoader);
 }
 
-Dex::Dex(const char *path) : buffer_(Buffer(path)) {
+Dex::Dex(const char *path) : buffer_(path) {
 }
 
 Dex::Dex(int fd, size_t size): buffer_(fd, size) {

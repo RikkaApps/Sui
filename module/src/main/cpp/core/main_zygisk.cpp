@@ -19,13 +19,17 @@
 #include "settings_process.h"
 #include "manager_process.h"
 
-inline static constexpr auto kProcessNameMax = 256;
-inline static constexpr auto kIgnore = 0;
-inline static constexpr auto kSystemServer = 1;
-inline static constexpr auto kSystemUi = 2;
-inline static constexpr auto kSettings = 3;
-
 namespace {
+    inline static constexpr auto kProcessNameMax = 256;
+
+    enum Identity : int {
+
+        IGNORE = 0,
+        SYSTEM_SERVER = 1,
+        SYSTEM_UI = 2,
+        SETTINGS = 3,
+    };
+
     ssize_t xsendmsg(int sockfd, const struct msghdr *msg, int flags) {
         int sent = sendmsg(sockfd, msg, flags);
         if (sent < 0) {
@@ -134,24 +138,25 @@ public:
     }
 
     void preAppSpecialize(zygisk::AppSpecializeArgs *args) override {
-        memset(app_data_dir, 0, PATH_MAX);
-        memset(process_name, 0, kProcessNameMax);
+        char process_name[kProcessNameMax]{0};
+        char app_data_dir[PATH_MAX]{0};
 
         if (args->nice_name) {
             ScopedUtfChars niceName{env_, args->nice_name};
             strcpy(process_name, niceName.c_str());
         }
 
+#ifdef DEBUG
         if (args->app_data_dir) {
             ScopedUtfChars appDataDir{env_, args->app_data_dir};
             strcpy(app_data_dir, appDataDir.c_str());
         }
-
+#endif
         LOGD("preAppSpecialize: %s %s", process_name, app_data_dir);
 
-        InitCompanion(false, args->uid);
+        InitCompanion(false, args->uid, process_name);
 
-        if (whoami == kIgnore) {
+        if (whoami == Identity::IGNORE) {
             api_->setOption(zygisk::Option::DLCLOSE_MODULE_LIBRARY);
         }
 
@@ -161,9 +166,20 @@ public:
     void postAppSpecialize(const zygisk::AppSpecializeArgs *args) override {
         LOGD("postAppSpecialize");
 
-        if (whoami == kSettings) {
+        if (whoami == Identity::IGNORE) {
+            return;
+        }
+
+        char app_data_dir[PATH_MAX]{0};
+
+        if (args->app_data_dir) {
+            ScopedUtfChars appDataDir{env_, args->app_data_dir};
+            strcpy(app_data_dir, appDataDir.c_str());
+        }
+
+        if (whoami == Identity::SETTINGS) {
             Settings::main(env_, app_data_dir, dex);
-        } else if (whoami == kSystemUi) {
+        } else if (whoami == Identity::SYSTEM_UI) {
             Manager::main(env_, app_data_dir, dex);
         }
     }
@@ -184,12 +200,10 @@ private:
     zygisk::Api *api_{};
     JNIEnv *env_{};
 
-    char process_name[kProcessNameMax] = {0};
-    char app_data_dir[PATH_MAX] = {0};
-    int whoami = kIgnore;
+    Identity whoami = Identity::IGNORE;
     Dex *dex = nullptr;
 
-    void InitCompanion(bool is_system_server, int uid) {
+    void InitCompanion(bool is_system_server, int uid, const char *process_name = nullptr) {
         auto companion = api_->connectCompanion();
         if (companion == -1) {
             LOGE("Zygote: failed to connect to companion");
@@ -198,21 +212,21 @@ private:
 
         if (is_system_server) {
             write_int(companion, 1);
-            whoami = kSystemServer;
+            whoami = Identity::SYSTEM_SERVER;
         } else {
             write_int(companion, 0);
             write_int(companion, uid);
             write_full(companion, process_name, kProcessNameMax);
-            whoami = read_int(companion);
+            whoami = static_cast<Identity>(read_int(companion));
         }
 
-        if (whoami != kIgnore) {
+        if (whoami != Identity::IGNORE) {
             auto fd = recv_fd(companion);
             auto size = (size_t) read_int(companion);
 
-            if (whoami == kSettings) {
+            if (whoami == Identity::SETTINGS) {
                 LOGI("Zygote: in Settings");
-            } else if (whoami == kSystemUi) {
+            } else if (whoami == Identity::SYSTEM_UI) {
                 LOGI("Zygote: in SystemUi");
             } else {
                 LOGI("Zygote: in SystemServer");
@@ -249,9 +263,8 @@ static void ReadApplicationInfo(const char *package, uid_t &uid, char *process) 
     }
 }
 
-static void PrepareCompanion() {
-    static bool prepare = false;
-    if (prepare) return;
+static bool PrepareCompanion() {
+    bool result = false;
 
     auto path = "/data/adb/modules/" ZYGISK_MODULE_ID "/" DEX_NAME;
     int fd = open(path, O_RDONLY);
@@ -290,37 +303,39 @@ static void PrepareCompanion() {
     LOGI("Companion: SystemUI %d %s", manager_uid, manager_process);
     LOGI("Companion: Settings %d %s", settings_uid, settings_process);
 
+    result = true;
+
     cleanup:
     if (fd != -1) close(fd);
 
-    prepare = true;
+    return result;
 }
 
 static void CompanionEntry(int socket) {
-    PrepareCompanion();
+    static auto prepare = PrepareCompanion();
 
     char process_name[kProcessNameMax]{0};
-    int whoami;
+    Identity whoami;
 
     int is_system_server = read_int(socket) == 1;
     if (is_system_server != 0) {
-        whoami = kSystemServer;
+        whoami = Identity::SYSTEM_SERVER;
     } else {
         int uid = read_int(socket);
         read_full(socket, process_name, kProcessNameMax);
 
         if (uid == manager_uid && strcmp(process_name, manager_process) == 0) {
-            whoami = kSystemUi;
+            whoami = Identity::SYSTEM_UI;
         } else if (uid == settings_uid && strcmp(process_name, settings_process) == 0) {
-            whoami = kSettings;
+            whoami = Identity::SETTINGS;
         } else {
-            whoami = kIgnore;
+            whoami = Identity::IGNORE;
         }
 
         write_int(socket, whoami);
     }
 
-    if (whoami != kIgnore) {
+    if (whoami != Identity::IGNORE) {
         send_fd(socket, dex_mem_fd);
         write_int(socket, dex_size);
     }

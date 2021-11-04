@@ -25,7 +25,7 @@ protected:
     uint8_t *bytes_ = nullptr;
     size_t size_ = 0;
 private:
-    bool is_mmap = 0;
+    bool is_mmap_ = 0;
 
 public:
     Buffer() = default;
