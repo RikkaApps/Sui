@@ -155,7 +155,7 @@ afterEvaluate {
                         versionCode: moduleVersionCode.toString(),
                         author     : moduleAuthor,
                         description: moduleDescription + " " + ((flavorLowered == "zygisk") ?
-                                "This module requires Magisk 24.0+ and Zygisk enabled." :
+                                "This module requires Magisk 24.0+ and Zygisk enabled. DO NOT add SystemUI and Settings to DenyList." :
                                 "This module requires Riru $moduleMinRiruVersionName or above."),
                 ])
                 filter(FixCrLfFilter.class,
