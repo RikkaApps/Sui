@@ -52,7 +52,7 @@ namespace SystemServer {
     static jint startShortcutTransactionCode = -1;
 
     static bool installDex(JNIEnv *env, Dex *dexFile) {
-        if (true/*android::GetApiLevel() < 26*/) {
+        if (android::GetApiLevel() < 26) {
             dexFile->setPre26Paths("/data/system/sui/"  DEX_NAME, "/data/system/sui/oat");
         }
         dexFile->createClassLoader(env);

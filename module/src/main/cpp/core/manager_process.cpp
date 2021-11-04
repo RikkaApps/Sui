@@ -50,7 +50,7 @@ namespace Manager {
     static jclass mainClass = nullptr;
 
     static bool installDex(JNIEnv *env, const char *appDataDir, Dex *dexFile) {
-        if (true/*android::GetApiLevel() < 26*/) {
+        if (android::GetApiLevel() < 26) {
             char dexPath[PATH_MAX], oatDir[PATH_MAX];
             snprintf(dexPath, PATH_MAX, "%s/sui/%s", appDataDir, DEX_NAME);
             snprintf(oatDir, PATH_MAX, "%s/sui/oat", appDataDir);
