@@ -85,7 +85,7 @@ dependencies {
     implementation 'dev.rikka.ndk.thirdparty:nativehelper:1.0.1'
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'
 
-    implementation "androidx.annotation:annotation:1.2.0"
+    implementation "androidx.annotation:annotation:1.3.0"
 
     implementation project(':aidl')
     implementation project(':shared')
@@ -127,16 +127,18 @@ afterEvaluate {
             from(templatePath) {
                 exclude 'riru.sh', 'customize.sh', 'module.prop'
             }
-            from(templatePath) {
-                include 'riru.sh'
-                filter(ReplaceTokens.class, tokens: [
-                        "RIRU_MODULE_LIB_NAME"             : moduleLibraryName,
-                        "RIRU_MODULE_API_VERSION"          : moduleRiruApiVersion.toString(),
-                        "RIRU_MODULE_MIN_API_VERSION"      : moduleMinRiruApiVersion.toString(),
-                        "RIRU_MODULE_MIN_RIRU_VERSION_NAME": moduleMinRiruVersionName,
-                ])
-                filter(FixCrLfFilter.class,
-                        eol: FixCrLfFilter.CrLf.newInstance("lf"))
+            if (flavorLowered == 'riru') {
+                from(templatePath) {
+                    include 'riru.sh'
+                    filter(ReplaceTokens.class, tokens: [
+                            "RIRU_MODULE_LIB_NAME"             : moduleLibraryName,
+                            "RIRU_MODULE_API_VERSION"          : moduleRiruApiVersion.toString(),
+                            "RIRU_MODULE_MIN_API_VERSION"      : moduleMinRiruApiVersion.toString(),
+                            "RIRU_MODULE_MIN_RIRU_VERSION_NAME": moduleMinRiruVersionName,
+                    ])
+                    filter(FixCrLfFilter.class,
+                            eol: FixCrLfFilter.CrLf.newInstance("lf"))
+                }
             }
             from(templatePath) {
                 include 'customize.sh'
