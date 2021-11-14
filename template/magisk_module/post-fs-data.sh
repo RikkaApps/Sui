@@ -1,10 +1,11 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
+MODULE_ID=$(basename "$MODDIR")
 MAGISK_VER_CODE=$(magisk -V)
 if [ "$MAGISK_VER_CODE" -ge 21000 ]; then
-  MAGISK_PATH="$(magisk --path)/.magisk/modules/riru-sui"
+  MAGISK_PATH="$(magisk --path)/.magisk/modules/$MODULE_ID"
 else
-  MAGISK_PATH=/sbin/.magisk/modules/riru-sui
+  MAGISK_PATH=/sbin/.magisk/modules/$MODULE_ID
 fi
 
 log -p i -t "Sui" "Magisk version $MAGISK_VER_CODE"
@@ -29,7 +30,7 @@ if [ "$enable_adb_root" = true ]; then
   log -p i -t "Sui" "Setup adb root support"
 
   # Run magiskpolicy manually if Magisk does not load sepolicy.rule
-  if [ ! -e "$(magisk --path)/.magisk/mirror/sepolicy.rules/riru-sui/sepolicy.rule" ]; then
+  if [ ! -e "$(magisk --path)/.magisk/mirror/sepolicy.rules/$MODULE_ID/sepolicy.rule" ]; then
     log -p e -t "Sui" "Magisk does not load sepolicy.rule..."
     log -p e -t "Sui" "Exec magiskpolicy --live --apply $MAGISK_PATH/sepolicy.rule..."
     magiskpolicy --live --apply "$MAGISK_PATH"/sepolicy.rule
