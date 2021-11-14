@@ -52,9 +52,9 @@ check_magisk_version() {
   elif [ "$FLAVOR" == "zygisk" ]; then
     ui_print "- Installing Sui (Zygisk version)"
 
-    if [ "$MAGISK_VER_CODE" -lt 23011 ]; then
+    if [ "$MAGISK_VER_CODE" -lt 23014 ]; then
       ui_print "*********************************************************"
-      ui_print "! Zygisk requires Magisk 23011+"
+      ui_print "! Zygisk requires Magisk 23014+"
       abort "*********************************************************"
     fi
   else
