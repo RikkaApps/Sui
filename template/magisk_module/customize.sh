@@ -68,6 +68,7 @@ elif [ "$FLAVOR" == "riru" ]; then
 fi
 
 mkdir "$MODPATH/bin"
+mkdir "$MODPATH/lib"
 extract "$ZIPFILE" "lib/$ARCH_NAME/libmain.so" "$MODPATH/bin" true
 extract "$ZIPFILE" "lib/$ARCH_NAME/librish.so" "$MODPATH" true
 extract "$ZIPFILE" "lib/$ARCH_NAME/libadbd_wrapper.so" "$MODPATH/bin" true
