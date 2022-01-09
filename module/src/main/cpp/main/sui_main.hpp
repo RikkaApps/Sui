@@ -111,53 +111,17 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     }
 }
 
-static int start_server(const char *dex_path, const char *files_path, const char *main_class, const char *process_name) {
-    while (true) {
-        static pid_t zygote_pid;
-
-        zygote_pid = -1;
-        foreach_proc([](pid_t pid) -> bool {
-            if (pid == getpid()) return false;
-
-#ifdef __LP64__
-            const char* zygote_name = "zygote64";
-#else
-            const char *zygote_name = "zygote";
-#endif
-            char buf[64];
-            snprintf(buf, 64, "/proc/%d/cmdline", pid);
-
-            int fd = open(buf, O_RDONLY);
-            if (fd > 0) {
-                memset(buf, 0, 64);
-                if (read(fd, buf, 64) > 0 && strcmp(zygote_name, buf) == 0) {
-                    zygote_pid = pid;
-                }
-                close(fd);
-            }
-            return zygote_pid != -1;
-        });
-
-        if (zygote_pid != -1) {
-            LOGI("found zygote %d", zygote_pid);
-            break;
-        }
-
-        LOGV("zygote not started, wait 1s...");
-        sleep(1);
-    }
-
-    run_server(dex_path, files_path, main_class, process_name);
-    return EXIT_SUCCESS;
-}
-
 static int sui_main(int argc, char **argv) {
-    if (fork() != 0) {
-        return 0;
-    }
-    daemon(false, false);
-
     LOGI("Sui starter begin: %s", argv[1]);
+
+    if (daemon(false, false) != 0) {
+        PLOGE("daemon");
+        return EXIT_FAILURE;
+    }
+
+    if (unshare(CLONE_NEWNS) != 0) {
+        return EXIT_FAILURE;
+    }
 
     auto root_path = argv[1];
 
@@ -165,7 +129,7 @@ static int sui_main(int argc, char **argv) {
     strcpy(dex_path, root_path);
     strcat(dex_path, "/sui.dex");
 
-    start_server(dex_path, root_path, SERVER_CLASS_PATH, SERVER_NAME);
+    run_server(dex_path, root_path, SERVER_CLASS_PATH, SERVER_NAME);
 
-    exit(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
