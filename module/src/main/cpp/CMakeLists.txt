@@ -37,7 +37,8 @@ add_library(util STATIC
         util/android.cpp
         util/plt.c
         util/selinux.cpp
-        util/memory.cpp)
+        util/memory.cpp
+        util/app_process.cpp)
 target_link_libraries(util cxx::cxx log nativehelper::nativehelper_header_only)
 
 if (FLAVOR STREQUAL "riru")

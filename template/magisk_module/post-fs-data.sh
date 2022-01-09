@@ -62,6 +62,10 @@ else
   log -p i -t "Sui" "adb root support is disabled"
 fi
 
+# Setup uninstaller
+rm "$MODDIR/bin/uninstall"
+ln -s "$MODDIR/bin/sui" "$MODDIR/bin/uninstall"
+
 # Run Sui server
 chmod 700 "$MODDIR"/bin/sui
 exec "$MODDIR"/bin/sui "$MODDIR" "$adb_root_exit"

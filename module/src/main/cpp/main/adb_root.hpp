@@ -10,6 +10,12 @@
 #include <private/ScopedReaddir.h>
 #include <string_view>
 #include <android/api-level.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <android.h>
 
 using namespace std::literals::string_view_literals;
 

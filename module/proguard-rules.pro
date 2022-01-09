@@ -26,6 +26,10 @@
     public static void main(java.lang.String[]);
 }
 
+-keep class rikka.sui.installer.Uninstaller {
+    public static void main(java.lang.String[]);
+}
+
 -keep class rikka.sui.shell.Shell {
     public static void main(java.lang.String[]);
 }

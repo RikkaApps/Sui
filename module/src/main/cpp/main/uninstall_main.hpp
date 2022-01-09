@@ -27,8 +27,19 @@
 /*
  * argv[1]: path of the module, such as /data/adb/modules/zygisk-sui
  */
-static int sui_main(int argc, char **argv) {
-    LOGI("Sui starter begin: %s", argv[1]);
+static int uninstall_main(int argc, char **argv) {
+    LOGI("Sui uninstaller begin: %s", argv[1]);
+
+    auto root_path = argv[1];
+
+    char dex_path[PATH_MAX]{0};
+    strcpy(dex_path, root_path);
+    strcat(dex_path, "/sui.dex");
+
+    if (copyfile(dex_path, "/dev/sui.dex") != 0) {
+        PLOGE("copyfile");
+        return EXIT_FAILURE;
+    }
 
     if (daemon(false, false) != 0) {
         PLOGE("daemon");
@@ -39,13 +50,8 @@ static int sui_main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    auto root_path = argv[1];
-
-    char dex_path[PATH_MAX]{0};
-    strcpy(dex_path, root_path);
-    strcat(dex_path, "/sui.dex");
-
-    app_process(dex_path, root_path, "rikka.sui.server.Starter", "sui");
+    app_process("/dev/sui.dex", "/dev", "rikka.sui.installer.Uninstaller", "sui_uninstaller");
+    unlink("/dev/sui.dex");
 
     return EXIT_SUCCESS;
 }
