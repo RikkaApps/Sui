@@ -20,7 +20,7 @@
 #include "manager_process.h"
 
 namespace {
-    inline static constexpr auto kProcessNameMax = 256;
+    inline constexpr auto kProcessNameMax = 256;
 
     enum Identity : int {
 
