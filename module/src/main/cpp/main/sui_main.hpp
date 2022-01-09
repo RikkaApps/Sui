@@ -35,9 +35,7 @@ static int sui_main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    if (unshare(CLONE_NEWNS) != 0) {
-        return EXIT_FAILURE;
-    }
+    wait_for_zygote();
 
     auto root_path = argv[1];
 

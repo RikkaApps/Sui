@@ -46,9 +46,7 @@ static int uninstall_main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    if (unshare(CLONE_NEWNS) != 0) {
-        return EXIT_FAILURE;
-    }
+    wait_for_zygote();
 
     app_process("/dev/sui.dex", "/dev", "rikka.sui.installer.Uninstaller", "sui_uninstaller");
     unlink("/dev/sui.dex");

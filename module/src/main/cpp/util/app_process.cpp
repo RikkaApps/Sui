@@ -23,6 +23,8 @@
 #include <unistd.h>
 #include <sched.h>
 #include <android.h>
+#include <misc.h>
+#include <fcntl.h>
 
 #ifdef DEBUG
 #define JAVA_DEBUGGABLE
@@ -91,5 +93,42 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     if (execvp((const char *) argv[0], argv)) {
         PLOGE("execvp %s", argv[0]);
         exit(EXIT_FAILURE);
+    }
+}
+
+void wait_for_zygote() {
+    while (true) {
+        static pid_t zygote_pid;
+
+        zygote_pid = -1;
+        foreach_proc([](pid_t pid) -> bool {
+            if (pid == getpid()) return false;
+
+#ifdef __LP64__
+            const char* zygote_name = "zygote64";
+#else
+            const char *zygote_name = "zygote";
+#endif
+            char buf[64];
+            snprintf(buf, 64, "/proc/%d/cmdline", pid);
+
+            int fd = open(buf, O_RDONLY);
+            if (fd > 0) {
+                memset(buf, 0, 64);
+                if (read(fd, buf, 64) > 0 && strcmp(zygote_name, buf) == 0) {
+                    zygote_pid = pid;
+                }
+                close(fd);
+            }
+            return zygote_pid != -1;
+        });
+
+        if (zygote_pid != -1) {
+            LOGI("found zygote %d", zygote_pid);
+            break;
+        }
+
+        LOGV("zygote not started, wait 1s...");
+        sleep(1);
     }
 }

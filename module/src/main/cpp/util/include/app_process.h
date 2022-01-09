@@ -22,4 +22,6 @@
 
 void app_process(const char *dex_path, const char *files_path, const char *main_class, const char *process_name);
 
+void wait_for_zygote();
+
 #endif //APP_PROCESS_H
