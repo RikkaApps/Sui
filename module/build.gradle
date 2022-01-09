@@ -125,7 +125,7 @@ afterEvaluate {
 
             into magiskDir
             from(templatePath) {
-                exclude 'riru.sh', 'customize.sh', 'module.prop'
+                exclude 'riru.sh', 'customize.sh', 'post-fs-data.sh', 'module.prop'
             }
             if (flavorLowered == 'riru') {
                 from(templatePath) {
@@ -142,6 +142,14 @@ afterEvaluate {
             }
             from(templatePath) {
                 include 'customize.sh'
+                filter(ReplaceTokens.class, tokens: [
+                        "FLAVOR": flavorLowered,
+                ])
+                filter(FixCrLfFilter.class,
+                        eol: FixCrLfFilter.CrLf.newInstance("lf"))
+            }
+            from(templatePath) {
+                include 'post-fs-data.sh'
                 filter(ReplaceTokens.class, tokens: [
                         "FLAVOR": flavorLowered,
                 ])
