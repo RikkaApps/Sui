@@ -45,13 +45,11 @@ if [ "$FLAVOR" == "zygisk" ]; then
 
   if [ "$IS64BIT" = true ]; then
     extract "$ZIPFILE" "lib/$ARCH_NAME_SECONDARY/libsui.so" "$MODPATH/zygisk" true
-    mv "$MODPATH/zygisk/libsui.so" "$MODPATH/zygisk/$ARCH_DIR_SECONDARY.so"
+    mv "$MODPATH/zygisk/libsui.so" "$MODPATH/zygisk/$ARCH_NAME_SECONDARY.so"
   fi
 elif [ "$FLAVOR" == "riru" ]; then
   extract "$ZIPFILE" 'riru.sh' "$TMPDIR"
   . $TMPDIR/riru.sh
-
-  check_riru_version
 
   mkdir "$MODPATH/riru"
   mkdir "$MODPATH/riru/lib"
