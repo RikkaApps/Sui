@@ -14,120 +14,21 @@
 #include <nativehelper/scoped_utf_chars.h>
 #include <fcntl.h>
 #include <cinttypes>
+#include <socket.h>
 #include "system_server.h"
 #include "main.h"
 #include "settings_process.h"
 #include "manager_process.h"
 
-namespace {
-    inline constexpr auto kProcessNameMax = 256;
+inline constexpr auto kProcessNameMax = 256;
 
-    enum Identity : int {
+enum Identity : int {
 
-        IGNORE = 0,
-        SYSTEM_SERVER = 1,
-        SYSTEM_UI = 2,
-        SETTINGS = 3,
-    };
-
-    ssize_t xsendmsg(int sockfd, const struct msghdr *msg, int flags) {
-        int sent = sendmsg(sockfd, msg, flags);
-        if (sent < 0) {
-            PLOGE("sendmsg");
-        }
-        return sent;
-    }
-
-    ssize_t xrecvmsg(int sockfd, struct msghdr *msg, int flags) {
-        int rec = recvmsg(sockfd, msg, flags);
-        if (rec < 0) {
-            PLOGE("recvmsg");
-        }
-        return rec;
-    }
-
-    int send_fds(int sockfd, void *cmsgbuf, size_t bufsz, const int *fds, int cnt) {
-        iovec iov = {
-                .iov_base = &cnt,
-                .iov_len  = sizeof(cnt),
-        };
-        msghdr msg = {
-                .msg_iov        = &iov,
-                .msg_iovlen     = 1,
-        };
-
-        if (cnt) {
-            msg.msg_control = cmsgbuf;
-            msg.msg_controllen = bufsz;
-            cmsghdr *cmsg = CMSG_FIRSTHDR(&msg);
-            cmsg->cmsg_len = CMSG_LEN(sizeof(int) * cnt);
-            cmsg->cmsg_level = SOL_SOCKET;
-            cmsg->cmsg_type = SCM_RIGHTS;
-
-            memcpy(CMSG_DATA(cmsg), fds, sizeof(int) * cnt);
-        }
-
-        return xsendmsg(sockfd, &msg, 0);
-    }
-
-    int send_fd(int sockfd, int fd) {
-        if (fd < 0) {
-            return send_fds(sockfd, nullptr, 0, nullptr, 0);
-        }
-        char cmsgbuf[CMSG_SPACE(sizeof(int))];
-        return send_fds(sockfd, cmsgbuf, sizeof(cmsgbuf), &fd, 1);
-    }
-
-    void *recv_fds(int sockfd, char *cmsgbuf, size_t bufsz, int cnt) {
-        iovec iov = {
-                .iov_base = &cnt,
-                .iov_len  = sizeof(cnt),
-        };
-        msghdr msg = {
-                .msg_iov        = &iov,
-                .msg_iovlen     = 1,
-                .msg_control    = cmsgbuf,
-                .msg_controllen = bufsz
-        };
-
-        xrecvmsg(sockfd, &msg, MSG_WAITALL);
-        cmsghdr *cmsg = CMSG_FIRSTHDR(&msg);
-
-        if (msg.msg_controllen != bufsz ||
-            cmsg == nullptr ||
-            cmsg->cmsg_len != CMSG_LEN(sizeof(int) * cnt) ||
-            cmsg->cmsg_level != SOL_SOCKET ||
-            cmsg->cmsg_type != SCM_RIGHTS) {
-            return nullptr;
-        }
-
-        return CMSG_DATA(cmsg);
-    }
-
-    int recv_fd(int sockfd) {
-        char cmsgbuf[CMSG_SPACE(sizeof(int))];
-
-        void *data = recv_fds(sockfd, cmsgbuf, sizeof(cmsgbuf), 1);
-        if (data == nullptr)
-            return -1;
-
-        int result;
-        memcpy(&result, data, sizeof(int));
-        return result;
-    }
-
-    int read_int(int fd) {
-        int val;
-        if (read_full(fd, &val, sizeof(val)) != 0)
-            return -1;
-        return val;
-    }
-
-    void write_int(int fd, int val) {
-        if (fd < 0) return;
-        write_full(fd, &val, sizeof(val));
-    }
-}
+    IGNORE = 0,
+    SYSTEM_SERVER = 1,
+    SYSTEM_UI = 2,
+    SETTINGS = 3,
+};
 
 class ZygiskModule : public zygisk::ModuleBase {
 
@@ -286,7 +187,7 @@ static bool PrepareCompanion() {
 
     dex_mem_fd = CreateSharedMem("sui.dex", size);
     if (dex_mem_fd >= 0) {
-        auto addr =(uint8_t *) mmap(nullptr, size, PROT_WRITE, MAP_SHARED, dex_mem_fd, 0);
+        auto addr = (uint8_t *) mmap(nullptr, size, PROT_WRITE, MAP_SHARED, dex_mem_fd, 0);
         if (addr != MAP_FAILED) {
             read_full(fd, addr, size);
             dex_size = size;

@@ -38,7 +38,8 @@ add_library(util STATIC
         util/plt.c
         util/selinux.cpp
         util/memory.cpp
-        util/app_process.cpp)
+        util/app_process.cpp
+        util/socket.cpp)
 target_link_libraries(util cxx::cxx log nativehelper::nativehelper_header_only)
 
 if (FLAVOR STREQUAL "riru")
