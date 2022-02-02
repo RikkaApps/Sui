@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <cinttypes>
 #include <socket.h>
+#include <sys/system_properties.h>
 #include "system_server.h"
 #include "main.h"
 #include "settings_process.h"
@@ -93,6 +94,13 @@ public:
 
     void postServerSpecialize(const zygisk::ServerSpecializeArgs *args) override {
         LOGD("postServerSpecialize");
+
+        if (__system_property_find("ro.vendor.product.ztename")) {
+            auto *process = env_->FindClass("android/os/Process");
+            auto *set_argv0 = env_->GetStaticMethodID(
+                    process, "setArgV0", "(Ljava/lang/String;)V");
+            env_->CallStaticVoidMethod(process, set_argv0, env_->NewStringUTF("system_server"));
+        }
 
         SystemServer::main(env_, dex);
     }

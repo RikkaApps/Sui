@@ -120,3 +120,9 @@ rm -f /data/adb/sui/starter
 rm -f /data/adb/sui/sui.dex
 rm -f /data/adb/sui/sui.dex.new
 rm -f /data/adb/sui/sui_wrapper
+
+if [ "$(grep_prop ro.maple.enable)" == "1" ] && [ "$FLAVOR" == "zygisk" ]; then
+  ui_print "- Add ro.maple.enable=0"
+  touch "$MODPATH/system.prop"
+  echo "ro.maple.enable=0" >> "$MODPATH/system.prop"
+fi
