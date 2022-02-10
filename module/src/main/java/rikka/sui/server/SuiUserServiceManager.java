@@ -30,9 +30,9 @@ public class SuiUserServiceManager extends UserServiceManager {
 
     public static final String USER_SERVICE_CMD_DEBUG;
 
-    private static final String USER_SERVICE_CMD_FORMAT = "(CLASSPATH=%s %s%s /system/bin " +
-            "--nice-name=%s %s " +
-            "--token=%s --package=%s --class=%s --uid=%d%s)&";
+    private static final String USER_SERVICE_CMD_FORMAT = "(CLASSPATH='%s' %s%s /system/bin " +
+            "--nice-name='%s' %s " +
+            "--token='%s' --package='%s' --class='%s' --uid=%d%s)&";
 
     static {
         int sdk = Build.VERSION.SDK_INT;
