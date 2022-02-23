@@ -55,12 +55,12 @@ import java.util.Map;
 
 import dev.rikka.tools.refine.Refine;
 import moe.shizuku.server.IShizukuApplication;
+import rikka.hidden.compat.SystemService;
 import rikka.parcelablelist.ParcelableListSlice;
 import rikka.rish.RishConfig;
 import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.server.ClientRecord;
 import rikka.shizuku.server.Service;
-import rikka.shizuku.server.api.SystemService;
 import rikka.sui.model.AppInfo;
 import rikka.sui.server.bridge.BridgeServiceClient;
 import rikka.sui.util.Logger;

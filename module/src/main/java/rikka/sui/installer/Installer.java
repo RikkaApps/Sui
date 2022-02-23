@@ -26,7 +26,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Locale;
 
-import rikka.shizuku.server.api.SystemService;
+import rikka.hidden.compat.SystemService;
 
 public class Installer {
 
