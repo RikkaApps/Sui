@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <sched.h>
 #include <app_process.h>
+#include <sys/stat.h>
 
 /*
  * argv[1]: path of the module, such as /data/adb/modules/zygisk-sui
@@ -36,6 +37,12 @@ static int sui_main(int argc, char **argv) {
     }
 
     wait_for_zygote();
+
+    if (access("/data/adb/sui", F_OK) != 0) {
+        mkdir("/data/adb/sui", 0600);
+    }
+    chmod("/data/adb/sui", 0600);
+    chown("/data/adb/sui", 0, 0);
 
     auto root_path = argv[1];
 
