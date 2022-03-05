@@ -4,3 +4,4 @@ version=${version}
 versionCode=${versionCode}
 author=${author}
 description=${description}
+updateJson=${updateJson}

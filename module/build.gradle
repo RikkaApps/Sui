@@ -169,6 +169,9 @@ afterEvaluate {
                         description: moduleDescription + " " + ((flavorLowered == "zygisk") ?
                                 "This module requires Magisk 24.0+ and Zygisk enabled. DO NOT add SystemUI and Settings to DenyList." :
                                 "This module requires Riru $moduleMinRiruVersionName or above."),
+                        updateJson : (flavorLowered == "zygisk") ?
+                                "https://rikkaapps.github.io/release/sui_zygisk.json" :
+                                "https://rikkaapps.github.io/release/sui_riru.json",
                 ])
                 filter(FixCrLfFilter.class,
                         eol: FixCrLfFilter.CrLf.newInstance("lf"))
