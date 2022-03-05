@@ -55,7 +55,9 @@ import java.util.Map;
 
 import dev.rikka.tools.refine.Refine;
 import moe.shizuku.server.IShizukuApplication;
-import rikka.hidden.compat.SystemService;
+import rikka.hidden.compat.ActivityManagerApis;
+import rikka.hidden.compat.PackageManagerApis;
+import rikka.hidden.compat.UserManagerApis;
 import rikka.parcelablelist.ParcelableListSlice;
 import rikka.rish.RishConfig;
 import rikka.shizuku.ShizukuApiConstants;
@@ -107,7 +109,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     private int waitForPackage(String packageName, boolean forever) {
         int uid;
         while (true) {
-            ApplicationInfo ai = SystemService.getApplicationInfoNoThrow(packageName, 0, 0);
+            ApplicationInfo ai = PackageManagerApis.getApplicationInfoNoThrow(packageName, 0, 0);
             if (ai != null) {
                 uid = ai.uid;
                 break;
@@ -197,7 +199,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         boolean isManager, isSettings;
         ClientRecord clientRecord = null;
 
-        List<String> packages = SystemService.getPackagesForUidNoThrow(callingUid);
+        List<String> packages = PackageManagerApis.getPackagesForUidNoThrow(callingUid);
         if (!packages.contains(requestPackageName)) {
             throw new SecurityException("Request package " + requestPackageName + "does not belong to uid " + callingUid);
         }
@@ -353,7 +355,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
                 record.allowed = allowed;
 
                 if (!allowed || wasHidden) {
-                    SystemService.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
+                    ActivityManagerApis.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
                 }
             }
         }
@@ -383,7 +385,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
         List<Integer> users = new ArrayList<>();
         if (userId == -1) {
-            users.addAll(SystemService.getUserIdsNoThrow());
+            users.addAll(UserManagerApis.getUserIdsNoThrow());
         } else {
             users.add(userId);
         }
@@ -393,7 +395,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
         List<AppInfo> list = new ArrayList<>();
         for (int user : users) {
-            for (PackageInfo pi : SystemService.getInstalledPackagesNoThrow(0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, user)) {
+            for (PackageInfo pi : PackageManagerApis.getInstalledPackagesNoThrow(0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/, user)) {
                 if (pi.applicationInfo == null
                         || Refine.<PackageInfoHidden>unsafeCast(pi).overlayTarget != null
                         || (pi.applicationInfo.flags & ApplicationInfo.FLAG_HAS_CODE) == 0)
@@ -430,16 +432,16 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
                     boolean hasComponents = MapUtil.getOrPut(hasComponentsCache, pi.packageName, () -> {
                         try {
                             int baseFlags = 0x00000200 /*MATCH_DISABLED_COMPONENTS*/ | 0x00002000 /*MATCH_UNINSTALLED_PACKAGES*/;
-                            PackageInfo pi2 = SystemService.getPackageInfoNoThrow(pi.packageName,
+                            PackageInfo pi2 = PackageManagerApis.getPackageInfoNoThrow(pi.packageName,
                                     baseFlags | PackageManager.GET_ACTIVITIES | PackageManager.GET_RECEIVERS | PackageManager.GET_SERVICES | PackageManager.GET_PROVIDERS,
                                     user);
                             if (pi2 == null) {
                                 // Exceed binder data transfer limit
                                 pi2 = pi;
-                                pi2.activities = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_ACTIVITIES, user).activities;
-                                pi2.receivers = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_RECEIVERS, user).receivers;
-                                pi2.services = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_SERVICES, user).services;
-                                pi2.providers = SystemService.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_PROVIDERS, user).providers;
+                                pi2.activities = PackageManagerApis.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_ACTIVITIES, user).activities;
+                                pi2.receivers = PackageManagerApis.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_RECEIVERS, user).receivers;
+                                pi2.services = PackageManagerApis.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_SERVICES, user).services;
+                                pi2.providers = PackageManagerApis.getPackageInfoNoThrow(pi.packageName, baseFlags | PackageManager.GET_PROVIDERS, user).providers;
                             }
                             return pi2.activities != null && pi2.activities.length > 0
                                     || pi2.receivers != null && pi2.receivers.length > 0

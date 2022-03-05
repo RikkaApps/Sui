@@ -26,12 +26,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Locale;
 
-import rikka.hidden.compat.SystemService;
+import rikka.hidden.compat.PackageManagerApis;
 
 public class Installer {
 
     private static void saveApplicationInfoToFile(String path, String packageName, String name) throws IOException {
-        ApplicationInfo ai = SystemService.getApplicationInfoNoThrow(packageName, 0, 0);
+        ApplicationInfo ai = PackageManagerApis.getApplicationInfoNoThrow(packageName, 0, 0);
         if (ai == null) {
             System.out.println("! Can't fetch application info for package " + packageName);
             return;

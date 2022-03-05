@@ -64,7 +64,7 @@ dependencies {
 
     implementation project(':aidl')
     implementation project(':api')
-    compileOnly 'dev.rikka.hidden:stub:1.0.0'
+    compileOnly 'dev.rikka.hidden:stub:2.1.0'
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:1.0.0'
 
     implementation 'dev.rikka.rikkax.appcompat:appcompat:1.2.0-rc01'
