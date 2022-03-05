@@ -1,10 +1,18 @@
-# Sui
+# Changelog
 
-Modern super user interface (SUI) implementation.
+### v12.6.1 (2022-02-23)
 
-<https://github.com/RikkaApps/Sui>
+* Works on Android 13 DP1 (Apps use Sui/Shizuku may need changes also)
+* Create `/data/adb/sui` on start (Swithing from Riru version to zygisk version will delete this folder, causing config unable to save)
 
-## Changelog
+### v12.4.0 (2022-01-09)
+
+- Adapt recent Magisk (Zygisk) changes
+- Remove the shortcut (shows when you long-press Settings) on uninstall (The shortcut that has already added to the launcher still needs manual removal)
+
+### v12.3.0
+
+- Zygisk support
 
 ### v12.2.1 (2021-09-20)
 
