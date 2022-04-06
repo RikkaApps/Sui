@@ -94,7 +94,7 @@ In short, there are four parts:
 - SystemServer inject
 
   - Hooks `Binder#execTransact` and finally allow us to handle an unused binder call
-  - Implements "get binder", "set binder" logic in that binder call, so taht root process can send its binder to the system server, and the apps can acquire root process's binder
+  - Implements "get binder", "set binder" logic in that binder call, so that root process can send its binder to the system server, and the apps can acquire root process's binder
 
 - SystemUI inject
 
