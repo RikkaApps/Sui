@@ -62,6 +62,7 @@ import rikka.parcelablelist.ParcelableListSlice;
 import rikka.rish.RishConfig;
 import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.server.ClientRecord;
+import rikka.shizuku.server.ConfigManager;
 import rikka.shizuku.server.Service;
 import rikka.sui.model.AppInfo;
 import rikka.sui.server.bridge.BridgeServiceClient;
@@ -185,6 +186,11 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     @Override
     public boolean checkCallerPermission(String func, int callingUid, int callingPid, @Nullable ClientRecord clientRecord) {
+        // Temporary fix for https://github.com/RikkaApps/Sui/issues/35
+        if ("transactRemote".equals(func)) {
+            SuiConfig.PackageEntry packageEntry = configManager.find(callingUid);
+            return packageEntry != null && packageEntry.isAllowed();
+        }
         return false;
     }
 
