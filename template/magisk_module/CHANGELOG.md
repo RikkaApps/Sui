@@ -1,5 +1,10 @@
 # Changelog
 
+### v12.6.2 (2022-04-10)
+
+* Temporary solution for [#35](https://github.com/RikkaApps/Sui/issues/35)
+* Add `updateJson`, module now can be upgraded through Magisk app
+
 ### v12.6.1 (2022-02-23)
 
 * Works on Android 13 DP1 (Apps use Sui/Shizuku may need changes also)

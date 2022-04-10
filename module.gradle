@@ -16,7 +16,7 @@ ext {
     moduleAuthor = "Rikka"
     moduleDescription = "Modern superuser interface implementation."
     moduleVersionMinor = 6
-    moduleVersionPatch = 1
+    moduleVersionPatch = 2
     moduleVersion = "v${api_version_major}.${moduleVersionMinor}.${moduleVersionPatch}"
     moduleVersionCode = gitCommitCount
 
