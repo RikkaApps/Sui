@@ -5,7 +5,7 @@ import java.security.MessageDigest
 
 plugins {
     id('com.android.application')
-    id('dev.rikka.tools.refine.gradle-plugin')
+    id('dev.rikka.tools.refine')
 }
 
 apply from: file(rootProject.file('module.gradle'))
