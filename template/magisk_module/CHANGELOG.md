@@ -1,5 +1,9 @@
 # Changelog
 
+### v12.6.3 (2022-06-09)
+
+* Works on Android 13 Beta 3
+
 ### v12.6.2 (2022-04-10)
 
 * Temporary solution for [#35](https://github.com/RikkaApps/Sui/issues/35)
