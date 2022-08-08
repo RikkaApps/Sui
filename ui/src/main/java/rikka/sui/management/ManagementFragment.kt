@@ -88,6 +88,7 @@ class ManagementFragment : AppFragment() {
                 Status.LOADING -> onLoading()
                 Status.SUCCESS -> onSuccess(it)
                 Status.ERROR -> onError(it.error)
+                else -> {}
             }
         }
     }
