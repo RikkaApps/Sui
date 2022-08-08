@@ -8,4 +8,4 @@ if [ ! -f "$DEX" ]; then
 fi
 
 [ -z "$RISH_APPLICATION_ID" ] && export RISH_APPLICATION_ID="%%%RISH_APPLICATION_ID%%%"
-/system/bin/app_process -Djava.class.path="$DEX" -Djava.library.path="$BASEDIR" /system/bin --nice-name=rish rikka.sui.shell.Shell "$@"
+/system/bin/app_process -Djava.class.path="$DEX" -Dsui.library.path="$BASEDIR" /system/bin --nice-name=rish rikka.sui.shell.Shell "$@"

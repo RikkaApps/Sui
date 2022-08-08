@@ -7,6 +7,8 @@ import android.os.Looper;
 import android.system.Os;
 import android.text.TextUtils;
 
+import java.io.File;
+
 import rikka.rish.Rish;
 import rikka.rish.RishConfig;
 import rikka.shizuku.Shizuku;
@@ -53,6 +55,12 @@ public class Shell extends Rish {
                 System.err.flush();
                 System.exit(1);
             }
+        }
+
+        String libPath = System.getProperty("sui.library.path");
+        if (libPath != null) {
+            RishConfig.setLibraryPath(new File(libPath).getAbsolutePath());
+
         }
 
         if (Looper.getMainLooper() == null) {
