@@ -94,8 +94,9 @@ dependencies {
     implementation project(':rish')
     implementation project(':server-shared')
 
-    implementation 'dev.rikka.hidden:compat:3.2.0'
-    compileOnly 'dev.rikka.hidden:stub:3.2.0'
+    def hiddenApiVersion = '3.4.2'
+    implementation "dev.rikka.hidden:compat:$hiddenApiVersion"
+    compileOnly "dev.rikka.hidden:stub:$hiddenApiVersion"
 }
 
 def outDir = file("$rootDir/out")

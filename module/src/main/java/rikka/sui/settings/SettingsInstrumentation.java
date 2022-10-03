@@ -25,6 +25,7 @@ import static rikka.sui.shortcut.ShortcutConstants.SHORTCUT_EXTRA;
 import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.Application;
+import android.app.IAppTask;
 import android.app.Instrumentation;
 import android.app.UiAutomation;
 import android.content.ComponentCallbacks2;
@@ -41,17 +42,22 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.os.TestLooperManager;
+import android.os.UserHandle;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+
+import com.android.internal.content.ReferrerIntent;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import rikka.sui.resource.SuiApk;
+import rikka.sui.util.InstrumentationUtil;
 
 public class SettingsInstrumentation extends Instrumentation {
 
@@ -400,6 +406,12 @@ public class SettingsInstrumentation extends Instrumentation {
         original.callActivityOnNewIntent(activity, intent);
     }
 
+    @Keep
+    public void callActivityOnNewIntent(Activity activity, ReferrerIntent intent) {
+        LOGGER.d("callActivityOnNewIntent: %s", activity);
+        InstrumentationUtil.callActivityOnNewIntent(original, activity, intent);
+    }
+
     @Override
     public void callActivityOnStart(Activity activity) {
         original.callActivityOnStart(activity);
@@ -491,5 +503,61 @@ public class SettingsInstrumentation extends Instrumentation {
     @Override
     public TestLooperManager acquireLooperManager(Looper looper) {
         return original.acquireLooperManager(looper);
+    }
+
+    @Keep
+    public ActivityResult execStartActivity(
+            Context who, IBinder contextThread, IBinder token, Activity target,
+            Intent intent, int requestCode, Bundle options) {
+        LOGGER.d("execStartActivity: %s", target);
+        return InstrumentationUtil.execStartActivity(original, who, contextThread, token, target, intent, requestCode, options);
+    }
+
+    @Keep
+    public void execStartActivities(Context who, IBinder contextThread,
+                                    IBinder token, Activity target, Intent[] intents, Bundle options) {
+        LOGGER.d("execStartActivities: %s", target);
+        InstrumentationUtil.execStartActivities(original, who, contextThread, token, target, intents, options);
+    }
+
+    @Keep
+    public int execStartActivitiesAsUser(Context who, IBinder contextThread,
+                                         IBinder token, Activity target, Intent[] intents, Bundle options,
+                                         int userId) {
+        LOGGER.d("execStartActivitiesAsUser: %s", target);
+        return InstrumentationUtil.execStartActivitiesAsUser(original, who, contextThread, token, target, intents, options, userId);
+    }
+
+    @Keep
+    public ActivityResult execStartActivity(
+            Context who, IBinder contextThread, IBinder token, String target,
+            Intent intent, int requestCode, Bundle options) {
+        LOGGER.d("execStartActivity2: %s", target);
+        return InstrumentationUtil.execStartActivity(original, who, contextThread, token, target, intent, requestCode, options);
+    }
+
+    @Keep
+    public ActivityResult execStartActivity(
+            Context who, IBinder contextThread, IBinder token, String resultWho,
+            Intent intent, int requestCode, Bundle options, UserHandle user) {
+        LOGGER.d("execStartActivity3: %s", intent);
+        return InstrumentationUtil.execStartActivity(original, who, contextThread, token, resultWho, intent, requestCode, options, user);
+    }
+
+    @Keep
+    public ActivityResult execStartActivityAsCaller(
+            Context who, IBinder contextThread, IBinder token, Activity target,
+            Intent intent, int requestCode, Bundle options,
+            boolean ignoreTargetSecurity, int userId) {
+        LOGGER.d("execStartActivityAsCaller: %s", intent);
+        return InstrumentationUtil.execStartActivityAsCaller(original, who, contextThread, token, target, intent, requestCode, options, ignoreTargetSecurity, userId);
+    }
+
+    @Keep
+    public void execStartActivityFromAppTask(
+            Context who, IBinder contextThread, IAppTask appTask,
+            Intent intent, Bundle options) {
+        LOGGER.d("execStartActivityFromAppTask: %s", intent);
+        InstrumentationUtil.execStartActivityFromAppTask(original, who, contextThread, appTask, intent, options);
     }
 }
