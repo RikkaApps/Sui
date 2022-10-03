@@ -32,6 +32,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageInfoHidden;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
@@ -46,6 +47,7 @@ import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -71,6 +73,7 @@ import rikka.sui.util.MapUtil;
 import rikka.sui.util.OsUtils;
 import rikka.sui.util.UserHandleCompat;
 
+@OptIn(markerClass = androidx.core.os.BuildCompat.PrereleaseSdkCheck.class)
 public class SuiService extends Service<SuiUserServiceManager, SuiClientManager, SuiConfigManager> {
 
     private static SuiService instance;
@@ -100,6 +103,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     private final SuiClientManager clientManager;
     private final SuiConfigManager configManager;
+    private final SuiUserServiceManager userServiceManager;
     private final int systemUiUid;
     private final int settingsUid;
     private IShizukuApplication systemUiApplication;
@@ -138,6 +142,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
         configManager = getConfigManager();
         clientManager = getClientManager();
+        userServiceManager = getUserServiceManager();
 
         systemUiUid = waitForPackage(MANAGER_APPLICATION_ID, true);
         settingsUid = waitForPackage(SETTINGS_APPLICATION_ID, true);
@@ -383,6 +388,12 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         if (Intent.ACTION_PACKAGE_REMOVED.equals(action) && uid > 0 & !replacing) {
             LOGGER.i("uid %d is removed", uid);
             configManager.remove(uid);
+        } else if (Intent.ACTION_PACKAGE_FULLY_REMOVED.equals(action) && !replacing) {
+            Uri uri = intent.getData();
+            String packageName = (uri != null) ? uri.getSchemeSpecificPart() : null;
+            if (packageName != null) {
+                userServiceManager.onPackageRemoved(packageName);
+            }
         }
     }
 
