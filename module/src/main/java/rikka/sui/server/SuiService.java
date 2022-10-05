@@ -392,7 +392,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
             Uri uri = intent.getData();
             String packageName = (uri != null) ? uri.getSchemeSpecificPart() : null;
             if (packageName != null) {
-                userServiceManager.onPackageRemoved(packageName);
+                userServiceManager.removeUserServicesForPackage(packageName);
             }
         }
     }

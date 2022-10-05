@@ -19,19 +19,12 @@
 
 package rikka.sui.server;
 
-import android.content.pm.PackageInfo;
 import android.os.Build;
-import android.util.ArrayMap;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import rikka.shizuku.server.UserServiceManager;
-import rikka.shizuku.server.UserServiceRecord;
 
 public class SuiUserServiceManager extends UserServiceManager {
 
@@ -74,29 +67,5 @@ public class SuiUserServiceManager extends UserServiceManager {
                 debug ? (" " + SuiUserServiceManager.USER_SERVICE_CMD_DEBUG) : "",
                 processName, "rikka.sui.server.userservice.Starter",
                 token, packageName, classname, callingUid, debug ? (" " + "--debug-name=" + processName) : "");
-    }
-
-    private final Map<String, List<UserServiceRecord>> userServiceRecords = Collections.synchronizedMap(new ArrayMap<>());
-
-    @Override
-    public void onUserServiceRecordCreated(UserServiceRecord record, PackageInfo packageInfo) {
-        String packageName = packageInfo.packageName;
-        List<UserServiceRecord> list = userServiceRecords.get(packageName);
-        if (list == null) {
-            list = Collections.synchronizedList(new ArrayList<>());
-            userServiceRecords.put(packageName, list);
-        }
-        list.add(record);
-    }
-
-    public void onPackageRemoved(String packageName) {
-        List<UserServiceRecord> list = userServiceRecords.get(packageName);
-        if (list != null) {
-            for (UserServiceRecord record : list) {
-                record.removeSelf();
-                LOGGER.i("remove user service %s since package %s has been removed", record.token, packageName);
-            }
-            userServiceRecords.remove(packageName);
-        }
     }
 }
