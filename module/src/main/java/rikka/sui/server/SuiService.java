@@ -367,6 +367,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
                 if (!allowed || wasHidden) {
                     ActivityManagerApis.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
+                    getUserServiceManager().removeUserServicesForPackage(record.packageName);
                 }
             }
         }
