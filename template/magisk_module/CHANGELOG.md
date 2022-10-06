@@ -1,5 +1,13 @@
 # Changelog
 
+### v12.7.1 (2022-10-06)
+
+- Don't set `java.library.path` in rish (#38)
+- Fix `peekUserService` not work after app process restarts
+- Fix UserServices are not killed after permission is revoked
+- Fix UserServices are not killed after the app is uninstalled
+- Wrap hidden methods of `Instrumentation` (#41)
+
 ### v12.6.3 (2022-06-09)
 
 * Works on Android 13 Beta 3
