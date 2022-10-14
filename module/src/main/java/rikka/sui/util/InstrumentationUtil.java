@@ -57,7 +57,7 @@ public class InstrumentationUtil {
         }
         if (callActivityOnNewIntentMethod != null) {
             try {
-                callActivityOnNewIntentMethod.invoke(instrumentation, intent, activity, intent);
+                callActivityOnNewIntentMethod.invoke(instrumentation, activity, intent);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
