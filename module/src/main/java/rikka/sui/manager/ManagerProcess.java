@@ -19,6 +19,9 @@
 
 package rikka.sui.manager;
 
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_API_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_PACKAGE_NAME;
+import static rikka.shizuku.ShizukuApiConstants.SERVER_VERSION;
 import static rikka.sui.manager.ManagerConstants.LOGGER;
 
 import android.app.ActivityThread;
@@ -109,8 +112,12 @@ public class ManagerProcess {
             return;
         }
 
+        Bundle args = new Bundle();
+        args.putString(ATTACH_APPLICATION_PACKAGE_NAME, "com.android.systemui");
+        args.putInt(ATTACH_APPLICATION_API_VERSION, SERVER_VERSION);
+
         try {
-            service.attachApplication(APPLICATION, "com.android.systemui");
+            service.attachApplication(APPLICATION, args);
             LOGGER.i("attachApplication");
         } catch (RemoteException e) {
             LOGGER.w(e, "attachApplication");

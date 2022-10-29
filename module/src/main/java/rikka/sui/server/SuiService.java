@@ -19,11 +19,13 @@
 
 package rikka.sui.server;
 
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_PERMISSION_GRANTED;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_SECONTEXT;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_UID;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SERVER_VERSION;
-import static rikka.shizuku.ShizukuApiConstants.ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_API_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_PACKAGE_NAME;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_PERMISSION_GRANTED;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_SECONTEXT;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_UID;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
 import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
 
@@ -64,7 +66,6 @@ import rikka.parcelablelist.ParcelableListSlice;
 import rikka.rish.RishConfig;
 import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.server.ClientRecord;
-import rikka.shizuku.server.ConfigManager;
 import rikka.shizuku.server.Service;
 import rikka.sui.model.AppInfo;
 import rikka.sui.server.bridge.BridgeServiceClient;
@@ -200,10 +201,16 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
     }
 
     @Override
-    public void attachApplication(IShizukuApplication application, String requestPackageName) {
-        if (application == null || requestPackageName == null) {
+    public void attachApplication(IShizukuApplication application, Bundle args) {
+        if (application == null || args == null) {
             return;
         }
+
+        String requestPackageName = args.getString(ATTACH_APPLICATION_PACKAGE_NAME);
+        if (requestPackageName == null) {
+            return;
+        }
+        int apiVersion = args.getInt(ATTACH_APPLICATION_API_VERSION, -1);
 
         int callingPid = Binder.getCallingPid();
         int callingUid = Binder.getCallingUid();
@@ -253,7 +260,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
                 throw new IllegalStateException("Client (uid=" + callingUid + ", pid=" + callingPid + ") has already attached");
             }
             synchronized (this) {
-                clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName);
+                clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName, apiVersion);
             }
             if (clientRecord == null) {
                 return;
@@ -261,12 +268,12 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         }
 
         Bundle reply = new Bundle();
-        reply.putInt(ATTACH_REPLY_SERVER_UID, OsUtils.getUid());
-        reply.putInt(ATTACH_REPLY_SERVER_VERSION, ShizukuApiConstants.SERVER_VERSION);
-        reply.putString(ATTACH_REPLY_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
+        reply.putInt(BIND_APPLICATION_SERVER_UID, OsUtils.getUid());
+        reply.putInt(BIND_APPLICATION_SERVER_VERSION, ShizukuApiConstants.SERVER_VERSION);
+        reply.putString(BIND_APPLICATION_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
         if (!isManager && !isSettings) {
-            reply.putBoolean(ATTACH_REPLY_PERMISSION_GRANTED, clientRecord.allowed);
-            reply.putBoolean(ATTACH_REPLY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, shouldShowRequestPermissionRationale(clientRecord));
+            reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, clientRecord.allowed);
+            reply.putBoolean(BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, shouldShowRequestPermissionRationale(clientRecord));
         }
         try {
             application.bindApplication(reply);

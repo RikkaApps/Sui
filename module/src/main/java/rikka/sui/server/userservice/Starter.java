@@ -21,21 +21,16 @@ package rikka.sui.server.userservice;
 
 import static rikka.shizuku.ShizukuApiConstants.USER_SERVICE_ARG_TOKEN;
 
-import android.app.ActivityThread;
-import android.content.Context;
-import android.content.ContextHidden;
-import android.ddm.DdmHandleAppName;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
 import android.os.ServiceManager;
-import android.os.UserHandle;
-import android.os.UserHandleHidden;
 import android.util.Log;
+import android.util.Pair;
 
-import dev.rikka.tools.refine.Refine;
 import moe.shizuku.server.IShizukuService;
+import rikka.shizuku.server.UserService;
 
 public class Starter {
 
@@ -46,51 +41,23 @@ public class Starter {
     private static final int BRIDGE_ACTION_GET_BINDER = 2;
 
     public static void main(String[] args) {
-        String name = null;
-        String token = null;
-        String pkg = null;
-        String cls = null;
-        int uid = -1;
-
-        for (String arg : args) {
-            if (arg.startsWith("--debug-name=")) {
-                name = arg.substring(13);
-            } else if (arg.startsWith("--token=")) {
-                token = arg.substring(8);
-            } else if (arg.startsWith("--package=")) {
-                pkg = arg.substring(10);
-            } else if (arg.startsWith("--class=")) {
-                cls = arg.substring(8);
-            } else if (arg.startsWith("--uid=")) {
-                uid = Integer.parseInt(arg.substring(6));
-            }
-        }
-
-        int appId = uid % 100000;
-        int userId = uid / 100000;
-
-        Log.i(TAG, String.format("starting service %s/%s...", pkg, cls));
-
         if (Looper.getMainLooper() == null) {
             Looper.prepareMainLooper();
         }
 
-        IBinder service = null;
-        Context systemContext = ActivityThread.systemMain().getSystemContext();
+        IBinder service;
+        String token;
 
-        DdmHandleAppName.setAppName(name != null ? name : pkg + ":user_service", 0);
+        UserService.setTag(TAG);
+        Pair<IBinder, String> result = UserService.create(args);
 
-        try {
-            UserHandle userHandle = Refine.unsafeCast(UserHandleHidden.of(userId));
-            Context context = Refine.<ContextHidden>unsafeCast(systemContext)
-                    .createPackageContextAsUser(pkg, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY, userHandle);
-            ClassLoader classLoader = context.getClassLoader();
-            Class<?> serviceClass = classLoader.loadClass(cls);
-            service = (IBinder) serviceClass.newInstance();
-        } catch (Throwable tr) {
-            Log.w(TAG, String.format("unable to start service %s/%s...", pkg, cls), tr);
+        if (result == null) {
             System.exit(1);
+            return;
         }
+
+        service = result.first;
+        token = result.second;
 
         if (!sendBinder(service, token)) {
             System.exit(1);
@@ -99,7 +66,7 @@ public class Starter {
         Looper.loop();
         System.exit(0);
 
-        Log.i(TAG, String.format("service %s/%s exited", pkg, cls));
+        Log.i(TAG, "service exited");
     }
 
     private static IBinder requestBinderFromBridge() {
