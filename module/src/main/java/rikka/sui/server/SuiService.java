@@ -267,9 +267,18 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
             }
         }
 
+        int replyServerVersion = ShizukuApiConstants.SERVER_VERSION;
+        if (!isManager && !isSettings && apiVersion == -1) {
+            // ShizukuBinderWrapper has adapted API v13 in dev.rikka.shizuku:api 12.2.0, however
+            // attachApplication in 12.2.0 is still old, so that server treat the client as pre 13.
+            // This finally cause transactRemote fails.
+            // So we can pass 12 here to pretend we are v12 server.
+            replyServerVersion = 12;
+        }
+
         Bundle reply = new Bundle();
         reply.putInt(BIND_APPLICATION_SERVER_UID, OsUtils.getUid());
-        reply.putInt(BIND_APPLICATION_SERVER_VERSION, ShizukuApiConstants.SERVER_VERSION);
+        reply.putInt(BIND_APPLICATION_SERVER_VERSION, replyServerVersion);
         reply.putString(BIND_APPLICATION_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
         if (!isManager && !isSettings) {
             reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, clientRecord.allowed);
