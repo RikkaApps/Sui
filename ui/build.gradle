@@ -10,7 +10,8 @@ plugins {
 apply from: file(rootProject.file('module.gradle'))
 
 android {
-    compileSdkVersion rootProject.ext.targetSdkVersion
+    namespace "rikka.sui"
+    compileSdk rootProject.ext.targetSdkVersion
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -20,19 +21,17 @@ android {
     }
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
     buildTypes {
         debug {
+            defaultConfig.minSdk 24
             multiDexEnabled false
         }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
     packagingOptions {
         exclude '/META-INF/*.version'
@@ -48,23 +47,19 @@ android {
     }
 }
 
-configurations.all {
+configurations.configureEach {
     exclude group: 'androidx.appcompat', module: 'appcompat'
 }
 
-repositories {
-    mavenLocal()
-}
-
 dependencies {
-    implementation("dev.rikka.tools.refine:runtime:3.1.1")
+    implementation libs.refine.runtime
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1"
 
     implementation project(':aidl')
     implementation project(':api')
-    compileOnly 'dev.rikka.hidden:stub:2.3.1'
+    compileOnly libs.hidden.stub
     implementation 'dev.rikka.rikkax.parcelablelist:parcelablelist:2.0.0'
 
     implementation 'dev.rikka.rikkax.appcompat:appcompat:1.2.0-rc01'

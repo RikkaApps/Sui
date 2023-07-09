@@ -85,7 +85,7 @@ class ManagementAppItemViewHolder(private val binding: ManagementAppItemBinding)
         val context = binding.root.context
         val theme = context.theme
         val isNight = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_YES != 0
-        val colorAccent = theme.resolveColor(R.attr.colorAccent)
+        val colorAccent = theme.resolveColor(androidx.appcompat.R.attr.colorAccent)
         val colorForeground = theme.resolveColor(android.R.attr.colorForeground)
         val textColorTertiary = theme.resolveColorStateList(android.R.attr.textColorTertiary)
         val colorError = if (isNight) 0xFF8A80 else 0xFF5252

@@ -79,7 +79,7 @@ class ManagementFragment : AppFragment() {
             setColorSchemeColors(
                 context.theme.resolveColor(android.R.attr.colorAccent)
             )
-            val actionBarSize = context.theme.resolveDimension(R.attr.actionBarSize, 0f).toInt()
+            val actionBarSize = context.theme.resolveDimension(androidx.appcompat.R.attr.actionBarSize, 0f).toInt()
             setProgressViewOffset(false, actionBarSize, (64 * resources.displayMetrics.density + actionBarSize).toInt())
         }
 

@@ -1,3 +1,10 @@
+plugins {
+    id 'com.android.application' version '8.0.2' apply false
+    id 'com.android.library' version '8.0.2' apply false
+    id 'org.jetbrains.kotlin.jvm' version '1.8.0' apply false
+    alias libs.plugins.refine apply false
+}
+
 apply plugin: 'idea'
 
 idea.module {
@@ -6,51 +13,35 @@ idea.module {
     resourceDirs += file('scripts')
 }
 
-buildscript {
-    apply from: 'api/manifest.gradle'
+subprojects {
+    plugins.withId("com.android.base") {
+        plugins.apply('dev.rikka.tools.refine')
 
-    ext.kotlinVersion = '1.7.20'
-    repositories {
-        mavenCentral()
-        google()
-
-        // In case newly published library not yet synced with maven central
-        maven {
-            url("https://s01.oss.sonatype.org/content/repositories/releases/")
-            content {
-                includeGroup("dev.rikka.tools.refine")
+        android {
+            compileSdk = 33
+            defaultConfig {
+                minSdk = 23
+                targetSdk = 33
+            }
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+            buildFeatures {
+                aidl true
             }
         }
-        mavenLocal()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'dev.rikka.tools.refine:gradle-plugin:3.1.1'
     }
 }
 
-allprojects {
-    repositories {
-        mavenCentral()
-        google()
 
-        // In case newly published library not yet synced with maven central
-        maven {
-            url("https://s01.oss.sonatype.org/content/repositories/releases/")
-            content {
-                includeGroupByRegex("dev.rikka.*")
-            }
-        }
-        mavenLocal()
-    }
-}
-
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
 
 ext {
     minSdkVersion = 23
     targetSdkVersion = 33
+    api_min_sdk = 23
+    api_target_sdk = 33
 }

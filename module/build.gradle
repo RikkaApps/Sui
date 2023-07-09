@@ -11,7 +11,8 @@ plugins {
 apply from: file(rootProject.file('module.gradle'))
 
 android {
-    compileSdkVersion rootProject.ext.targetSdkVersion
+    namespace "rikka.sui"
+    compileSdk rootProject.ext.targetSdkVersion
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -31,6 +32,7 @@ android {
     }
     buildTypes {
         debug {
+            defaultConfig.minSdk 24
             multiDexEnabled false
         }
         release {
@@ -65,10 +67,6 @@ android {
             }
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
     lintOptions {
         checkReleaseBuilds false
     }
@@ -78,7 +76,7 @@ android {
 }
 
 dependencies {
-    implementation 'dev.rikka.tools.refine:runtime:3.1.1'
+    implementation libs.refine.runtime
 
     implementation 'dev.rikka.ndk:riru:26.0.0'
     implementation 'dev.rikka.ndk.thirdparty:cxx:1.2.0'
@@ -94,9 +92,8 @@ dependencies {
     implementation project(':rish')
     implementation project(':server-shared')
 
-    def hiddenApiVersion = '3.4.2'
-    implementation "dev.rikka.hidden:compat:$hiddenApiVersion"
-    compileOnly "dev.rikka.hidden:stub:$hiddenApiVersion"
+    implementation libs.hidden.compat
+    compileOnly libs.hidden.stub
 }
 
 def outDir = file("$rootDir/out")
@@ -208,8 +205,8 @@ afterEvaluate {
         task("zip${variantCapped}", type: Zip) {
             dependsOn("prepareMagiskFiles${variantCapped}")
             from magiskDir
-            archiveName zipName
-            destinationDir outDir
+            archiveFileName = zipName
+            destinationDirectory = outDir
         }
 
         task("push${variantCapped}", type: Exec) {

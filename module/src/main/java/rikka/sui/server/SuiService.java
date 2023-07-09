@@ -22,6 +22,7 @@ package rikka.sui.server;
 import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_API_VERSION;
 import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_PACKAGE_NAME;
 import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_PERMISSION_GRANTED;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_PATCH_VERSION;
 import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_SECONTEXT;
 import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_UID;
 import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_VERSION;
