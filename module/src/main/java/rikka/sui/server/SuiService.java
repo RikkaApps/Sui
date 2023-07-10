@@ -281,6 +281,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
         reply.putInt(BIND_APPLICATION_SERVER_UID, OsUtils.getUid());
         reply.putInt(BIND_APPLICATION_SERVER_VERSION, replyServerVersion);
         reply.putString(BIND_APPLICATION_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
+        reply.putInt(BIND_APPLICATION_SERVER_VERSION, replyServerVersion);
+        reply.putInt(BIND_APPLICATION_SERVER_PATCH_VERSION, ShizukuApiConstants.SERVER_PATCH_VERSION);
         if (!isManager && !isSettings) {
             reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, clientRecord.allowed);
             reply.putBoolean(BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, shouldShowRequestPermissionRationale(clientRecord));
