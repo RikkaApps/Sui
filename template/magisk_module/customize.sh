@@ -89,9 +89,9 @@ ui_print "- Fetching information for SystemUI and Settings"
 
 ui_print "- Extracting files for rish"
 extract "$ZIPFILE" 'rish' "$MODPATH"
-extract "$ZIPFILE" 'post-install.example.sh' "$MODPATH"
+extract "$ZIPFILE" 'post-install.example.sh' "$ROOT_PATH"
 set_perm "$MODPATH/rish" 0 2000 0770
-set_perm "$MODPATH/post-install.example.sh" 0 0 0600
+set_perm "$ROOT_PATH/post-install.example.sh" 0 0 0600
 
 if [ -f $ROOT_PATH/post-install.sh ]; then
   cat "$ROOT_PATH/post-install.sh" | grep -q "SCRIPT_VERSION=2"
@@ -115,7 +115,6 @@ rm -rf /data/adb/sui/res
 rm -rf /data/adb/sui/res.new
 rm -f /data/adb/sui/z
 rm -f /data/adb/sui/com.android.systemui
-rm -f /data/adb/sui/post-install.example.sh
 rm -f /data/adb/sui/starter
 rm -f /data/adb/sui/sui.dex
 rm -f /data/adb/sui/sui.dex.new
