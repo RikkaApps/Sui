@@ -3,13 +3,13 @@ package rikka.sui.server;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
 
 import androidx.annotation.Nullable;
 
 import java.io.File;
 
 import rikka.sui.server.SuiConfig.PackageEntry;
+import rikka.sui.util.SQLiteDataBaseRemoteCompat;
 
 public class SuiDatabase {
 
@@ -27,7 +27,7 @@ public class SuiDatabase {
     private static SQLiteDatabase createDatabase(boolean allowRetry) {
         SQLiteDatabase database;
         try {
-            database = SQLiteDatabase.openDatabase(DATABASE_PATH, (CursorFactory) null, SQLiteDatabase.OPEN_READWRITE | SQLiteDatabase.CREATE_IF_NECESSARY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+            database = SQLiteDataBaseRemoteCompat.openDatabase(DATABASE_PATH, null);
             database.execSQL("CREATE TABLE IF NOT EXISTS uid_configs(uid INTEGER PRIMARY KEY, flags INTEGER);");
         } catch (Throwable e) {
             ServerConstants.LOGGER.e(e, "create database");
