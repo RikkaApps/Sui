@@ -39,6 +39,7 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
@@ -68,6 +69,7 @@ import rikka.rish.RishConfig;
 import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.server.ClientRecord;
 import rikka.shizuku.server.Service;
+import rikka.shizuku.server.util.HandlerUtil;
 import rikka.sui.model.AppInfo;
 import rikka.sui.server.bridge.BridgeServiceClient;
 import rikka.sui.util.Logger;
@@ -139,6 +141,8 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
     public SuiService() {
         super();
+
+        HandlerUtil.setMainHandler(new Handler(Looper.getMainLooper()));
 
         SuiService.instance = this;
 
