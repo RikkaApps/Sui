@@ -92,7 +92,7 @@ public class SuiService extends Service<SuiUserServiceManager, SuiClientManager,
 
         SuiService.filesPath = filesPath;
 
-        Looper.prepare();
+        Looper.prepareMainLooper();
         new SuiService();
         Looper.loop();
 
