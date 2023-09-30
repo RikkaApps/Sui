@@ -1,5 +1,15 @@
 # Changelog
 
+### v13.5.1 (2023-09-19)
+
+- Works on Android 14
+- Works on ColorOS (OPPO & OnePlus) Android 14
+
+### v13.0.1 (2023-02-01)
+
+- Fix authentication error of `transactRemote` with `IBinder.FLAG_ONEWAY`
+- Fix `rish` does not work on Android 8.x
+
 ### v12.7.1 (2022-10-06)
 
 - Don't set `java.library.path` in rish (#38)
