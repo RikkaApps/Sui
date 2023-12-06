@@ -3,9 +3,11 @@ name: Module
 on:
   push:
     branches:
-      - master
+      - patch-1
     paths-ignore:
       - '**/README.md'
+  workflow_dispatch:
+  
 jobs:
   build:
     runs-on: ubuntu-20.04
